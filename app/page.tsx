@@ -1,327 +1,349 @@
 import Link from "next/link"
-import { ArrowRight } from "lucide-react"
+import Image from "next/image"
 import { Button } from "@/components/ui/button"
+import { Card, CardContent } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
+import { Calendar, Building2, Briefcase, Gavel, FileText, Users, MapPin, ArrowRight } from "lucide-react"
 
-export default function LandingPage() {
+export default function Home() {
   return (
-    <div className="flex flex-col min-h-screen">
-      <header className="fixed top-0 w-full z-50 bg-black/50 backdrop-blur-sm">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary">
-              <span className="text-lg font-bold text-primary-foreground">5</span>
-            </div>
-            <span className="text-xl font-bold text-white">5Sense</span>
-          </Link>
-          <nav className="hidden md:flex items-center gap-6">
-            <Link href="/about" className="text-sm font-medium text-white hover:text-primary">
-              About Us
-            </Link>
-            <Link href="#services" className="text-sm font-medium text-white hover:text-primary">
-              Services
-            </Link>
-            <Link href="#products" className="text-sm font-medium text-white hover:text-primary">
-              Products
-            </Link>
-            <Link href="#invest" className="text-sm font-medium text-white hover:text-primary">
-              Invest
-            </Link>
-          </nav>
-          <div className="flex items-center gap-4">
-            <Button variant="outline" size="sm" className="text-white border-white hover:bg-white hover:text-black">
-              <Link href="/login">Log In</Link>
-            </Button>
-            <Button size="sm">
-              <Link href="/signup">Sign Up</Link>
-            </Button>
-          </div>
+    <div className="flex flex-col">
+      {/* Hero Section */}
+      <section className="relative bg-gradient-to-r from-slate-900 to-slate-800 text-white">
+        <div className="absolute inset-0 overflow-hidden">
+          <Image
+            src="/placeholder.svg?height=1080&width=1920"
+            alt="Real Estate Background"
+            fill
+            className="object-cover opacity-20"
+            priority
+          />
         </div>
-      </header>
-
-      <section className="relative h-screen w-full flex items-center justify-center">
-        <div className="absolute inset-0 z-0">
-          <video
-            autoPlay
-            muted
-            loop
-            playsInline
-            className="w-full h-full object-cover"
-            poster="/placeholder.svg?height=1080&width=1920"
-          >
-            <source src="#" type="video/mp4" />
-            {/* Fallback for browsers that don't support video */}
-            <img
-              src="/placeholder.svg?height=1080&width=1920"
-              alt="5Sense Platform"
-              className="w-full h-full object-cover"
-            />
-          </video>
-          <div className="absolute inset-0 bg-black/60"></div>
-        </div>
-
-        <div className="container mx-auto px-4 z-10 text-center">
-          <h1 className="text-4xl md:text-6xl font-bold text-white mb-6">
-            Welcome to <span className="text-primary">5Sense</span>
-          </h1>
-          <p className="text-xl md:text-2xl text-white/80 mb-8 max-w-3xl mx-auto">
-            Your all-in-one platform for services, products, and investments in future resource centers.
-          </p>
-          <div className="flex flex-wrap items-center justify-center gap-4">
-            <Button size="lg" className="text-lg px-8">
-              <Link href="/signup">Get Started</Link>
-            </Button>
-            <Button
-              variant="outline"
-              size="lg"
-              className="text-lg px-8 text-white border-white hover:bg-white hover:text-black"
-            >
-              <Link href="/about">Learn More</Link>
-            </Button>
-          </div>
-        </div>
-      </section>
-
-      <section id="services" className="py-20 bg-white">
-        <div className="container mx-auto px-4">
-          <h2 className="text-3xl md:text-4xl font-bold text-center mb-12">Our Services</h2>
-          <div className="grid md:grid-cols-3 gap-8">
-            <div className="bg-muted rounded-lg p-6 text-center">
-              <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="24"
-                  height="24"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  className="text-primary h-8 w-8"
-                >
-                  <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
-                  <path d="m15 5 4 4" />
-                </svg>
-              </div>
-              <h3 className="text-xl font-semibold mb-2">Professional Services</h3>
-              <p className="text-muted-foreground mb-4">
-                Access a wide range of professional services from our vetted freelancers and experts.
-              </p>
-              <Button variant="link" asChild>
-                <Link href="/login" className="flex items-center justify-center gap-1">
-                  Explore Services <ArrowRight className="h-4 w-4" />
-                </Link>
+        <div className="container relative z-10 py-20 md:py-32">
+          <div className="max-w-3xl">
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6">Homes in Better Hands</h1>
+            <p className="text-xl md:text-2xl mb-8 text-slate-200">
+              The all-in-one platform connecting buyers, sellers, title companies, and service providers for seamless
+              real estate transactions.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4">
+              <Button size="lg" asChild>
+                <Link href="/marketplace">Browse Properties</Link>
               </Button>
-            </div>
-            <div className="bg-muted rounded-lg p-6 text-center">
-              <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="24"
-                  height="24"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  className="text-primary h-8 w-8"
-                >
-                  <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z" />
-                  <path d="M3 6h18" />
-                  <path d="M16 10a4 4 0 0 1-8 0" />
-                </svg>
-              </div>
-              <h3 className="text-xl font-semibold mb-2">Quality Products</h3>
-              <p className="text-muted-foreground mb-4">
-                Shop our curated selection of high-quality print-on-demand products.
-              </p>
-              <Button variant="link" asChild>
-                <Link href="/login" className="flex items-center justify-center gap-1">
-                  Browse Products <ArrowRight className="h-4 w-4" />
-                </Link>
-              </Button>
-            </div>
-            <div className="bg-muted rounded-lg p-6 text-center">
-              <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="24"
-                  height="24"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  className="text-primary h-8 w-8"
-                >
-                  <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
-                </svg>
-              </div>
-              <h3 className="text-xl font-semibold mb-2">Investment Opportunities</h3>
-              <p className="text-muted-foreground mb-4">
-                Invest in future resource centers and track your portfolio growth.
-              </p>
-              <Button variant="link" asChild>
-                <Link href="/login" className="flex items-center justify-center gap-1">
-                  Start Investing <ArrowRight className="h-4 w-4" />
-                </Link>
+              <Button size="lg" variant="outline" asChild>
+                <Link href="/services">Find Services</Link>
               </Button>
             </div>
           </div>
         </div>
       </section>
 
-      <section id="cta" className="py-20 bg-primary/10">
-        <div className="container mx-auto px-4 text-center">
-          <h2 className="text-3xl md:text-4xl font-bold mb-6">Ready to Get Started?</h2>
-          <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
-            Join 5Sense today and access our comprehensive platform for services, products, and investments.
+      {/* Features Section */}
+      <section className="container py-16 md:py-24">
+        <div className="text-center mb-16">
+          <h2 className="text-3xl md:text-4xl font-bold mb-4">Everything You Need in One Place</h2>
+          <p className="text-lg text-muted-foreground max-w-3xl mx-auto">
+            Our comprehensive platform streamlines the real estate process from start to finish.
           </p>
-          <Button size="lg" className="text-lg px-8">
-            <Link href="/signup">Sign Up Now</Link>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex flex-col items-center text-center">
+                <div className="p-3 rounded-full bg-primary/10 text-primary mb-4">
+                  <FileText className="h-8 w-8" />
+                </div>
+                <h3 className="text-xl font-semibold mb-2">Transaction Progress</h3>
+                <p className="text-muted-foreground">
+                  Track closing progress, share documents, and collaborate with title companies in real-time.
+                </p>
+                <Button variant="link" asChild className="mt-4">
+                  <Link href="/progress" className="flex items-center">
+                    Learn more <ArrowRight className="ml-1 h-4 w-4" />
+                  </Link>
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex flex-col items-center text-center">
+                <div className="p-3 rounded-full bg-primary/10 text-primary mb-4">
+                  <Building2 className="h-8 w-8" />
+                </div>
+                <h3 className="text-xl font-semibold mb-2">Property Marketplace</h3>
+                <p className="text-muted-foreground">
+                  Browse, list, and auction properties with interactive maps and direct messaging.
+                </p>
+                <Button variant="link" asChild className="mt-4">
+                  <Link href="/marketplace" className="flex items-center">
+                    Learn more <ArrowRight className="ml-1 h-4 w-4" />
+                  </Link>
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex flex-col items-center text-center">
+                <div className="p-3 rounded-full bg-primary/10 text-primary mb-4">
+                  <Briefcase className="h-8 w-8" />
+                </div>
+                <h3 className="text-xl font-semibold mb-2">Service Directory</h3>
+                <p className="text-muted-foreground">
+                  Find and hire trusted third-party services for all your real estate needs.
+                </p>
+                <Button variant="link" asChild className="mt-4">
+                  <Link href="/services" className="flex items-center">
+                    Learn more <ArrowRight className="ml-1 h-4 w-4" />
+                  </Link>
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex flex-col items-center text-center">
+                <div className="p-3 rounded-full bg-primary/10 text-primary mb-4">
+                  <Gavel className="h-8 w-8" />
+                </div>
+                <h3 className="text-xl font-semibold mb-2">Property Auctions</h3>
+                <p className="text-muted-foreground">
+                  Participate in transparent property auctions with real-time bidding and updates.
+                </p>
+                <Button variant="link" asChild className="mt-4">
+                  <Link href="/marketplace?tab=auctions" className="flex items-center">
+                    Learn more <ArrowRight className="ml-1 h-4 w-4" />
+                  </Link>
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex flex-col items-center text-center">
+                <div className="p-3 rounded-full bg-primary/10 text-primary mb-4">
+                  <Calendar className="h-8 w-8" />
+                </div>
+                <h3 className="text-xl font-semibold mb-2">Integrated Calendar</h3>
+                <p className="text-muted-foreground">
+                  Manage all your appointments and deadlines in one centralized calendar.
+                </p>
+                <Button variant="link" asChild className="mt-4">
+                  <Link href="/calendar" className="flex items-center">
+                    Learn more <ArrowRight className="ml-1 h-4 w-4" />
+                  </Link>
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex flex-col items-center text-center">
+                <div className="p-3 rounded-full bg-primary/10 text-primary mb-4">
+                  <Users className="h-8 w-8" />
+                </div>
+                <h3 className="text-xl font-semibold mb-2">Contractor Jobs</h3>
+                <p className="text-muted-foreground">
+                  Post and find specialized real estate contracting jobs and projects.
+                </p>
+                <Button variant="link" asChild className="mt-4">
+                  <Link href="/contracts" className="flex items-center">
+                    Learn more <ArrowRight className="ml-1 h-4 w-4" />
+                  </Link>
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </section>
+
+      {/* Featured Properties */}
+      <section className="bg-slate-50 py-16 md:py-24">
+        <div className="container">
+          <div className="flex justify-between items-center mb-10">
+            <h2 className="text-3xl font-bold">Featured Properties</h2>
+            <Button asChild>
+              <Link href="/marketplace">View All</Link>
+            </Button>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[1, 2, 3].map((i) => (
+              <Card key={i} className="overflow-hidden">
+                <div className="relative h-48">
+                  <Image
+                    src={`/placeholder.svg?height=400&width=600&text=Property+${i}`}
+                    alt={`Property ${i}`}
+                    fill
+                    className="object-cover"
+                  />
+                  <Badge className="absolute top-2 right-2 bg-primary">For Sale</Badge>
+                </div>
+                <CardContent className="p-4">
+                  <div className="flex justify-between items-start mb-2">
+                    <h3 className="text-lg font-semibold">Modern Family Home</h3>
+                    <p className="font-bold text-primary">$425,000</p>
+                  </div>
+                  <div className="flex items-center text-muted-foreground text-sm mb-3">
+                    <MapPin className="h-4 w-4 mr-1" />
+                    <span>Phoenix, AZ</span>
+                  </div>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Beautiful 4 bedroom, 3 bathroom home with modern finishes and spacious backyard.
+                  </p>
+                  <div className="flex justify-between">
+                    <div className="flex gap-2">
+                      <Badge variant="outline">4 Beds</Badge>
+                      <Badge variant="outline">3 Baths</Badge>
+                      <Badge variant="outline">2,400 sqft</Badge>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Services Section */}
+      <section className="container py-16 md:py-24">
+        <div className="flex justify-between items-center mb-10">
+          <h2 className="text-3xl font-bold">Popular Services</h2>
+          <Button asChild>
+            <Link href="/services">View All</Link>
           </Button>
         </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {["Title Services", "Home Inspection", "Real Estate Photography", "Renovation"].map((service, i) => (
+            <Card key={i} className="overflow-hidden">
+              <div className="relative h-40">
+                <Image
+                  src={`/placeholder.svg?height=300&width=400&text=${service.replace(" ", "+")}`}
+                  alt={service}
+                  fill
+                  className="object-cover"
+                />
+              </div>
+              <CardContent className="p-4">
+                <h3 className="text-lg font-semibold mb-2">{service}</h3>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Professional {service.toLowerCase()} from verified providers.
+                </p>
+                <Button size="sm" variant="outline" className="w-full" asChild>
+                  <Link href={`/services?category=${service.toLowerCase().replace(" ", "-")}`}>Find Providers</Link>
+                </Button>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
       </section>
 
-      <footer className="bg-muted py-12">
-        <div className="container mx-auto px-4">
-          <div className="grid gap-8 md:grid-cols-4">
+      {/* CTA Section */}
+      <section className="bg-primary text-primary-foreground py-16 md:py-24">
+        <div className="container">
+          <div className="max-w-3xl mx-auto text-center">
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">Ready to Get Started?</h2>
+            <p className="text-lg mb-8 text-primary-foreground/90">
+              Join thousands of users who are streamlining their real estate transactions with our platform.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Button size="lg" variant="secondary" asChild>
+                <Link href="/marketplace">Browse Properties</Link>
+              </Button>
+              <Button size="lg" variant="outline" asChild>
+                <Link href="/profile/create">Create Account</Link>
+              </Button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="bg-slate-900 text-slate-200 py-12">
+        <div className="container">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             <div>
-              <Link href="/" className="flex items-center gap-2 mb-4">
-                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary">
-                  <span className="text-lg font-bold text-primary-foreground">5</span>
-                </div>
-                <span className="text-xl font-bold">5Sense</span>
-              </Link>
-              <p className="text-sm text-muted-foreground">
-                Your all-in-one platform for services, products, and investments in future resource centers.
+              <h3 className="font-bold text-xl mb-4">HomesBH</h3>
+              <p className="text-slate-400 mb-4">
+                Streamlining real estate transactions for buyers, sellers, and service providers.
               </p>
             </div>
             <div>
-              <h3 className="text-sm font-semibold mb-4">Platform</h3>
+              <h4 className="font-semibold mb-4">Platform</h4>
               <ul className="space-y-2">
                 <li>
-                  <Link href="/about" className="text-sm text-muted-foreground hover:text-primary">
+                  <Link href="/progress" className="text-slate-400 hover:text-white">
+                    Transaction Progress
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/services" className="text-slate-400 hover:text-white">
+                    Third Party Services
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/marketplace" className="text-slate-400 hover:text-white">
+                    Marketplace
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/calendar" className="text-slate-400 hover:text-white">
+                    Calendar
+                  </Link>
+                </li>
+              </ul>
+            </div>
+            <div>
+              <h4 className="font-semibold mb-4">Company</h4>
+              <ul className="space-y-2">
+                <li>
+                  <Link href="/about" className="text-slate-400 hover:text-white">
                     About Us
                   </Link>
                 </li>
                 <li>
-                  <Link href="#services" className="text-sm text-muted-foreground hover:text-primary">
-                    Services
+                  <Link href="/contact" className="text-slate-400 hover:text-white">
+                    Contact
                   </Link>
                 </li>
                 <li>
-                  <Link href="#products" className="text-sm text-muted-foreground hover:text-primary">
-                    Products
+                  <Link href="/careers" className="text-slate-400 hover:text-white">
+                    Careers
                   </Link>
                 </li>
                 <li>
-                  <Link href="#invest" className="text-sm text-muted-foreground hover:text-primary">
-                    Invest
+                  <Link href="/blog" className="text-slate-400 hover:text-white">
+                    Blog
                   </Link>
                 </li>
               </ul>
             </div>
             <div>
-              <h3 className="text-sm font-semibold mb-4">Legal</h3>
+              <h4 className="font-semibold mb-4">Legal</h4>
               <ul className="space-y-2">
                 <li>
-                  <Link href="#" className="text-sm text-muted-foreground hover:text-primary">
+                  <Link href="/terms" className="text-slate-400 hover:text-white">
                     Terms of Service
                   </Link>
                 </li>
                 <li>
-                  <Link href="#" className="text-sm text-muted-foreground hover:text-primary">
+                  <Link href="/privacy" className="text-slate-400 hover:text-white">
                     Privacy Policy
-                  </Link>
-                </li>
-                <li>
-                  <Link href="#" className="text-sm text-muted-foreground hover:text-primary">
-                    Cookie Policy
-                  </Link>
-                </li>
-              </ul>
-            </div>
-            <div>
-              <h3 className="text-sm font-semibold mb-4">Contact</h3>
-              <ul className="space-y-2">
-                <li>
-                  <Link href="#" className="text-sm text-muted-foreground hover:text-primary">
-                    Support
-                  </Link>
-                </li>
-                <li>
-                  <Link href="#" className="text-sm text-muted-foreground hover:text-primary">
-                    Sales
-                  </Link>
-                </li>
-                <li>
-                  <Link href="#" className="text-sm text-muted-foreground hover:text-primary">
-                    Partnerships
                   </Link>
                 </li>
               </ul>
             </div>
           </div>
-          <div className="border-t mt-12 pt-8 flex flex-col md:flex-row items-center justify-between">
-            <p className="text-sm text-muted-foreground">© 2025 5Sense. All rights reserved.</p>
-            <div className="flex items-center gap-4 mt-4 md:mt-0">
-              <Link href="#" className="text-muted-foreground hover:text-primary">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="24"
-                  height="24"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  className="h-5 w-5"
-                >
-                  <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" />
-                </svg>
-                <span className="sr-only">Facebook</span>
-              </Link>
-              <Link href="#" className="text-muted-foreground hover:text-primary">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="24"
-                  height="24"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  className="h-5 w-5"
-                >
-                  <rect width="20" height="20" x="2" y="2" rx="5" ry="5" />
-                  <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
-                  <line x1="17.5" x2="17.51" y1="6.5" y2="6.5" />
-                </svg>
-                <span className="sr-only">Instagram</span>
-              </Link>
-              <Link href="#" className="text-muted-foreground hover:text-primary">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="24"
-                  height="24"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  className="h-5 w-5"
-                >
-                  <path d="M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.6 5.6 4.1 9 4-.9-4.2 4-6.6 7-3.8 1.1 0 3-1.2 3-1.2z" />
-                </svg>
-                <span className="sr-only">Twitter</span>
-              </Link>
-            </div>
+          <div className="border-t border-slate-800 mt-8 pt-8 text-center text-slate-400">
+            <p>&copy; {new Date().getFullYear()} Homes in Better Hands. All rights reserved.</p>
           </div>
         </div>
       </footer>

@@ -1,0 +1,51 @@
+{
+  "version": 2,
+  "buildCommand": "npm install --no-optional && npm run build",
+  "installCommand": "npm install --no-optional",
+  "framework": "nextjs",
+  "regions": ["iad1"],
+  "outputDirectory": ".next",
+  "env": {
+    "NEXTAUTH_URL": {
+      "description": "URL of your website (in production)",
+      "required": true
+    },
+    "NEXTAUTH_SECRET": {
+      "description": "Secret used for NextAuth.js JWT encryption",
+      "required": true
+    },
+    "NODE_ENV": "production"
+  },
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
+        },
+        {
+          "key": "X-XSS-Protection",
+          "value": "1; mode=block"
+        }
+      ]
+    }
+  ],
+  "crons": [
+    {
+      "path": "/api/cron/cleanup-sessions",
+      "schedule": "0 0 * * *"
+    },
+    {
+      "path": "/api/cron/send-reminders",
+      "schedule": "0 9 * * *"
+    }
+  ],
+  "github": {
+    "silent": true
+  }
+}
