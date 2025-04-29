@@ -1,58 +1,99 @@
 "use client"
 
 import type React from "react"
+import { createContext, useContext, useState, useEffect } from "react"
 
-import { createContext, useContext, useEffect, useState } from "react"
-import { useSession, signOut } from "next-auth/react"
-
-type User = {
+interface User {
   id: string
-  name?: string | null
-  email?: string | null
-  image?: string | null
-  role: string
+  name: string
+  email: string
+  image?: string
 }
 
-type AuthContextType = {
+interface AuthContextType {
   user: User | null
-  isLoading: boolean
-  isAuthenticated: boolean
-  signOut: () => Promise<void>
+  loading: boolean
+  login: (email: string, password: string) => Promise<void>
+  logout: () => Promise<void>
+  signup: (name: string, email: string, password: string) => Promise<void>
 }
 
-const AuthContext = createContext<AuthContextType>({
-  user: null,
-  isLoading: true,
-  isAuthenticated: false,
-  signOut: async () => {},
-})
+const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
-export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
-  const { data: session, status } = useSession()
+export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    if (session?.user) {
-      setUser({
-        id: session.user.id,
-        name: session.user.name,
-        email: session.user.email,
-        image: session.user.image,
-        role: session.user.role || "USER",
-      })
-    } else {
-      setUser(null)
+    // Check if user is logged in
+    const checkAuth = async () => {
+      try {
+        // Simulate auth check
+        const storedUser = localStorage.getItem("user")
+        if (storedUser) {
+          setUser(JSON.parse(storedUser))
+        }
+      } catch (error) {
+        console.error("Auth check failed:", error)
+      } finally {
+        setLoading(false)
+      }
     }
-  }, [session])
 
-  const value = {
-    user,
-    isLoading: status === "loading",
-    isAuthenticated: !!user,
-    signOut,
+    checkAuth()
+  }, [])
+
+  const login = async (email: string, password: string) => {
+    setLoading(true)
+    try {
+      // Simulate login
+      const user = { id: "1", name: "Test User", email }
+      localStorage.setItem("user", JSON.stringify(user))
+      setUser(user)
+    } catch (error) {
+      console.error("Login failed:", error)
+      throw error
+    } finally {
+      setLoading(false)
+    }
   }
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
+  const logout = async () => {
+    setLoading(true)
+    try {
+      // Simulate logout
+      localStorage.removeItem("user")
+      setUser(null)
+    } catch (error) {
+      console.error("Logout failed:", error)
+      throw error
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const signup = async (name: string, email: string, password: string) => {
+    setLoading(true)
+    try {
+      // Simulate signup
+      const user = { id: "1", name, email }
+      localStorage.setItem("user", JSON.stringify(user))
+      setUser(user)
+    } catch (error) {
+      console.error("Signup failed:", error)
+      throw error
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return <AuthContext.Provider value={{ user, loading, login, logout, signup }}>{children}</AuthContext.Provider>
 }
 
-export const useAuth = () => useContext(AuthContext)
+export function useAuth() {
+  const context = useContext(AuthContext)
+  if (context === undefined) {
+    throw new Error("useAuth must be used within an AuthProvider")
+  }
+  return context
+}
