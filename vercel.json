@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "buildCommand": "bash .vercel/build.sh",
+  "buildCommand": "npx pnpm install --no-optional && npx prisma generate && npx pnpm run build",
   "framework": "nextjs",
   "regions": ["iad1"],
   "outputDirectory": ".next",
