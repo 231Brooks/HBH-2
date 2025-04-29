@@ -3,28 +3,21 @@ import prisma from "@/lib/prisma"
 
 export async function GET() {
   try {
-    // Get real activities from the database
-    const activities = await prisma.activity.findMany({
-      take: 10,
-      orderBy: {
-        timestamp: "desc",
-      },
-      include: {
-        user: true,
-      },
-    })
+    // Simple query to test the connection
+    const result = await prisma.$queryRaw`SELECT 1 as connected`
 
     return NextResponse.json({
       status: "success",
-      activities,
+      message: "Database connection successful",
+      result,
     })
   } catch (error) {
-    console.error("Error fetching activities:", error)
+    console.error("Database connection error:", error)
 
     return NextResponse.json(
       {
         status: "error",
-        message: "Failed to fetch activities",
+        message: "Database connection failed",
         error: error instanceof Error ? error.message : String(error),
       },
       { status: 500 },

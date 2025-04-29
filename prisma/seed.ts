@@ -4,6 +4,18 @@ import bcrypt from "bcryptjs"
 const prisma = new PrismaClient()
 
 async function main() {
+  // Create a test user
+  const user = await prisma.user.upsert({
+    where: { email: "test@example.com" },
+    update: {},
+    create: {
+      email: "test@example.com",
+      name: "Test User",
+    },
+  })
+
+  console.log({ user })
+
   console.log("Starting database seeding...")
 
   // Create admin user
