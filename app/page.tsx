@@ -1,73 +1,46 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import ActivityFeed from "@/components/activity-feed"
+import Link from "next/link"
 
 export default function Home() {
   return (
-    <div className="space-y-8">
-      <section className="text-center py-12">
-        <h1 className="text-4xl font-bold mb-4">Welcome to Homes Better Hands</h1>
-        <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-          Your complete real estate platform for managing properties, transactions, and services.
-        </p>
-      </section>
+    <main className="flex min-h-screen flex-col items-center justify-center p-24">
+      <div className="z-10 max-w-5xl w-full items-center justify-center font-mono text-sm">
+        <h1 className="text-4xl font-bold mb-8 text-center">Homes Better Hands</h1>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Recent Activities</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ActivityFeed />
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Quick Links</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ul className="space-y-2">
-              <li>
-                <a href="/progress" className="text-blue-600 hover:underline">
-                  View Transactions
-                </a>
-              </li>
-              <li>
-                <a href="/marketplace" className="text-blue-600 hover:underline">
-                  Browse Properties
-                </a>
-              </li>
-              <li>
-                <a href="/services" className="text-blue-600 hover:underline">
-                  Find Services
-                </a>
-              </li>
-            </ul>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Platform Stats</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              <div className="flex justify-between">
-                <span>Active Properties:</span>
-                <span className="font-bold">245</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Service Providers:</span>
-                <span className="font-bold">128</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Completed Transactions:</span>
-                <span className="font-bold">1,892</span>
-              </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
+          <div className="bg-white p-6 rounded-lg shadow-md">
+            <h2 className="text-2xl font-semibold mb-4">Welcome to Our Platform</h2>
+            <p className="mb-4">Your one-stop solution for real estate transactions, services, and marketplace.</p>
+            <div className="flex justify-center">
+              <Link href="/api/db-test" className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded">
+                Test Database Connection
+              </Link>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+
+          <div className="bg-white p-6 rounded-lg shadow-md">
+            <h2 className="text-2xl font-semibold mb-4">Main Features</h2>
+            <ul className="list-disc pl-5 space-y-2">
+              <li>Progress tracking for transactions</li>
+              <li>Service marketplace for professionals</li>
+              <li>Property listings and management</li>
+              <li>Calendar integration for appointments</li>
+              <li>User profiles and messaging</li>
+            </ul>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {["Progress", "Services", "Marketplace", "Calendar", "Profile"].map((section) => (
+            <Link
+              key={section}
+              href={`/${section.toLowerCase()}`}
+              className="bg-gray-100 hover:bg-gray-200 p-4 rounded-lg text-center"
+            >
+              {section}
+            </Link>
+          ))}
+        </div>
       </div>
-    </div>
+    </main>
   )
 }

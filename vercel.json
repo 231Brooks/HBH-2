@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "buildCommand": "npm run build",
+  "buildCommand": "npx prisma generate && npm run build",
   "framework": "nextjs",
   "regions": ["iad1"],
   "outputDirectory": ".next",

@@ -3,13 +3,14 @@ import prisma from "@/lib/prisma"
 
 export async function GET() {
   try {
-    // Simple query to test the connection
-    const result = await prisma.$queryRaw`SELECT 1 as connected`
+    // Try a simple query to test the database connection
+    const userCount = await prisma.user.count()
 
     return NextResponse.json({
       status: "success",
       message: "Database connection successful",
-      result,
+      userCount,
+      timestamp: new Date().toISOString(),
     })
   } catch (error) {
     console.error("Database connection error:", error)
@@ -19,6 +20,7 @@ export async function GET() {
         status: "error",
         message: "Database connection failed",
         error: error instanceof Error ? error.message : String(error),
+        timestamp: new Date().toISOString(),
       },
       { status: 500 },
     )
