@@ -5,17 +5,6 @@
   "framework": "nextjs",
   "regions": ["iad1"],
   "outputDirectory": ".next",
-  "env": {
-    "NEXTAUTH_URL": {
-      "description": "URL of your website (in production)",
-      "required": true
-    },
-    "NEXTAUTH_SECRET": {
-      "description": "Secret used for NextAuth.js JWT encryption",
-      "required": true
-    },
-    "NODE_ENV": "production"
-  },
   "headers": [
     {
       "source": "/(.*)",
