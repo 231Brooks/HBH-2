@@ -1,7 +1,7 @@
 {
   "version": 2,
-  "buildCommand": "npm install --no-optional && npx prisma generate && next build",
-  "installCommand": "npm install --no-optional",
+  "buildCommand": "npm run build",
+  "installCommand": "npm install --omit=optional",
   "framework": "nextjs",
   "regions": ["iad1"],
   "outputDirectory": ".next",
