@@ -1,51 +1,77 @@
 "use client"
+
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
 interface Activity {
   id: string
+  type: string
   title: string
   description: string
   timestamp: string
-  type: string
+  userId: string
 }
 
 interface ActivityFeedProps {
-  activities?: Activity[]
-  loading?: boolean
+  userId?: string
+  limit?: number
 }
 
-export default function ActivityFeed({ activities = [], loading = false }: ActivityFeedProps) {
+export default function ActivityFeed({ userId, limit = 5 }: ActivityFeedProps) {
+  const [activities, setActivities] = useState<Activity[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchActivities = async () => {
+      try {
+        // In a real app, you would fetch from an API
+        // For now, we'll use mock data
+        const mockActivities: Activity[] = [
+          {
+            id: "1",
+            type: "transaction",
+            title: "New Transaction Created",
+            description: "You created a new transaction for property at 123 Main St.",
+            timestamp: new Date().toISOString(),
+            userId: "1",
+          },
+          {
+            id: "2",
+            type: "property",
+            title: "Property Listed",
+            description: "You listed a new property at 456 Oak Ave.",
+            timestamp: new Date(Date.now() - 86400000).toISOString(),
+            userId: "1",
+          },
+          {
+            id: "3",
+            type: "message",
+            title: "New Message",
+            description: "You received a new message from John Doe.",
+            timestamp: new Date(Date.now() - 172800000).toISOString(),
+            userId: "1",
+          },
+        ]
+
+        setActivities(mockActivities.slice(0, limit))
+      } catch (error) {
+        console.error("Error fetching activities:", error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchActivities()
+  }, [userId, limit])
+
   if (loading) {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Activity Feed</CardTitle>
+          <CardTitle>Recent Activity</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="flex items-start space-x-4">
-                <div className="h-10 w-10 rounded-full bg-gray-200 animate-pulse"></div>
-                <div className="space-y-2 flex-1">
-                  <div className="h-4 bg-gray-200 rounded animate-pulse w-3/4"></div>
-                  <div className="h-4 bg-gray-200 rounded animate-pulse w-full"></div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-    )
-  }
-
-  if (activities.length === 0) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Activity Feed</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-center text-muted-foreground py-6">No recent activity</p>
+          <p>Loading activities...</p>
         </CardContent>
       </Card>
     )
@@ -54,29 +80,22 @@ export default function ActivityFeed({ activities = [], loading = false }: Activ
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Activity Feed</CardTitle>
+        <CardTitle>Recent Activity</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="space-y-4">
-          {activities.map((activity) => (
-            <div key={activity.id} className="flex items-start space-x-4">
-              <div className="h-10 w-10 rounded-full bg-primary flex items-center justify-center text-primary-foreground">
-                {activity.type === "message"
-                  ? "M"
-                  : activity.type === "transaction"
-                    ? "T"
-                    : activity.type === "property"
-                      ? "P"
-                      : "A"}
+        {activities.length === 0 ? (
+          <p>No recent activity.</p>
+        ) : (
+          <div className="space-y-4">
+            {activities.map((activity) => (
+              <div key={activity.id} className="border-b pb-3 last:border-0">
+                <h4 className="font-medium">{activity.title}</h4>
+                <p className="text-sm text-gray-500">{activity.description}</p>
+                <p className="text-xs text-gray-400 mt-1">{new Date(activity.timestamp).toLocaleString()}</p>
               </div>
-              <div>
-                <p className="font-medium">{activity.title}</p>
-                <p className="text-sm text-muted-foreground">{activity.description}</p>
-                <p className="text-xs text-muted-foreground mt-1">{activity.timestamp}</p>
-              </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </CardContent>
     </Card>
   )
