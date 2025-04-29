@@ -1,93 +1,71 @@
 "use client"
 
-import type React from "react"
-import { createContext, useContext, useState, useEffect } from "react"
+import { createContext, useContext, useState, type ReactNode } from "react"
 
 interface User {
   id: string
-  name?: string
-  email?: string
+  name: string
+  email: string
   image?: string
 }
 
 interface AuthContextType {
   user: User | null
   loading: boolean
-  login: (email: string, password: string) => Promise<void>
-  logout: () => Promise<void>
-  signup: (email: string, password: string, name: string) => Promise<void>
+  login: (email: string, password: string) => Promise<boolean>
+  logout: () => void
+  register: (name: string, email: string, password: string) => Promise<boolean>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
-export function AuthProvider({ children }: { children: React.ReactNode }) {
+export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    // Check if user is logged in
-    const checkAuth = async () => {
-      try {
-        // In a real app, you would fetch the session
-        const storedUser = localStorage.getItem("user")
-        if (storedUser) {
-          setUser(JSON.parse(storedUser))
-        }
-      } catch (error) {
-        console.error("Authentication error:", error)
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    checkAuth()
-  }, [])
+  const [loading, setLoading] = useState(false)
 
   const login = async (email: string, password: string) => {
     setLoading(true)
     try {
-      // In a real app, you would make an API call
-      const mockUser = { id: "1", name: "Test User", email }
-      setUser(mockUser)
-      localStorage.setItem("user", JSON.stringify(mockUser))
+      // Mock successful login
+      setUser({
+        id: "user-1",
+        name: "Demo User",
+        email: email,
+        image: "/placeholder.jpg",
+      })
+      return true
     } catch (error) {
       console.error("Login error:", error)
-      throw error
+      return false
     } finally {
       setLoading(false)
     }
   }
 
-  const logout = async () => {
+  const logout = () => {
+    setUser(null)
+  }
+
+  const register = async (name: string, email: string, password: string) => {
     setLoading(true)
     try {
-      // In a real app, you would make an API call
-      setUser(null)
-      localStorage.removeItem("user")
+      // Mock successful registration
+      setUser({
+        id: "user-" + Date.now(),
+        name,
+        email,
+        image: "/placeholder.jpg",
+      })
+      return true
     } catch (error) {
-      console.error("Logout error:", error)
-      throw error
+      console.error("Registration error:", error)
+      return false
     } finally {
       setLoading(false)
     }
   }
 
-  const signup = async (email: string, password: string, name: string) => {
-    setLoading(true)
-    try {
-      // In a real app, you would make an API call
-      const mockUser = { id: "1", name, email }
-      setUser(mockUser)
-      localStorage.setItem("user", JSON.stringify(mockUser))
-    } catch (error) {
-      console.error("Signup error:", error)
-      throw error
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  return <AuthContext.Provider value={{ user, loading, login, logout, signup }}>{children}</AuthContext.Provider>
+  return <AuthContext.Provider value={{ user, loading, login, logout, register }}>{children}</AuthContext.Provider>
 }
 
 export function useAuth() {
@@ -97,5 +75,3 @@ export function useAuth() {
   }
   return context
 }
-
-export default AuthContext

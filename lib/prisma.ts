@@ -2,14 +2,14 @@ import { PrismaClient } from "@prisma/client"
 import { neonConfig } from "@neondatabase/serverless"
 import { Pool } from "@neondatabase/serverless"
 
-// This prevents multiple instances of Prisma Client in development
-declare global {
-  var prisma: PrismaClient | undefined
-}
-
 // Configure Neon for serverless environments
 if (process.env.NODE_ENV === "production") {
   neonConfig.fetchConnectionCache = true
+}
+
+// This prevents multiple instances of Prisma Client in development
+declare global {
+  var prisma: PrismaClient | undefined
 }
 
 // Function to create a new PrismaClient instance with error handling

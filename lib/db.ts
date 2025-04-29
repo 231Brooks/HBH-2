@@ -1,31 +1,14 @@
-import { neon, neonConfig } from "@neondatabase/serverless"
-import { PrismaNeon } from "@prisma/adapter-neon"
-import { PrismaClient } from "@prisma/client"
-import { logger } from "./logger"
+import { neon } from "@neondatabase/serverless"
 
-// Configure neon to use fetch
-neonConfig.fetchConnectionCache = true
+// Create SQL client
+export const sql = neon(process.env.DATABASE_URL || "")
 
-// Create a singleton PrismaClient instance
-let prisma: PrismaClient
-
-if (process.env.NODE_ENV === "production") {
-  // In production, use the Neon serverless driver
-  const connectionString = process.env.DATABASE_URL!
-  const sql = neon(connectionString)
-
-  prisma = new PrismaClient({
-    adapter: new PrismaNeon(sql),
-  })
-
-  logger.info("Using Neon serverless driver for database connection")
-} else {
-  // In development, use the default Prisma client
-  if (!global.prisma) {
-    global.prisma = new PrismaClient()
-    logger.info("Created new PrismaClient instance")
+// Helper function to execute SQL queries with error handling
+export async function executeQuery(query: string, params: any[] = []) {
+  try {
+    return await sql(query, params)
+  } catch (error) {
+    console.error("Database query error:", error)
+    throw error
   }
-  prisma = global.prisma
 }
-
-export default prisma
