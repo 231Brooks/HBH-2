@@ -1,7 +1,6 @@
 {
   "version": 2,
-  "buildCommand": "npm run build",
-  "installCommand": "npm install --omit=optional",
+  "buildCommand": "bash .vercel/build.sh",
   "framework": "nextjs",
   "regions": ["iad1"],
   "outputDirectory": ".next",
