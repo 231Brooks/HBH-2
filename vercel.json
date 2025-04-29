@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "buildCommand": "bash .vercel/build.sh",
+  "buildCommand": "npm install --no-optional && npx prisma generate && next build",
   "installCommand": "npm install --no-optional",
   "framework": "nextjs",
   "regions": ["iad1"],
