@@ -1,6 +1,7 @@
 import type React from "react"
 import "./globals.css"
 import type { Metadata } from "next"
+import { Providers } from "./providers"
 
 export const metadata: Metadata = {
   title: "Homes Better Hands",
@@ -15,7 +16,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className="bg-gray-50">{children}</body>
+      <body className="bg-gray-50">
+        <Providers>{children}</Providers>
+      </body>
     </html>
   )
 }
