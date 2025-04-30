@@ -4,11 +4,12 @@ import { useState, useEffect, useRef } from "react"
 import { createClient } from "@supabase/supabase-js"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Send, Loader2 } from "lucide-react"
 import { getCachedData, cacheData } from "@/lib/redis"
+import { UserAvatarWithPresence } from "./user-avatar-with-presence"
+import { useGetPresence } from "@/lib/presence"
 
 type Message = {
   id: string
@@ -25,8 +26,21 @@ type RealTimeChatProps = {
   currentUserId: string
   currentUserName: string
   currentUserAvatar?: string
+  otherUserId: string
   otherUserName: string
   otherUserAvatar?: string
+}
+
+// Get Supabase client (client-side only)
+const getSupabaseClient = () => {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+
+  if (!supabaseUrl || !supabaseAnonKey) {
+    throw new Error("Supabase URL and anon key must be defined")
+  }
+
+  return createClient(supabaseUrl, supabaseAnonKey)
 }
 
 export default function RealTimeChat({
@@ -34,6 +48,7 @@ export default function RealTimeChat({
   currentUserId,
   currentUserName,
   currentUserAvatar,
+  otherUserId,
   otherUserName,
   otherUserAvatar,
 }: RealTimeChatProps) {
@@ -45,22 +60,14 @@ export default function RealTimeChat({
   const [isTyping, setIsTyping] = useState(false)
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
+  // Get presence data for the conversation
+  const { isUserOnline } = useGetPresence(`chat:${conversationId}`)
+  const isOtherUserOnline = isUserOnline(otherUserId)
+
   // Scroll to bottom when messages change
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
   }, [messages])
-
-  // Get Supabase client (client-side only)
-  const getSupabaseClient = () => {
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-
-    if (!supabaseUrl || !supabaseAnonKey) {
-      throw new Error("Supabase URL and anon key must be defined")
-    }
-
-    return createClient(supabaseUrl, supabaseAnonKey)
-  }
 
   // Load initial messages and set up realtime subscription
   useEffect(() => {
@@ -138,15 +145,34 @@ export default function RealTimeChat({
           }, 2000)
         }
       })
-      .subscribe()
+      .subscribe(async (status) => {
+        if (status === "SUBSCRIBED") {
+          // Track presence for the current user
+          await subscription.track({
+            user_id: currentUserId,
+            status: "online",
+            last_seen: new Date().toISOString(),
+          })
+        }
+      })
+
+    // Set up heartbeat to keep presence active
+    const heartbeatInterval = setInterval(async () => {
+      await subscription.track({
+        user_id: currentUserId,
+        status: "online",
+        last_seen: new Date().toISOString(),
+      })
+    }, 30000) // Update every 30 seconds
 
     return () => {
+      clearInterval(heartbeatInterval)
       subscription.unsubscribe()
       if (typingTimeoutRef.current) {
         clearTimeout(typingTimeoutRef.current)
       }
     }
-  }, [conversationId, currentUserId])
+  }, [conversationId, currentUserId, otherUserId])
 
   // Handle sending a new message
   const handleSendMessage = async () => {
@@ -194,11 +220,16 @@ export default function RealTimeChat({
     <Card className="w-full h-[600px] flex flex-col">
       <CardHeader className="pb-3">
         <CardTitle className="flex items-center gap-2">
-          <Avatar className="h-8 w-8">
-            <AvatarImage src={otherUserAvatar || "/placeholder.svg"} />
-            <AvatarFallback>{otherUserName[0]}</AvatarFallback>
-          </Avatar>
-          <span>{otherUserName}</span>
+          <UserAvatarWithPresence
+            userId={otherUserId}
+            userName={otherUserName}
+            userAvatar={otherUserAvatar}
+            size="sm"
+          />
+          <div className="flex flex-col">
+            <span>{otherUserName}</span>
+            <span className="text-xs text-muted-foreground">{isOtherUserOnline ? "Online" : "Offline"}</span>
+          </div>
         </CardTitle>
       </CardHeader>
       <CardContent className="flex-1 overflow-hidden p-0">
@@ -220,10 +251,12 @@ export default function RealTimeChat({
                 >
                   <div className="flex gap-2 max-w-[80%]">
                     {message.user_id !== currentUserId && (
-                      <Avatar className="h-8 w-8">
-                        <AvatarImage src={message.user_avatar || otherUserAvatar} />
-                        <AvatarFallback>{message.user_name[0]}</AvatarFallback>
-                      </Avatar>
+                      <UserAvatarWithPresence
+                        userId={message.user_id}
+                        userName={message.user_name}
+                        userAvatar={message.user_avatar || otherUserAvatar}
+                        size="sm"
+                      />
                     )}
                     <div
                       className={`rounded-lg p-3 ${
@@ -243,10 +276,12 @@ export default function RealTimeChat({
                       </p>
                     </div>
                     {message.user_id === currentUserId && (
-                      <Avatar className="h-8 w-8">
-                        <AvatarImage src={currentUserAvatar || "/placeholder.svg"} />
-                        <AvatarFallback>{currentUserName[0]}</AvatarFallback>
-                      </Avatar>
+                      <UserAvatarWithPresence
+                        userId={currentUserId}
+                        userName={currentUserName}
+                        userAvatar={currentUserAvatar}
+                        size="sm"
+                      />
                     )}
                   </div>
                 </div>
@@ -254,10 +289,12 @@ export default function RealTimeChat({
               {isTyping && (
                 <div className="flex justify-start">
                   <div className="flex gap-2 max-w-[80%]">
-                    <Avatar className="h-8 w-8">
-                      <AvatarImage src={otherUserAvatar || "/placeholder.svg"} />
-                      <AvatarFallback>{otherUserName[0]}</AvatarFallback>
-                    </Avatar>
+                    <UserAvatarWithPresence
+                      userId={otherUserId}
+                      userName={otherUserName}
+                      userAvatar={otherUserAvatar}
+                      size="sm"
+                    />
                     <div className="rounded-lg p-3 bg-muted">
                       <div className="flex space-x-1">
                         <div className="h-2 w-2 bg-muted-foreground rounded-full animate-bounce"></div>
