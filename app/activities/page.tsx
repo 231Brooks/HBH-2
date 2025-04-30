@@ -1,5 +1,5 @@
-import ActivitiesClientPage from "./client-page"
+import ClientWrapper from "./client-wrapper"
 
 export default function ActivitiesPage() {
-  return <ActivitiesClientPage />
+  return <ClientWrapper />
 }
