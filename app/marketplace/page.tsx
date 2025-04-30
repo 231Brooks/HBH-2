@@ -27,6 +27,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox"
 import { Slider } from "@/components/ui/slider"
 import PropertyMap from "./components/property-map"
+// Import the CachedMarketplaceItems component
+import { CachedMarketplaceItems } from "./cached-items"
 
 export default function MarketplacePage() {
   const [viewMode, setViewMode] = useState<"grid" | "list" | "map">("grid")
@@ -384,6 +386,10 @@ export default function MarketplacePage() {
           <p className="text-muted-foreground">Showing saved properties</p>
         </TabsContent>
       </Tabs>
+
+      <div className="mt-8">
+        <CachedMarketplaceItems />
+      </div>
     </div>
   )
 }

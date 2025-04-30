@@ -18,6 +18,7 @@ import {
   Settings,
   LogOut,
   BarChart,
+  ServerIcon,
 } from "lucide-react"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { useState, useEffect } from "react"
@@ -30,6 +31,11 @@ const navItems = [
   { name: "Marketplace", href: "/marketplace", icon: <BarChart className="h-5 w-5" /> },
   { name: "Calendar", href: "/calendar", icon: <Calendar className="h-5 w-5" /> },
   { name: "Profile", href: "/profile", icon: <User className="h-5 w-5" /> },
+  {
+    name: "Integration Test",
+    href: "/integration-test",
+    icon: <ServerIcon className="h-5 w-5" />,
+  },
 ]
 
 export default function Navbar() {

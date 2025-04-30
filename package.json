@@ -65,7 +65,11 @@
     "next-auth": "latest",
     "cloudinary": "latest",
     "@auth/prisma-adapter": "latest",
-    "bcryptjs": "latest"
+    "bcryptjs": "latest",
+    "@upstash/redis": "latest",
+    "@supabase/supabase-js": "latest",
+    "fs": "latest",
+    "path": "latest"
   },
   "devDependencies": {
     "@types/node": "^22",
