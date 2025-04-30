@@ -7,11 +7,6 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { getCachedData, cacheData } from "@/lib/redis"
 
-// Create a singleton Supabase client for the browser
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-const supabase = createClient(supabaseUrl, supabaseAnonKey)
-
 type Notification = {
   id: string
   message: string
@@ -30,6 +25,18 @@ export default function RealTimeNotifications({ userId }: RealTimeNotificationsP
   const [showNotifications, setShowNotifications] = useState(false)
   const [unreadCount, setUnreadCount] = useState(0)
 
+  // Get Supabase client (client-side only)
+  const getSupabaseClient = () => {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+
+    if (!supabaseUrl || !supabaseAnonKey) {
+      throw new Error("Supabase URL and anon key must be defined")
+    }
+
+    return createClient(supabaseUrl, supabaseAnonKey)
+  }
+
   // Load notifications and set up realtime subscription
   useEffect(() => {
     const loadNotifications = async () => {
@@ -43,6 +50,7 @@ export default function RealTimeNotifications({ userId }: RealTimeNotificationsP
         }
 
         // Fetch notifications from Supabase
+        const supabase = getSupabaseClient()
         const { data, error } = await supabase
           .from("notifications")
           .select("*")
@@ -69,6 +77,7 @@ export default function RealTimeNotifications({ userId }: RealTimeNotificationsP
     loadNotifications()
 
     // Subscribe to new notifications
+    const supabase = getSupabaseClient()
     const subscription = supabase
       .channel(`notifications:${userId}`)
       .on(
@@ -102,6 +111,7 @@ export default function RealTimeNotifications({ userId }: RealTimeNotificationsP
   // Mark notification as read
   const markAsRead = async (id: string) => {
     try {
+      const supabase = getSupabaseClient()
       const { error } = await supabase.from("notifications").update({ read: true }).eq("id", id)
 
       if (error) {
@@ -127,6 +137,7 @@ export default function RealTimeNotifications({ userId }: RealTimeNotificationsP
   // Mark all notifications as read
   const markAllAsRead = async () => {
     try {
+      const supabase = getSupabaseClient()
       const { error } = await supabase
         .from("notifications")
         .update({ read: true })

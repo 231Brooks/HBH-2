@@ -10,11 +10,6 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { Send, Loader2 } from "lucide-react"
 import { getCachedData, cacheData } from "@/lib/redis"
 
-// Create a singleton Supabase client for the browser
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-const supabase = createClient(supabaseUrl, supabaseAnonKey)
-
 type Message = {
   id: string
   content: string
@@ -55,6 +50,18 @@ export default function RealTimeChat({
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
   }, [messages])
 
+  // Get Supabase client (client-side only)
+  const getSupabaseClient = () => {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+
+    if (!supabaseUrl || !supabaseAnonKey) {
+      throw new Error("Supabase URL and anon key must be defined")
+    }
+
+    return createClient(supabaseUrl, supabaseAnonKey)
+  }
+
   // Load initial messages and set up realtime subscription
   useEffect(() => {
     const loadMessages = async () => {
@@ -70,6 +77,7 @@ export default function RealTimeChat({
         }
 
         // Fetch messages from Supabase
+        const supabase = getSupabaseClient()
         const { data, error } = await supabase
           .from("messages")
           .select("*")
@@ -96,6 +104,7 @@ export default function RealTimeChat({
     loadMessages()
 
     // Subscribe to new messages
+    const supabase = getSupabaseClient()
     const subscription = supabase
       .channel(`messages:${conversationId}`)
       .on(
@@ -155,6 +164,7 @@ export default function RealTimeChat({
         created_at: new Date().toISOString(),
       }
 
+      const supabase = getSupabaseClient()
       const { error } = await supabase.from("messages").insert(newMsg)
 
       if (error) {
@@ -172,6 +182,7 @@ export default function RealTimeChat({
 
   // Handle typing indicator
   const handleTyping = () => {
+    const supabase = getSupabaseClient()
     supabase.channel(`messages:${conversationId}`).send({
       type: "broadcast",
       event: "typing",

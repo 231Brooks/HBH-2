@@ -9,11 +9,6 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Loader2, AlertCircle } from "lucide-react"
 import RealTimeChat from "@/components/real-time-chat"
 
-// Create a singleton Supabase client for the browser
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-const supabase = createClient(supabaseUrl, supabaseAnonKey)
-
 export default function RealtimeChatDemo() {
   const [setupStatus, setSetupStatus] = useState<"idle" | "loading" | "success" | "error">("idle")
   const [error, setError] = useState<string | null>(null)
@@ -33,34 +28,23 @@ export default function RealtimeChatDemo() {
     avatar: "/letter-b-abstract.png",
   }
 
-  // Setup realtime tables
-  const setupRealtimeTables = async () => {
-    setSetupStatus("loading")
-    setError(null)
+  // Get Supabase client (client-side only)
+  const getSupabaseClient = () => {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
-    try {
-      const response = await fetch("/api/setup-realtime-tables", {
-        method: "POST",
-      })
-
-      const data = await response.json()
-
-      if (!response.ok) {
-        throw new Error(data.error || "Failed to set up realtime tables")
-      }
-
-      setSetupStatus("success")
-      setActiveTab("create")
-    } catch (err: any) {
-      console.error("Setup error:", err)
-      setSetupStatus("error")
-      setError(err.message || "An error occurred during setup")
+    if (!supabaseUrl || !supabaseAnonKey) {
+      throw new Error("Supabase URL and anon key must be defined")
     }
+
+    return createClient(supabaseUrl, supabaseAnonKey)
   }
 
   // Create a new conversation
   const createConversation = async () => {
     try {
+      const supabase = getSupabaseClient()
+
       // Create a new conversation
       const { data: conversationData, error: conversationError } = await supabase
         .from("conversations")
@@ -90,6 +74,31 @@ export default function RealtimeChatDemo() {
     } catch (err: any) {
       console.error("Error creating conversation:", err)
       setError(err.message || "Failed to create conversation")
+    }
+  }
+
+  // Setup realtime tables
+  const setupRealtimeTables = async () => {
+    setSetupStatus("loading")
+    setError(null)
+
+    try {
+      const response = await fetch("/api/setup-realtime-tables", {
+        method: "POST",
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to set up realtime tables")
+      }
+
+      setSetupStatus("success")
+      setActiveTab("create")
+    } catch (err: any) {
+      console.error("Setup error:", err)
+      setSetupStatus("error")
+      setError(err.message || "An error occurred during setup")
     }
   }
 
