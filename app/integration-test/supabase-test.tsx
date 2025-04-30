@@ -6,11 +6,6 @@ import { Button } from "@/components/ui/button"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { CheckCircle, XCircle, Loader2 } from "lucide-react"
 
-// Create a singleton Supabase client for the browser
-const supabaseUrl = process.env.SUPABASE_NEXT_PUBLIC_SUPABASE_URL!
-const supabaseAnonKey = proSUPABASE_NEXT_PUBLIC_SUPABASE_ANON_KEY_ANON_KEY!
-const supabase = createClient(supabaseUrl, supabaseAnonKey)
-
 export function SupabaseTest() {
   const [connectionStatus, setConnectionStatus] = useState<"idle" | "loading" | "success" | "error">("idle")
   const [tableStatus, setTableStatus] = useState<"idle" | "loading" | "success" | "error">("idle")
@@ -21,12 +16,33 @@ export function SupabaseTest() {
   const [existingTables, setExistingTables] = useState<string[]>([])
   const [error, setError] = useState<string | null>(null)
 
+  // Initialize Supabase client only when needed
+  const getSupabaseClient = () => {
+    try {
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+      const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+
+      if (!supabaseUrl || !supabaseAnonKey) {
+        throw new Error("Supabase URL or Anon Key is not defined")
+      }
+
+      return createClient(supabaseUrl, supabaseAnonKey)
+    } catch (err: any) {
+      console.error("Failed to initialize Supabase client:", err)
+      setError(err.message || "Failed to initialize Supabase client")
+      return null
+    }
+  }
+
   // Test Supabase connection
   const testConnection = async () => {
     setConnectionStatus("loading")
     setError(null)
 
     try {
+      const supabase = getSupabaseClient()
+      if (!supabase) throw new Error("Failed to initialize Supabase client")
+
       const { data, error } = await supabase.auth.getSession()
 
       // Even if we don't have a session, we can still connect to Supabase
@@ -44,6 +60,9 @@ export function SupabaseTest() {
     setError(null)
 
     try {
+      const supabase = getSupabaseClient()
+      if (!supabase) throw new Error("Failed to initialize Supabase client")
+
       // Call the function we created
       const { error } = await supabase.rpc("create_test_table")
 
@@ -61,13 +80,19 @@ export function SupabaseTest() {
   const checkExistingTables = async () => {
     setExistingTablesStatus("loading")
     setError(null)
+    setExistingTables([])
 
     try {
+      const supabase = getSupabaseClient()
+      if (!supabase) throw new Error("Failed to initialize Supabase client")
+
       // Query for existing tables
       const { data, error } = await supabase.from("MarketplaceItem").select("id").limit(1)
 
       // We're just checking if we can access the table
-      setExistingTables((prev) => [...prev, "MarketplaceItem"])
+      if (!error) {
+        setExistingTables((prev) => [...prev, "MarketplaceItem"])
+      }
 
       // Check Bid table
       const bidResult = await supabase.from("Bid").select("id").limit(1)
@@ -97,6 +122,9 @@ export function SupabaseTest() {
     setError(null)
 
     try {
+      const supabase = getSupabaseClient()
+      if (!supabase) throw new Error("Failed to initialize Supabase client")
+
       const testItem = {
         name: "Test Item",
         description: "This is a test item",
@@ -121,6 +149,9 @@ export function SupabaseTest() {
     setError(null)
 
     try {
+      const supabase = getSupabaseClient()
+      if (!supabase) throw new Error("Failed to initialize Supabase client")
+
       const { data, error } = await supabase
         .from("integration_test")
         .select("*")

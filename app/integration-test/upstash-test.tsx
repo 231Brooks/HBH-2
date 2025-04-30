@@ -17,6 +17,10 @@ export function UpstashTest() {
   // Initialize Redis client
   const getRedisClient = () => {
     try {
+      if (typeof window === "undefined") {
+        throw new Error("Redis client can only be initialized on the client side")
+      }
+
       return Redis.fromEnv()
     } catch (err: any) {
       console.error("Redis client initialization error:", err)

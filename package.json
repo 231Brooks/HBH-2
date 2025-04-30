@@ -66,8 +66,8 @@
     "cloudinary": "latest",
     "@auth/prisma-adapter": "latest",
     "bcryptjs": "latest",
-    "@upstash/redis": "latest",
     "@supabase/supabase-js": "latest",
+    "@upstash/redis": "latest",
     "fs": "latest",
     "path": "latest"
   },
