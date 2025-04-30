@@ -1,6 +1,6 @@
 "use client"
 
-import { createContext, useContext, useState, type ReactNode } from "react"
+import { createContext, useContext, useState, useEffect, type ReactNode } from "react"
 
 interface User {
   id: string
@@ -21,7 +21,32 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(true)
+  const [mounted, setMounted] = useState(false)
+
+  // Handle client-side mounting
+  useEffect(() => {
+    setMounted(true)
+
+    // Check for existing user session
+    const checkSession = async () => {
+      try {
+        // Mock successful login for demo purposes
+        setUser({
+          id: "user-1",
+          name: "Demo User",
+          email: "demo@example.com",
+          image: "/placeholder.jpg",
+        })
+      } catch (error) {
+        console.error("Session check error:", error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    checkSession()
+  }, [])
 
   const login = async (email: string, password: string) => {
     setLoading(true)
@@ -63,6 +88,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } finally {
       setLoading(false)
     }
+  }
+
+  // Don't render anything until mounted on the client
+  if (!mounted) {
+    return null
   }
 
   return <AuthContext.Provider value={{ user, loading, login, logout, register }}>{children}</AuthContext.Provider>
