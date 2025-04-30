@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Input } from "@/components/ui/input"
 import { Search, MessageSquare } from "lucide-react"
+import { Button } from "@/components/ui/button"
 
 export default function ChatClient() {
   const { user } = useAuth()
@@ -55,6 +56,9 @@ export default function ChatClient() {
     return (
       <div className="container py-8 text-center">
         <p>Please sign in to access messages</p>
+        <Button className="mt-4" onClick={() => (window.location.href = "/auth/login")}>
+          Sign In
+        </Button>
       </div>
     )
   }

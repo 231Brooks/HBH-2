@@ -32,12 +32,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const checkSession = async () => {
       try {
         // Mock successful login for demo purposes
-        setUser({
-          id: "user-1",
-          name: "Demo User",
-          email: "demo@example.com",
-          image: "/placeholder.jpg",
-        })
+        // In a real app, you'd check for an existing session
+        const storedUser = localStorage.getItem("user")
+        if (storedUser) {
+          setUser(JSON.parse(storedUser))
+        } else {
+          // For demo purposes, auto-login
+          setUser({
+            id: "user-1",
+            name: "Demo User",
+            email: "demo@example.com",
+            image: "/placeholder.jpg",
+          })
+          localStorage.setItem(
+            "user",
+            JSON.stringify({
+              id: "user-1",
+              name: "Demo User",
+              email: "demo@example.com",
+              image: "/placeholder.jpg",
+            }),
+          )
+        }
       } catch (error) {
         console.error("Session check error:", error)
       } finally {
@@ -52,12 +68,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setLoading(true)
     try {
       // Mock successful login
-      setUser({
+      const newUser = {
         id: "user-1",
         name: "Demo User",
         email: email,
         image: "/placeholder.jpg",
-      })
+      }
+      setUser(newUser)
+      localStorage.setItem("user", JSON.stringify(newUser))
       return true
     } catch (error) {
       console.error("Login error:", error)
@@ -69,18 +87,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = () => {
     setUser(null)
+    localStorage.removeItem("user")
   }
 
   const register = async (name: string, email: string, password: string) => {
     setLoading(true)
     try {
       // Mock successful registration
-      setUser({
+      const newUser = {
         id: "user-" + Date.now(),
         name,
         email,
         image: "/placeholder.jpg",
-      })
+      }
+      setUser(newUser)
+      localStorage.setItem("user", JSON.stringify(newUser))
       return true
     } catch (error) {
       console.error("Registration error:", error)
@@ -92,7 +113,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Don't render anything until mounted on the client
   if (!mounted) {
-    return null
+    return <>{children}</>
   }
 
   return <AuthContext.Provider value={{ user, loading, login, logout, register }}>{children}</AuthContext.Provider>
