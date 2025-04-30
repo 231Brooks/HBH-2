@@ -7,10 +7,22 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button"
 import { Loader2 } from "lucide-react"
 
-// Create a singleton Supabase client for the browser
-const supabaseUrl = process.env.SUPABASE_NEXT_PUBLIC_SUPABASE_URL!
-const supabaseAnonKey = proSUPABASE_NEXT_PUBLIC_SUPABASE_ANON_KEY_ANON_KEY!
-const supabase = createClient(supabaseUrl, supabaseAnonKey)
+// Initialize Supabase client only when needed
+const getSupabaseClient = () => {
+  try {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+
+    if (!supabaseUrl || !supabaseAnonKey) {
+      throw new Error("Supabase URL or Anon Key is not defined")
+    }
+
+    return createClient(supabaseUrl, supabaseAnonKey)
+  } catch (err) {
+    console.error("Failed to initialize Supabase client:", err)
+    return null
+  }
+}
 
 type MarketplaceItem = {
   id: string
@@ -45,6 +57,11 @@ export function CachedMarketplaceItems() {
       }
 
       // If no cache or useCache is false, fetch from Supabase
+      const supabase = getSupabaseClient()
+      if (!supabase) {
+        throw new Error("Failed to initialize Supabase client")
+      }
+
       const { data, error } = await supabase
         .from("MarketplaceItem")
         .select("*")
