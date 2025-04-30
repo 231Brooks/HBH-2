@@ -5,84 +5,69 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
-export function formatCurrency(amount: number | string): string {
-  const numAmount = typeof amount === "string" ? Number.parseFloat(amount) : amount
+export function formatCurrency(amount: number): string {
   return new Intl.NumberFormat("en-US", {
     style: "currency",
     currency: "USD",
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
-  }).format(numAmount)
+  }).format(amount)
 }
 
-export function formatDate(dateString: string): string {
-  return new Date(dateString).toLocaleString("en-US", {
-    year: "numeric",
-    month: "long",
+export function formatDate(date: Date | string): string {
+  return new Intl.DateTimeFormat("en-US", {
+    month: "short",
     day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  })
+    year: "numeric",
+  }).format(new Date(date))
 }
 
-// Add the missing exports
-export function formatTimeAgo(date: Date | string): string {
-  const now = new Date()
-  const pastDate = typeof date === "string" ? new Date(date) : date
-  const seconds = Math.floor((now.getTime() - pastDate.getTime()) / 1000)
-
-  let interval = Math.floor(seconds / 31536000)
-  if (interval >= 1) {
-    return interval === 1 ? "1 year ago" : `${interval} years ago`
-  }
-
-  interval = Math.floor(seconds / 2592000)
-  if (interval >= 1) {
-    return interval === 1 ? "1 month ago" : `${interval} months ago`
-  }
-
-  interval = Math.floor(seconds / 86400)
-  if (interval >= 1) {
-    return interval === 1 ? "1 day ago" : `${interval} days ago`
-  }
-
-  interval = Math.floor(seconds / 3600)
-  if (interval >= 1) {
-    return interval === 1 ? "1 hour ago" : `${interval} hours ago`
-  }
-
-  interval = Math.floor(seconds / 60)
-  if (interval >= 1) {
-    return interval === 1 ? "1 minute ago" : `${interval} minutes ago`
-  }
-
-  return seconds < 10 ? "just now" : `${Math.floor(seconds)} seconds ago`
+export function formatDateTime(date: Date | string): string {
+  return new Intl.DateTimeFormat("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    hour: "numeric",
+    minute: "numeric",
+  }).format(new Date(date))
 }
 
-export function calculateTimeLeft(endDate: Date | string): {
-  days: number
-  hours: number
-  minutes: number
-  seconds: number
-} {
-  const end = typeof endDate === "string" ? new Date(endDate) : endDate
+export function truncateText(text: string, maxLength: number): string {
+  if (text.length <= maxLength) return text
+  return text.slice(0, maxLength) + "..."
+}
+
+export function calculateTimeAgo(date: Date | string): string {
   const now = new Date()
+  const pastDate = new Date(date)
+  const diffInSeconds = Math.floor((now.getTime() - pastDate.getTime()) / 1000)
 
-  const difference = end.getTime() - now.getTime()
+  if (diffInSeconds < 60) return `${diffInSeconds} seconds ago`
 
-  if (difference <= 0) {
-    return {
-      days: 0,
-      hours: 0,
-      minutes: 0,
-      seconds: 0,
-    }
-  }
+  const diffInMinutes = Math.floor(diffInSeconds / 60)
+  if (diffInMinutes < 60) return `${diffInMinutes} minute${diffInMinutes !== 1 ? "s" : ""} ago`
 
-  return {
-    days: Math.floor(difference / (1000 * 60 * 60 * 24)),
-    hours: Math.floor((difference / (1000 * 60 * 60)) % 24),
-    minutes: Math.floor((difference / 1000 / 60) % 60),
-    seconds: Math.floor((difference / 1000) % 60),
-  }
+  const diffInHours = Math.floor(diffInMinutes / 60)
+  if (diffInHours < 24) return `${diffInHours} hour${diffInHours !== 1 ? "s" : ""} ago`
+
+  const diffInDays = Math.floor(diffInHours / 24)
+  if (diffInDays < 7) return `${diffInDays} day${diffInDays !== 1 ? "s" : ""} ago`
+
+  const diffInWeeks = Math.floor(diffInDays / 7)
+  if (diffInWeeks < 4) return `${diffInWeeks} week${diffInWeeks !== 1 ? "s" : ""} ago`
+
+  const diffInMonths = Math.floor(diffInDays / 30)
+  if (diffInMonths < 12) return `${diffInMonths} month${diffInMonths !== 1 ? "s" : ""} ago`
+
+  const diffInYears = Math.floor(diffInDays / 365)
+  return `${diffInYears} year${diffInYears !== 1 ? "s" : ""} ago`
+}
+
+export function getInitials(name: string): string {
+  if (!name) return ""
+
+  const names = name.split(" ")
+  if (names.length === 1) return names[0].charAt(0).toUpperCase()
+
+  return (names[0].charAt(0) + names[names.length - 1].charAt(0)).toUpperCase()
 }

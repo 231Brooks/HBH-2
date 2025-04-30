@@ -2,15 +2,12 @@
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 generator client {
-  provider        = "prisma-client-js"
-  previewFeatures = ["driverAdapters"]
-  binaryTargets   = ["native", "rhel-openssl-1.0.x"]
+  provider = "prisma-client-js"
 }
 
 datasource db {
-  provider  = "postgresql"
-  url       = env("DATABASE_URL")
-  directUrl = env("DATABASE_URL_UNPOOLED")
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 // User model
@@ -44,74 +41,6 @@ model User {
   appointments      Appointment[]
   messages          Message[]           @relation("SentMessages")
   receivedMessages  Message[]           @relation("ReceivedMessages")
-  notifications     Notification[]
-  activities        Activity[]
-  accounts          Account[]
-  sessions          Session[]
-}
-
-// NextAuth models
-model Account {
-  id                String  @id @default(cuid())
-  userId            String
-  type              String
-  provider          String
-  providerAccountId String
-  refresh_token     String? @db.Text
-  access_token      String? @db.Text
-  expires_at        Int?
-  token_type        String?
-  scope             String?
-  id_token          String? @db.Text
-  session_state     String?
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([provider, providerAccountId])
-}
-
-model Session {
-  id           String   @id @default(cuid())
-  sessionToken String   @unique
-  userId       String
-  expires      DateTime
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-}
-
-model VerificationToken {
-  identifier String
-  token      String   @unique
-  expires    DateTime
-
-  @@unique([identifier, token])
-}
-
-// Add Notification model
-model Notification {
-  id            String    @id @default(cuid())
-  type          String
-  title         String
-  message       String
-  read          Boolean   @default(false)
-  recipientId   String
-  recipient     User      @relation(fields: [recipientId], references: [id])
-  entityId      String?
-  entityType    String?
-  createdAt     DateTime  @default(now())
-}
-
-// Activity model for real-time feed
-model Activity {
-  id          String   @id @default(cuid())
-  type        String
-  title       String
-  description String?
-  userId      String
-  user        User     @relation(fields: [userId], references: [id])
-  entityId    String?
-  entityType  String?
-  timestamp   DateTime @default(now())
-  metadata    Json?
 }
 
 enum UserRole {

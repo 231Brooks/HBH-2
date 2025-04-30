@@ -3,40 +3,6 @@ import type { NextRequest } from "next/server"
 import { getToken } from "next-auth/jwt"
 
 export async function middleware(request: NextRequest) {
-  // Get the pathname
-  const path = request.nextUrl.pathname
-
-  // Public paths that don't require authentication
-  const publicPaths = [
-    "/",
-    "/auth/login",
-    "/auth/signup",
-    "/auth/forgot-password",
-    "/auth/reset-password",
-    "/marketplace",
-    "/services",
-    "/job-marketplace",
-  ]
-
-  // Check if the path is public
-  const isPublicPath = publicPaths.some((publicPath) => path === publicPath || path.startsWith(`${publicPath}/`))
-
-  // Check if the path is for static assets or API
-  const isStaticAsset = path.startsWith("/_next") || path.startsWith("/images") || path.startsWith("/favicon")
-
-  const isApiPath = path.startsWith("/api")
-
-  // If it's a static asset or public path, allow access
-  if (isStaticAsset || isPublicPath) {
-    return NextResponse.next()
-  }
-
-  // For API routes, we'll let them handle their own auth
-  if (isApiPath) {
-    return NextResponse.next()
-  }
-
-  // Get the token
   const token = await getToken({ req: request })
   const isAuthenticated = !!token
 
@@ -47,10 +13,10 @@ export async function middleware(request: NextRequest) {
   const adminRoutes = ["/admin"]
 
   // Check if the requested path is a protected route
-  const isProtectedRoute = protectedRoutes.some((route) => path.startsWith(route))
+  const isProtectedRoute = protectedRoutes.some((route) => request.nextUrl.pathname.startsWith(route))
 
   // Check if the requested path is an admin-only route
-  const isAdminRoute = adminRoutes.some((route) => path.startsWith(route))
+  const isAdminRoute = adminRoutes.some((route) => request.nextUrl.pathname.startsWith(route))
 
   // Redirect to login if trying to access a protected route while not authenticated
   if (isProtectedRoute && !isAuthenticated) {
@@ -65,20 +31,20 @@ export async function middleware(request: NextRequest) {
   }
 
   // Redirect to profile if trying to access auth pages while already authenticated
-  if (isAuthenticated && path.startsWith("/auth")) {
+  if (isAuthenticated && request.nextUrl.pathname.startsWith("/auth")) {
     return NextResponse.redirect(new URL("/profile", request.url))
   }
 
-  // Add security headers to all responses
-  const response = NextResponse.next()
-
-  // Log access attempt for security monitoring
-  console.log(`Access attempt: ${path} by ${isAuthenticated ? token.email : "unauthenticated user"}`)
-
-  return response
+  return NextResponse.next()
 }
 
-// Configure which routes use this middleware
 export const config = {
-  matcher: ["/((?!api/health|_next/static|_next/image|favicon.ico).*)"],
+  matcher: [
+    "/profile/:path*",
+    "/progress/:path*",
+    "/messages/:path*",
+    "/calendar/:path*",
+    "/admin/:path*",
+    "/auth/:path*",
+  ],
 }

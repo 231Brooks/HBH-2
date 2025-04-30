@@ -1,172 +1,109 @@
 "use client"
 
-import { useState, useCallback } from "react"
-import { useDropzone } from "react-dropzone"
+import type React from "react"
+
+import { useState } from "react"
+import { Input } from "@/components/ui/input"
+import { Upload, Check, AlertCircle } from "lucide-react"
 import Image from "next/image"
-import { Button } from "@/components/ui/button"
-import { Progress } from "@/components/ui/progress"
-import { Upload, X, Check, AlertCircle } from "lucide-react"
 
 interface CloudinaryUploadProps {
   onUpload: (url: string) => void
-  folder?: string
-  maxFiles?: number
+  label?: string
+  accept?: string
   maxSize?: number // in MB
-  accept?: Record<string, string[]>
-  className?: string
-  buttonText?: string
 }
 
 export default function CloudinaryUpload({
   onUpload,
-  folder = "general",
-  maxFiles = 1,
-  maxSize = 10, // 10MB
-  accept = {
-    "image/*": [".png", ".jpg", ".jpeg", ".webp"],
-  },
-  className = "",
-  buttonText = "Upload Image",
+  label = "Upload Image",
+  accept = "image/*",
+  maxSize = 5, // Default 5MB
 }: CloudinaryUploadProps) {
-  const [uploading, setUploading] = useState(false)
-  const [progress, setProgress] = useState(0)
+  const [isUploading, setIsUploading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [preview, setPreview] = useState<string | null>(null)
 
-  const uploadToCloudinary = useCallback(
-    async (file: File) => {
-      try {
-        setUploading(true)
-        setError(null)
-        setProgress(10)
+  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
 
-        // Create a temporary preview
-        const objectUrl = URL.createObjectURL(file)
-        setPreview(objectUrl)
+    // Check file size
+    if (file.size > maxSize * 1024 * 1024) {
+      setError(`File size exceeds ${maxSize}MB limit`)
+      return
+    }
 
-        // Get signature from server
-        const signatureResponse = await fetch("/api/cloudinary/signature", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ folder }),
-        })
+    setIsUploading(true)
+    setError(null)
 
-        if (!signatureResponse.ok) {
-          throw new Error("Failed to get upload signature")
-        }
+    try {
+      // Create a temporary preview
+      const objectUrl = URL.createObjectURL(file)
+      setPreview(objectUrl)
 
-        const { signature, timestamp, cloudName, apiKey } = await signatureResponse.json()
-        setProgress(30)
+      // Create form data for upload
+      const formData = new FormData()
+      formData.append("file", file)
+      formData.append("upload_preset", "ml_default") // Use your upload preset or create one in Cloudinary dashboard
 
-        // Create form data for upload
-        const formData = new FormData()
-        formData.append("file", file)
-        formData.append("api_key", apiKey)
-        formData.append("timestamp", timestamp.toString())
-        formData.append("signature", signature)
-        formData.append("folder", folder)
-
-        // Upload to Cloudinary
-        const uploadResponse = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/auto/upload`, {
+      // Upload to Cloudinary directly from the browser
+      const response = await fetch(
+        `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload`,
+        {
           method: "POST",
           body: formData,
-        })
+        },
+      )
 
-        setProgress(90)
-
-        if (!uploadResponse.ok) {
-          throw new Error("Upload failed")
-        }
-
-        const data = await uploadResponse.json()
-        setProgress(100)
-
-        // Call the onUpload callback with the secure URL
-        onUpload(data.secure_url)
-        return data
-      } catch (err) {
-        console.error("Upload error:", err)
-        setError(err instanceof Error ? err.message : "Failed to upload file")
-        setPreview(null)
-        return null
-      } finally {
-        setUploading(false)
+      if (!response.ok) {
+        throw new Error("Upload failed")
       }
-    },
-    [folder, onUpload],
-  )
 
-  const onDrop = useCallback(
-    async (acceptedFiles: File[]) => {
-      if (acceptedFiles.length === 0) return
+      const data = await response.json()
 
-      const file = acceptedFiles[0]
-      await uploadToCloudinary(file)
-    },
-    [uploadToCloudinary],
-  )
-
-  const { getRootProps, getInputProps, isDragActive, open } = useDropzone({
-    onDrop,
-    accept,
-    maxFiles,
-    maxSize: maxSize * 1024 * 1024,
-    noClick: true,
-    noKeyboard: true,
-    disabled: uploading,
-  })
-
-  const handleRemovePreview = () => {
-    setPreview(null)
-    setError(null)
+      // Call the onUpload callback with the secure URL
+      onUpload(data.secure_url)
+    } catch (err) {
+      console.error("Upload error:", err)
+      setError("Failed to upload image. Please try again.")
+      setPreview(null)
+    } finally {
+      setIsUploading(false)
+    }
   }
 
   return (
-    <div className={`space-y-4 ${className}`}>
-      <div
-        {...getRootProps()}
-        className={`border-2 border-dashed rounded-md p-4 transition-colors ${
-          isDragActive ? "border-primary bg-primary/5" : "border-muted-foreground/25"
-        } ${uploading ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
-      >
-        <input {...getInputProps()} />
-
+    <div className="space-y-4">
+      <div className="flex flex-col items-center justify-center border-2 border-dashed rounded-md p-6 relative">
         {preview ? (
-          <div className="relative">
-            <Button
-              type="button"
-              variant="destructive"
-              size="icon"
-              className="absolute top-2 right-2 h-6 w-6 rounded-full z-10"
-              onClick={handleRemovePreview}
-              disabled={uploading}
-            >
-              <X className="h-4 w-4" />
-            </Button>
-            <div className="relative h-48 w-full">
-              <Image src={preview || "/placeholder.svg"} alt="Preview" fill className="object-contain rounded-md" />
-            </div>
+          <div className="relative w-full h-48">
+            <Image src={preview || "/placeholder.svg"} alt="Preview" fill className="object-contain" />
           </div>
         ) : (
           <div className="flex flex-col items-center justify-center py-4">
             <Upload className="h-10 w-10 text-muted-foreground mb-2" />
-            <p className="text-sm font-medium mb-1">Drag and drop your file here</p>
-            <p className="text-xs text-muted-foreground mb-4">or click the button below to select a file</p>
-            <Button type="button" onClick={open} disabled={uploading}>
-              {buttonText}
-            </Button>
+            <p className="text-sm font-medium mb-1">{label}</p>
+            <p className="text-xs text-muted-foreground mb-4">Drag and drop or click to upload</p>
           </div>
         )}
 
-        {uploading && (
-          <div className="mt-4 space-y-2">
-            <div className="flex items-center justify-between text-sm">
-              <span>Uploading...</span>
-              <span>{progress}%</span>
+        <Input
+          type="file"
+          accept={accept}
+          onChange={handleUpload}
+          disabled={isUploading}
+          className={`absolute inset-0 w-full h-full opacity-0 cursor-pointer ${
+            isUploading ? "pointer-events-none" : ""
+          }`}
+        />
+
+        {isUploading && (
+          <div className="absolute inset-0 bg-background/80 flex items-center justify-center">
+            <div className="flex flex-col items-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+              <p className="mt-2 text-sm">Uploading...</p>
             </div>
-            <Progress value={progress} className="h-2" />
           </div>
         )}
       </div>
@@ -178,7 +115,7 @@ export default function CloudinaryUpload({
         </div>
       )}
 
-      {preview && !error && !uploading && (
+      {preview && !error && !isUploading && (
         <div className="flex items-center text-green-600 text-sm">
           <Check className="h-4 w-4 mr-1" />
           Upload successful

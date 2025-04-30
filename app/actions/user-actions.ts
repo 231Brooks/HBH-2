@@ -135,17 +135,3 @@ export async function getUserPublicProfile(userId: string) {
     return { user: null }
   }
 }
-
-// Get a user by email
-export async function getUserByEmail(email: string) {
-  try {
-    const user = await prisma.user.findUnique({
-      where: { email },
-    })
-
-    return user
-  } catch (error) {
-    console.error("Failed to fetch user:", error)
-    return null
-  }
-}
