@@ -103,6 +103,25 @@ docker-compose up -d
 - `/styles`: Global CSS styles
 - `/types`: TypeScript type definitions
 
+## Security Considerations
+
+- All user inputs are validated and sanitized
+- CSRF protection implemented for all non-GET requests
+- Rate limiting implemented to prevent abuse
+- Secure password storage with bcrypt
+- Content Security Policy (CSP) implemented
+- HTTPS enforced in production
+- Database queries are protected against SQL injection via Prisma
+- Authentication flow secured with NextAuth.js
+
+## Performance Optimization
+
+- Images optimized via Next.js Image component
+- CSS and JS minified in production
+- API routes optimized for serverless deployment
+- Database queries optimized with proper indexing
+- Static generation used where appropriate
+
 ## Contributing
 
 1. Fork the repository

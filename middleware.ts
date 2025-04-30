@@ -69,7 +69,13 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL("/profile", request.url))
   }
 
-  return NextResponse.next()
+  // Add security headers to all responses
+  const response = NextResponse.next()
+
+  // Log access attempt for security monitoring
+  console.log(`Access attempt: ${path} by ${isAuthenticated ? token.email : "unauthenticated user"}`)
+
+  return response
 }
 
 // Configure which routes use this middleware

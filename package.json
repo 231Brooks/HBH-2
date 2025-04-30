@@ -57,7 +57,7 @@
     "tailwind-merge": "^2.5.5",
     "tailwindcss-animate": "^1.0.7",
     "vaul": "^0.9.6",
-    "zod": "^3.24.1",
+    "zod": "latest",
     "@auth/core": "latest",
     "nodemailer": "latest",
     "@prisma/client": "latest",
@@ -70,9 +70,13 @@
     "lodash": "latest",
     "@auth/prisma-adapter": "latest",
     "bcryptjs": "latest",
-    "pusher": "latest",
+    "@neondatabase/serverless": "latest",
+    "child_process": "latest",
+    "util": "latest",
+    "nanoid": "latest",
+    "crypto": "latest",
     "pusher-js": "latest",
-    "@neondatabase/serverless": "latest"
+    "pusher": "latest"
   },
   "devDependencies": {
     "@types/node": "^22",

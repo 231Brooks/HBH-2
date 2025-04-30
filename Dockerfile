@@ -14,7 +14,8 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-# Generate Prisma client
+# Set NODE_ENV and generate Prisma client
+ENV NODE_ENV production
 RUN npx prisma generate
 
 # Build the Next.js application
@@ -40,11 +41,15 @@ COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 # Set proper permissions
 RUN chown -R nextjs:nodejs /app
 
-# Switch to non-root user
+# Switch to non-root user for security
 USER nextjs
 
 EXPOSE 3000
 
 ENV PORT 3000
+ENV HOSTNAME 0.0.0.0
+
+# Create a healthcheck
+HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 CMD wget -qO- http://localhost:3000/api/health || exit 1
 
 CMD ["node", "server.js"]
