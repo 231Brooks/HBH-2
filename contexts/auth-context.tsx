@@ -128,21 +128,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }
 
-  // Return the default context during server-side rendering
-  if (typeof window === "undefined") {
-    return <AuthContext.Provider value={defaultContextValue}>{children}</AuthContext.Provider>
-  }
-
-  // Don't render anything until mounted on the client
-  if (!mounted) {
-    return <>{children}</>
-  }
-
   return <AuthContext.Provider value={{ user, loading, login, logout, register }}>{children}</AuthContext.Provider>
 }
 
 export function useAuth() {
-  // Use the context, but don't throw an error if it's not available
-  // This allows the hook to be used during SSR without errors
-  return useContext(AuthContext)
+  const context = useContext(AuthContext)
+
+  // Check if we're in a browser environment before using the context
+  if (typeof window === "undefined") {
+    return defaultContextValue
+  }
+
+  return context
 }

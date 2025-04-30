@@ -1,25 +1,20 @@
 "use client"
 
-import { ThemeProvider } from "@/components/theme-provider"
-import { AuthProvider } from "@/contexts/auth-context"
+import type React from "react"
+
+import { ThemeProvider } from "next-themes"
 import { NotificationProvider } from "@/contexts/notification-context"
-import type { ReactNode } from "react"
+import { AuthProvider } from "@/contexts/auth-context"
+import { SessionProvider } from "next-auth/react"
 
-export function Providers({ children }: { children: ReactNode }) {
-  // Check if we're in a not-found page
-  const isNotFoundPage =
-    typeof window !== "undefined" && (window.location.pathname === "/_not-found" || window.location.pathname === "/404")
-
-  // If we're in a not-found page, don't wrap with providers
-  if (isNotFoundPage) {
-    return <>{children}</>
-  }
-
+export function Providers({ children }: { children: React.ReactNode }) {
   return (
-    <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
-      <AuthProvider>
-        <NotificationProvider>{children}</NotificationProvider>
-      </AuthProvider>
-    </ThemeProvider>
+    <SessionProvider>
+      <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+        <NotificationProvider>
+          <AuthProvider>{children}</AuthProvider>
+        </NotificationProvider>
+      </ThemeProvider>
+    </SessionProvider>
   )
 }

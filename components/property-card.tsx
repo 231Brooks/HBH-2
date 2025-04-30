@@ -1,172 +1,108 @@
 "use client"
 
-import Link from "next/link"
+import type React from "react"
+
 import Image from "next/image"
+import Link from "next/link"
+import { Card, CardContent, CardFooter } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
-import { MapPin, Bed, Bath, Square, Heart, MessageSquare } from "lucide-react"
-import { formatCurrency } from "@/lib/utils"
+import { Heart, MapPin, Bed, Bath, SquareIcon as SquareFoot, Clock, Gavel } from "lucide-react"
+import { formatCurrency, calculateTimeLeft } from "@/lib/utils"
 import type { Property } from "@/types"
 
 interface PropertyCardProps {
   property: Property
-  onSave?: (propertyId: string) => void
-  isSaved?: boolean
+  onSave: (propertyId: string) => void
+  isSaved: boolean
   viewMode?: "grid" | "list"
 }
 
-export default function PropertyCard({ property, onSave, isSaved = false, viewMode = "grid" }: PropertyCardProps) {
-  const primaryImage = property.images.find((img) => img.isPrimary) || property.images[0]
-  const imageUrl = primaryImage?.url || "/cozy-cabin-retreat.png"
+export default function PropertyCard({ property, onSave, isSaved, viewMode = "grid" }: PropertyCardProps) {
+  const isAuction = property.status === "AUCTION"
+  const isGrid = viewMode === "grid"
 
-  if (viewMode === "grid") {
-    return (
-      <Card className="overflow-hidden transition-all hover:shadow-md">
-        <div className="relative">
-          <Image
-            src={imageUrl || "/placeholder.svg"}
-            alt={property.title}
-            width={600}
-            height={400}
-            className="h-48 w-full object-cover"
-          />
-          <Badge
-            className={`absolute top-2 right-2 ${
-              property.status === "AUCTION" ? "bg-amber-500" : "bg-primary"
-            } text-white`}
-          >
-            {property.status === "FOR_SALE"
-              ? "For Sale"
-              : property.status === "AUCTION"
-                ? "Auction"
-                : property.status === "PENDING"
-                  ? "Pending"
-                  : "Sold"}
-          </Badge>
-          <Button
-            variant="ghost"
-            size="icon"
-            className={`absolute top-2 left-2 bg-white/80 hover:bg-white rounded-full h-8 w-8 ${
-              isSaved ? "text-red-500" : "text-slate-700"
-            }`}
-            onClick={() => onSave && onSave(property.id)}
-          >
-            <Heart className="h-4 w-4" fill={isSaved ? "currentColor" : "none"} />
-          </Button>
-        </div>
-        <CardContent className="p-4">
-          <div className="flex justify-between items-start mb-2">
-            <h3 className="text-lg font-semibold">{property.title}</h3>
-            <p className="font-bold text-primary">{formatCurrency(property.price)}</p>
-          </div>
-          <div className="flex items-center text-muted-foreground text-sm mb-3">
-            <MapPin className="h-4 w-4 mr-1" />
-            <span>
-              {property.address}, {property.city}, {property.state}
-            </span>
-          </div>
-          <div className="flex justify-between mb-4">
-            <div className="flex gap-3">
-              <div className="flex items-center">
-                <Bed className="h-4 w-4 text-muted-foreground mr-1" />
-                <span className="text-sm">{property.beds} Beds</span>
-              </div>
-              <div className="flex items-center">
-                <Bath className="h-4 w-4 text-muted-foreground mr-1" />
-                <span className="text-sm">{property.baths} Baths</span>
-              </div>
-              <div className="flex items-center">
-                <Square className="h-4 w-4 text-muted-foreground mr-1" />
-                <span className="text-sm">{property.sqft.toLocaleString()} sqft</span>
-              </div>
-            </div>
-          </div>
-          <div className="flex gap-2">
-            <Button variant="outline" size="sm" className="flex-1" asChild>
-              <Link href={`/marketplace/${property.id}`}>Details</Link>
-            </Button>
-            <Button size="sm" className="flex-1">
-              <MessageSquare className="mr-1 h-4 w-4" /> Contact
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-    )
-  } else {
-    // List view
-    return (
-      <Card className="overflow-hidden transition-all hover:shadow-md">
-        <div className="flex flex-col md:flex-row">
-          <div className="relative md:w-1/3">
+  const handleSave = (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    onSave(property.id)
+  }
+
+  return (
+    <Link href={`/marketplace/property/${property.id}`}>
+      <Card className={`overflow-hidden transition-shadow hover:shadow-md ${isGrid ? "" : "flex"}`}>
+        <div className={`${isGrid ? "w-full" : "w-1/3"} relative`}>
+          <div className={`relative ${isGrid ? "h-48" : "h-full"}`}>
             <Image
-              src={imageUrl || "/placeholder.svg"}
+              src={property.images[0]?.url || "/placeholder.svg?height=200&width=300&query=property"}
               alt={property.title}
-              width={600}
-              height={400}
-              className="h-48 md:h-full w-full object-cover"
+              fill
+              className="object-cover"
             />
-            <Badge
-              className={`absolute top-2 right-2 ${
-                property.status === "AUCTION" ? "bg-amber-500" : "bg-primary"
-              } text-white`}
-            >
-              {property.status === "FOR_SALE"
-                ? "For Sale"
-                : property.status === "AUCTION"
-                  ? "Auction"
-                  : property.status === "PENDING"
-                    ? "Pending"
-                    : "Sold"}
-            </Badge>
             <Button
               variant="ghost"
               size="icon"
-              className={`absolute top-2 left-2 bg-white/80 hover:bg-white rounded-full h-8 w-8 ${
-                isSaved ? "text-red-500" : "text-slate-700"
-              }`}
-              onClick={() => onSave && onSave(property.id)}
+              className="absolute top-2 right-2 bg-white/80 hover:bg-white rounded-full"
+              onClick={handleSave}
             >
-              <Heart className="h-4 w-4" fill={isSaved ? "currentColor" : "none"} />
+              <Heart className={`h-5 w-5 ${isSaved ? "fill-red-500 text-red-500" : ""}`} />
             </Button>
+            <Badge className={`absolute top-2 left-2 ${isAuction ? "bg-amber-500" : "bg-green-500"}`}>
+              {isAuction ? "Auction" : property.status.replace(/_/g, " ")}
+            </Badge>
+            {isAuction && property.auctionEnd && (
+              <Badge className="absolute bottom-2 left-2 bg-black/70">
+                <Clock className="h-3 w-3 mr-1" />
+                {calculateTimeLeft(property.auctionEnd)}
+              </Badge>
+            )}
           </div>
-          <div className="p-6 md:w-2/3">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-2 gap-2">
-              <h3 className="text-lg font-semibold">{property.title}</h3>
-              <p className="font-bold text-primary">{formatCurrency(property.price)}</p>
-            </div>
-            <div className="flex items-center text-muted-foreground text-sm mb-3">
-              <MapPin className="h-4 w-4 mr-1" />
-              <span>
+        </div>
+        <div className={`${isGrid ? "w-full" : "w-2/3"}`}>
+          <CardContent className={`${isGrid ? "pt-4" : "p-4"}`}>
+            <h3 className="font-semibold text-lg mb-1 line-clamp-1">{property.title}</h3>
+            <div className="flex items-center text-muted-foreground text-sm mb-2">
+              <MapPin className="h-3 w-3 mr-1" />
+              <span className="line-clamp-1">
                 {property.address}, {property.city}, {property.state}
               </span>
             </div>
-            <p className="text-sm text-muted-foreground mb-4">{property.description}</p>
-            <div className="flex gap-4 mb-4">
+            <div className="flex items-center justify-between mb-2">
+              <span className="font-bold text-lg text-primary">
+                {formatCurrency(property.price)}
+                {isAuction && <span className="text-xs font-normal text-muted-foreground ml-1">Starting Bid</span>}
+              </span>
+              {isAuction && (
+                <div className="flex items-center">
+                  <Gavel className="h-4 w-4 text-amber-500 mr-1" />
+                  <span className="text-sm text-amber-500 font-medium">Auction</span>
+                </div>
+              )}
+            </div>
+            <div className="flex items-center justify-between text-sm">
               <div className="flex items-center">
                 <Bed className="h-4 w-4 text-muted-foreground mr-1" />
-                <span className="text-sm">{property.beds} Beds</span>
+                <span>{property.beds} Beds</span>
               </div>
               <div className="flex items-center">
                 <Bath className="h-4 w-4 text-muted-foreground mr-1" />
-                <span className="text-sm">{property.baths} Baths</span>
+                <span>{property.baths} Baths</span>
               </div>
               <div className="flex items-center">
-                <Square className="h-4 w-4 text-muted-foreground mr-1" />
-                <span className="text-sm">{property.sqft.toLocaleString()} sqft</span>
+                <SquareFoot className="h-4 w-4 text-muted-foreground mr-1" />
+                <span>{property.sqft?.toLocaleString()} sqft</span>
               </div>
             </div>
-            <div className="flex gap-2">
-              <Button variant="outline" asChild>
-                <Link href={`/marketplace/${property.id}`}>View Details</Link>
+          </CardContent>
+          {!isGrid && (
+            <CardFooter className="pt-0">
+              <Button variant="outline" size="sm" className="ml-auto">
+                View Details
               </Button>
-              <Button>
-                <MessageSquare className="mr-1 h-4 w-4" /> Contact Seller
-              </Button>
-            </div>
-          </div>
+            </CardFooter>
+          )}
         </div>
       </Card>
-    )
-  }
+    </Link>
+  )
 }

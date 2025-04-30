@@ -1,24 +1,24 @@
 // User types
-export type User = {
+export interface User {
   id: string
-  email: string
   name?: string
+  email: string
   image?: string
-  role: "USER" | "PROFESSIONAL" | "ADMIN"
-  createdAt: Date
-  updatedAt: Date
-  emailVerified: boolean
-  phoneVerified: boolean
-  identityVerified: boolean
+  role: string
   location?: string
   bio?: string
   phone?: string
   rating?: number
   reviewCount: number
+  emailVerified: boolean
+  phoneVerified: boolean
+  identityVerified: boolean
+  createdAt: string
+  updatedAt: string
 }
 
 // Property types
-export type Property = {
+export interface Property {
   id: string
   title: string
   description?: string
@@ -30,45 +30,58 @@ export type Property = {
   beds?: number
   baths?: number
   sqft?: number
-  type: "RESIDENTIAL" | "COMMERCIAL" | "LAND" | "MULTI_FAMILY"
-  status: "FOR_SALE" | "AUCTION" | "PENDING" | "SOLD"
-  createdAt: Date
-  updatedAt: Date
-  images: PropertyImage[]
+  type: string
+  status: string
   features: string[]
   latitude?: number
   longitude?: number
+  createdAt: string
+  updatedAt: string
+  auctionEnd?: string
+  auctionReservePrice?: number
   ownerId: string
+  owner: {
+    id: string
+    name?: string
+    email: string
+  }
+  images: PropertyImage[]
 }
 
-export type PropertyImage = {
+export interface PropertyImage {
   id: string
   url: string
-  propertyId: string
   isPrimary: boolean
-  createdAt: Date
 }
 
-export type SavedProperty = {
+// Auction types
+export interface Bid {
   id: string
-  userId: string
+  amount: number
   propertyId: string
-  createdAt: Date
+  userId: string
+  createdAt: string
+  status: string
+  user?: {
+    id: string
+    name?: string
+    email: string
+  }
 }
 
 // Transaction types
-export type Transaction = {
+export interface Transaction {
   id: string
   propertyId: string
   property: Property
   creatorId: string
   creator: User
-  type: "PURCHASE" | "SALE"
-  status: "IN_PROGRESS" | "PENDING_APPROVAL" | "DOCUMENT_REVIEW" | "CLOSING_SOON" | "COMPLETED" | "CANCELLED"
+  type: string
+  status: string
   price: number
-  closingDate?: Date
-  createdAt: Date
-  updatedAt: Date
+  closingDate?: string
+  createdAt: string
+  updatedAt: string
   progress: number
   notes?: string
   parties: TransactionParty[]
@@ -76,50 +89,59 @@ export type Transaction = {
   titleCompanyId?: string
   titleCompany?: TitleCompany
   milestones: Milestone[]
+  tasks: Task[]
 }
 
-export type TransactionParty = {
+export interface TransactionParty {
   id: string
   transactionId: string
   userId: string
   user: User
-  role: "BUYER" | "SELLER" | "AGENT" | "TITLE_AGENT" | "ATTORNEY" | "OTHER"
-  createdAt: Date
-  updatedAt: Date
+  role: string
+  createdAt: string
+  updatedAt: string
 }
 
-export type Document = {
+export interface Document {
   id: string
   name: string
   url: string
-  type:
-    | "PURCHASE_AGREEMENT"
-    | "DISCLOSURE"
-    | "INSPECTION"
-    | "APPRAISAL"
-    | "TITLE_COMMITMENT"
-    | "CLOSING_STATEMENT"
-    | "OTHER"
+  type: string
   transactionId: string
   uploadedById?: string
-  createdAt: Date
-  updatedAt: Date
+  createdAt: string
+  updatedAt: string
+  status: string
+  comments: DocumentComment[]
 }
 
-export type Milestone = {
+export interface DocumentComment {
+  id: string
+  content: string
+  documentId: string
+  userId: string
+  createdAt: string
+  user: {
+    id: string
+    name: string
+    image?: string
+  }
+}
+
+export interface Milestone {
   id: string
   transactionId: string
   title: string
   description?: string
-  dueDate: Date
-  completedDate?: Date
-  status: "PENDING" | "COMPLETED" | "OVERDUE"
-  createdAt: Date
-  updatedAt: Date
+  dueDate: string
+  completedDate?: string
+  status: string
+  createdAt: string
+  updatedAt: string
 }
 
 // Title Company types
-export type TitleCompany = {
+export interface TitleCompany {
   id: string
   name: string
   address?: string
@@ -130,116 +152,80 @@ export type TitleCompany = {
   email?: string
   website?: string
   logo?: string
-  createdAt: Date
-  updatedAt: Date
+  createdAt: string
+  updatedAt: string
 }
 
-// Service types
-export type Service = {
-  id: string
-  name: string
-  description?: string
-  category: ServiceCategory
-  price?: string
-  hourlyRate?: number
-  providerId: string
-  provider: User
-  location?: string
-  image?: string
-  verified: boolean
-  createdAt: Date
-  updatedAt: Date
-  reviews: Review[]
-}
-
-export type ServiceCategory =
-  | "TITLE_SERVICES"
-  | "HOME_INSPECTION"
-  | "PHOTOGRAPHY"
-  | "CONTRACTORS"
-  | "LEGAL_SERVICES"
-  | "MORTGAGE"
-  | "INTERIOR_DESIGN"
-  | "MOVING_SERVICES"
-
-// Project types
-export type Project = {
+// Task types
+export interface Task {
   id: string
   title: string
   description?: string
-  status: "IN_PROGRESS" | "COMPLETED" | "CANCELLED"
-  progress: number
-  startDate?: Date
-  endDate?: Date
-  budget?: number
-  ownerId: string
-  owner: User
-  serviceId?: string
-  service?: Service
-  createdAt: Date
-  updatedAt: Date
+  status: string
+  priority: string
+  dueDate?: string
+  completedDate?: string
+  assignedToId?: string
+  transactionId?: string
+  projectId?: string
+  createdAt: string
+  updatedAt: string
 }
 
-// Review types
-export type Review = {
-  id: string
-  rating: number
-  comment?: string
-  authorId: string
-  author: User
-  receiverId: string
-  receiver: User
-  serviceId?: string
-  service?: Service
-  createdAt: Date
-  updatedAt: Date
-}
-
-// Calendar/Appointment types
-export type Appointment = {
+// Calendar types
+export interface Appointment {
   id: string
   title: string
   description?: string
-  startTime: Date
-  endTime: Date
+  startTime: string
+  endTime: string
   location?: string
-  type: "CLOSING" | "INSPECTION" | "PHOTOGRAPHY" | "LEGAL" | "RENOVATION" | "OTHER"
+  type: string
   userId: string
   user: User
-  createdAt: Date
-  updatedAt: Date
+  createdAt: string
+  updatedAt: string
+  attendees: string[]
+  reminderSent: boolean
 }
 
-// Messaging types
-export type Message = {
+// Messaging model
+export interface Message {
   id: string
   content: string
   senderId: string
-  sender: User
   receiverId: string
-  receiver: User
   read: boolean
-  createdAt: Date
+  createdAt: string
   conversationId: string
 }
 
-export type Conversation = {
-  id: string
-  messages: Message[]
-  createdAt: Date
-  updatedAt: Date
-}
-
-// Job Marketplace types
-export type JobListing = {
+// Job Marketplace models
+export interface JobListing {
   id: string
   title: string
   description: string
   location: string
   budget: string
-  category: ServiceCategory
+  category: string
   skills: string[]
-  createdAt: Date
-  updatedAt: Date
+  createdAt: string
+  updatedAt: string
   proposals: number
+}
+
+// Service model
+export interface Service {
+  id: string
+  name: string
+  description?: string
+  category: string
+  price?: string
+  hourlyRate?: number
+  providerId: string
+  location?: string
+  image?: string
+  verified: boolean
+  createdAt: string
+  updatedAt: string
 }

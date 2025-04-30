@@ -1,313 +1,241 @@
 "use server"
 
 import { revalidatePath } from "next/cache"
-import prisma from "@/lib/prisma"
-import { auth } from "@/lib/auth"
-import { pusherServer } from "@/lib/pusher-server"
-import { logger } from "@/lib/logger"
+import { sql } from "@/lib/db"
+import { getServerSession } from "next-auth"
+import { authOptions } from "@/lib/auth"
+import type { Property } from "@/types"
 
-// Create a new property
-export async function createProperty(formData: FormData) {
+// Get all properties with optional filters
+export async function getProperties(filters: any = {}) {
   try {
-    const session = await auth()
-    if (!session?.user?.id) {
-      throw new Error("You must be logged in to create a property")
-    }
-
-    const title = formData.get("title") as string
-    const description = formData.get("description") as string
-    const address = formData.get("address") as string
-    const city = formData.get("city") as string
-    const state = formData.get("state") as string
-    const zipCode = formData.get("zipCode") as string
-    const price = Number.parseFloat(formData.get("price") as string)
-    const beds = formData.get("beds") ? Number.parseInt(formData.get("beds") as string) : null
-    const baths = formData.get("baths") ? Number.parseFloat(formData.get("baths") as string) : null
-    const sqft = formData.get("sqft") ? Number.parseInt(formData.get("sqft") as string) : null
-    const type = formData.get("type") as string
-    const status = (formData.get("status") as string) || "FOR_SALE"
-    const features = formData.getAll("features") as string[]
-    const latitude = formData.get("latitude") ? Number.parseFloat(formData.get("latitude") as string) : null
-    const longitude = formData.get("longitude") ? Number.parseFloat(formData.get("longitude") as string) : null
-    const imagesJson = formData.get("images") as string
-
-    // Validate required fields
-    if (!title || !address || !city || !state || !zipCode || !price || !type) {
-      throw new Error("Missing required fields")
-    }
-
-    // Parse images JSON
-    let images: { url: string; isPrimary: boolean }[] = []
-    try {
-      if (imagesJson) {
-        images = JSON.parse(imagesJson)
-      }
-    } catch (error) {
-      logger.error("Failed to parse images JSON", error)
-    }
-
-    // Create property with transaction to ensure all operations succeed or fail together
-    const property = await prisma.$transaction(async (tx) => {
-      // Create the property
-      const newProperty = await tx.property.create({
-        data: {
-          title,
-          description,
-          address,
-          city,
-          state,
-          zipCode,
-          price,
-          beds,
-          baths,
-          sqft,
-          type: type as any,
-          status: status as any,
-          features,
-          latitude,
-          longitude,
-          ownerId: session.user.id,
-        },
-      })
-
-      // Add images if provided
-      if (images.length > 0) {
-        await tx.propertyImage.createMany({
-          data: images.map((image) => ({
-            url: image.url,
-            isPrimary: image.isPrimary,
-            propertyId: newProperty.id,
-          })),
-        })
-      }
-
-      // Create activity
-      await tx.activity.create({
-        data: {
-          type: "property",
-          title: "Property created",
-          description: `New property "${title}" was created`,
-          userId: session.user.id,
-          entityId: newProperty.id,
-          entityType: "property",
-        },
-      })
-
-      return newProperty
-    })
-
-    // Trigger real-time notification
-    await pusherServer.trigger("global-activities", "new-activity", {
-      type: "property",
-      title: "New property listed",
-      description: `${title} is now available`,
-      timestamp: new Date().toISOString(),
-    })
-
-    revalidatePath("/marketplace")
-    return { success: true, propertyId: property.id }
-  } catch (error) {
-    logger.error("Failed to create property:", error)
-    return { success: false, error: error instanceof Error ? error.message : "Failed to create property" }
-  }
-}
-
-// Get all properties with filtering and pagination
-export async function getProperties(options: {
-  status?: string
-  type?: string
-  minPrice?: number
-  maxPrice?: number
-  beds?: number
-  baths?: number
-  city?: string
-  state?: string
-  limit?: number
-  offset?: number
-}) {
-  try {
-    const { status, type, minPrice, maxPrice, beds, baths, city, state, limit = 10, offset = 0 } = options
-
-    // Build filter conditions
-    const where: any = {}
-
-    if (status) where.status = status
-    if (type) where.type = type
-    if (minPrice !== undefined) where.price = { ...where.price, gte: minPrice }
-    if (maxPrice !== undefined) where.price = { ...where.price, lte: maxPrice }
-    if (beds !== undefined) where.beds = { gte: beds }
-    if (baths !== undefined) where.baths = { gte: baths }
-    if (city) where.city = { contains: city, mode: "insensitive" }
-    if (state) where.state = state
-
-    // Get properties with pagination
-    const properties = await prisma.property.findMany({
-      where,
-      include: {
-        images: true,
-        owner: {
-          select: {
-            id: true,
-            name: true,
-            image: true,
-          },
-        },
-      },
-      orderBy: { createdAt: "desc" },
-      take: limit,
-      skip: offset,
-    })
-
-    // Get total count for pagination
-    const total = await prisma.property.count({ where })
+    // In a real app, you would build a dynamic query based on filters
+    const properties = await sql`
+      SELECT p.*, u.name as owner_name, u.email as owner_email
+      FROM "Property" p
+      JOIN "User" u ON p.owner_id = u.id
+      ORDER BY p.created_at DESC
+      LIMIT 20
+    `
 
     return {
-      properties,
-      total,
-      hasMore: offset + limit < total,
+      success: true,
+      properties: properties.map(mapPropertyFromDb),
     }
   } catch (error) {
-    logger.error("Failed to fetch properties:", error)
-    return { properties: [], total: 0, hasMore: false }
+    console.error("Failed to fetch properties:", error)
+    return { success: false, error: "Failed to fetch properties" }
   }
 }
 
 // Get a single property by ID
 export async function getPropertyById(id: string) {
   try {
-    const property = await prisma.property.findUnique({
-      where: { id },
-      include: {
-        images: true,
-        owner: {
-          select: {
-            id: true,
-            name: true,
-            image: true,
-            email: true,
-            phone: true,
-          },
-        },
-        transactions: {
-          where: {
-            status: {
-              not: "CANCELLED",
-            },
-          },
-          select: {
-            id: true,
-            status: true,
-          },
-        },
-      },
-    })
+    const [property] = await sql`
+      SELECT p.*, u.name as owner_name, u.email as owner_email
+      FROM "Property" p
+      JOIN "User" u ON p.owner_id = u.id
+      WHERE p.id = ${id}
+    `
 
     if (!property) {
-      return { property: null }
+      return { success: false, error: "Property not found" }
     }
 
-    // Track property view (could be expanded to only count unique views)
-    await prisma.activity.create({
-      data: {
-        type: "property_view",
-        title: "Property viewed",
-        userId: (await auth())?.user?.id || "anonymous",
-        entityId: property.id,
-        entityType: "property",
-      },
-    })
+    // Get property images
+    const images = await sql`
+      SELECT * FROM "PropertyImage"
+      WHERE property_id = ${id}
+      ORDER BY is_primary DESC
+    `
 
-    return { property }
+    return {
+      success: true,
+      property: {
+        ...mapPropertyFromDb(property),
+        images: images.map((img: any) => ({
+          id: img.id,
+          url: img.url,
+          isPrimary: img.is_primary,
+        })),
+      },
+    }
   } catch (error) {
-    logger.error("Failed to fetch property:", error)
-    return { property: null }
+    console.error("Failed to fetch property:", error)
+    return { success: false, error: "Failed to fetch property" }
   }
 }
 
-export async function updateProperty(id, formData) {
-  // Similar to createProperty but with UPDATE query
-  // ...
-
-  revalidatePath(`/marketplace/property/${id}`)
-}
-
-export async function deleteProperty(id) {
-  // await query("DELETE FROM property_images WHERE property_id = $1", [id])
-  // await query("DELETE FROM properties WHERE id = $1", [id])
-
-  revalidatePath("/marketplace")
-}
-
-// Save/unsave a property
+// Toggle save property
 export async function toggleSaveProperty(propertyId: string) {
-  const session = await auth()
-  if (!session?.user?.id) {
-    throw new Error("You must be logged in to save a property")
+  const session = await getServerSession(authOptions)
+
+  if (!session?.user) {
+    return { success: false, error: "Authentication required" }
   }
 
   try {
     // Check if property is already saved
-    const existingSave = await prisma.savedProperty.findUnique({
-      where: {
-        userId_propertyId: {
-          userId: session.user.id,
-          propertyId,
-        },
-      },
-    })
+    const [existingSave] = await sql`
+      SELECT * FROM "SavedProperty"
+      WHERE user_id = ${session.user.id}
+      AND property_id = ${propertyId}
+    `
 
     if (existingSave) {
       // Unsave the property
-      await prisma.savedProperty.delete({
-        where: {
-          userId_propertyId: {
-            userId: session.user.id,
-            propertyId,
-          },
-        },
-      })
+      await sql`
+        DELETE FROM "SavedProperty"
+        WHERE user_id = ${session.user.id}
+        AND property_id = ${propertyId}
+      `
       return { success: true, saved: false }
     } else {
       // Save the property
-      await prisma.savedProperty.create({
-        data: {
-          userId: session.user.id,
-          propertyId,
-        },
-      })
+      await sql`
+        INSERT INTO "SavedProperty" (id, user_id, property_id, created_at)
+        VALUES (gen_random_uuid(), ${session.user.id}, ${propertyId}, NOW())
+      `
       return { success: true, saved: true }
     }
   } catch (error) {
     console.error("Failed to toggle save property:", error)
-    return { success: false, error: "Failed to toggle save property" }
+    return { success: false, error: "Failed to save property" }
   }
 }
 
-// Get saved properties for the current user
-export async function getSavedProperties() {
-  const session = await auth()
-  if (!session?.user?.id) {
-    return { properties: [] }
+// Get bids for a property
+export async function getPropertyBids(propertyId: string) {
+  try {
+    const bids = await sql`
+      SELECT b.*, u.name as user_name, u.email as user_email
+      FROM "Bid" b
+      JOIN "User" u ON b.user_id = u.id
+      WHERE b.property_id = ${propertyId}
+      ORDER BY b.amount DESC
+    `
+
+    return {
+      success: true,
+      bids: bids.map((bid: any) => ({
+        id: bid.id,
+        amount: bid.amount,
+        createdAt: bid.created_at,
+        status: bid.status,
+        user: {
+          id: bid.user_id,
+          name: bid.user_name,
+          email: bid.user_email,
+        },
+      })),
+    }
+  } catch (error) {
+    console.error("Failed to fetch bids:", error)
+    return { success: false, error: "Failed to fetch bids" }
+  }
+}
+
+// Place a bid on a property
+export async function placeBid(propertyId: string, amount: number) {
+  const session = await getServerSession(authOptions)
+
+  if (!session?.user) {
+    return { success: false, error: "Authentication required" }
   }
 
   try {
-    const savedProperties = await prisma.savedProperty.findMany({
-      where: { userId: session.user.id },
-      include: {
-        property: {
-          include: {
-            images: true,
-          },
-        },
-      },
-      orderBy: { createdAt: "desc" },
-    })
+    // Check if property exists and is in auction status
+    const [property] = await sql`
+      SELECT * FROM "Property"
+      WHERE id = ${propertyId}
+      AND status = 'AUCTION'
+    `
 
-    return {
-      properties: savedProperties.map((sp) => sp.property),
+    if (!property) {
+      return { success: false, error: "Property not found or not available for auction" }
     }
+
+    // Check if auction has ended
+    if (property.auction_end && new Date(property.auction_end) < new Date()) {
+      return { success: false, error: "Auction has ended" }
+    }
+
+    // Check if user is the owner
+    if (property.owner_id === session.user.id) {
+      return { success: false, error: "You cannot bid on your own property" }
+    }
+
+    // Get highest bid
+    const [highestBid] = await sql`
+      SELECT * FROM "Bid"
+      WHERE property_id = ${propertyId}
+      ORDER BY amount DESC
+      LIMIT 1
+    `
+
+    const minimumBid = highestBid ? highestBid.amount + 1000 : property.price
+
+    // Check if bid amount is high enough
+    if (amount < minimumBid) {
+      return { success: false, error: `Bid must be at least ${minimumBid}` }
+    }
+
+    // Place the bid
+    const [newBid] = await sql`
+      INSERT INTO "Bid" (id, property_id, user_id, amount, created_at, status)
+      VALUES (gen_random_uuid(), ${propertyId}, ${session.user.id}, ${amount}, NOW(), 'ACTIVE')
+      RETURNING id
+    `
+
+    // Update previous bids to outbid status
+    if (highestBid) {
+      await sql`
+        UPDATE "Bid"
+        SET status = 'OUTBID'
+        WHERE property_id = ${propertyId}
+        AND id != ${newBid.id}
+        AND status = 'ACTIVE'
+      `
+    }
+
+    revalidatePath(`/marketplace/property/${propertyId}`)
+
+    return { success: true, bidId: newBid.id }
   } catch (error) {
-    console.error("Failed to fetch saved properties:", error)
-    return { properties: [] }
+    console.error("Failed to place bid:", error)
+    return { success: false, error: "Failed to place bid" }
+  }
+}
+
+// Helper function to map database property to frontend property
+function mapPropertyFromDb(dbProperty: any): Property {
+  return {
+    id: dbProperty.id,
+    title: dbProperty.title,
+    description: dbProperty.description,
+    address: dbProperty.address,
+    city: dbProperty.city,
+    state: dbProperty.state,
+    zipCode: dbProperty.zip_code,
+    price: dbProperty.price,
+    beds: dbProperty.beds,
+    baths: dbProperty.baths,
+    sqft: dbProperty.sqft,
+    type: dbProperty.type,
+    status: dbProperty.status,
+    features: dbProperty.features,
+    latitude: dbProperty.latitude,
+    longitude: dbProperty.longitude,
+    createdAt: dbProperty.created_at,
+    updatedAt: dbProperty.updated_at,
+    auctionEnd: dbProperty.auction_end,
+    auctionReservePrice: dbProperty.auction_reserve_price,
+    ownerId: dbProperty.owner_id,
+    owner: {
+      id: dbProperty.owner_id,
+      name: dbProperty.owner_name,
+      email: dbProperty.owner_email,
+    },
+    images: [], // Images are loaded separately
   }
 }
