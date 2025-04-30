@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
@@ -12,28 +12,85 @@ import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
 import { AlertCircle } from "lucide-react"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import { useSupabase } from "@/contexts/supabase-context"
 
 export default function LoginPage() {
   const router = useRouter()
+  const { supabase, user, loading: authLoading } = useSupabase()
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // Redirect if already logged in
+  useEffect(() => {
+    if (user) {
+      router.push("/profile")
+    }
+  }, [user, router])
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
     setError("")
 
-    // Simulate API call
-    setTimeout(() => {
+    if (!supabase) {
+      setError("Authentication system is not available. Please try again later.")
       setLoading(false)
-      if (email === "test@example.com" && password === "password") {
-        router.push("/profile")
-      } else {
-        setError("Invalid email or password. Please try again.")
+      return
+    }
+
+    try {
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      })
+
+      if (signInError) {
+        throw signInError
       }
-    }, 1500)
+
+      // The useEffect above will handle redirect on successful login
+    } catch (err: any) {
+      console.error("Login error:", err)
+      setError(err.message || "Failed to sign in. Please check your credentials and try again.")
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleOAuthSignIn = async (provider: "github" | "google") => {
+    if (!supabase) {
+      setError("Authentication system is not available. Please try again later.")
+      return
+    }
+
+    try {
+      const { error: signInError } = await supabase.auth.signInWithOAuth({
+        provider,
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
+        },
+      })
+
+      if (signInError) {
+        throw signInError
+      }
+    } catch (err: any) {
+      console.error(`${provider} login error:`, err)
+      setError(err.message || `Failed to sign in with ${provider}. Please try again.`)
+    }
+  }
+
+  if (authLoading) {
+    return (
+      <div className="container flex items-center justify-center min-h-[calc(100vh-4rem)] py-8">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto"></div>
+          <p className="mt-4 text-lg">Loading authentication...</p>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -90,7 +147,7 @@ export default function LoginPage() {
                 </Label>
               </div>
 
-              <Button type="submit" className="w-full" disabled={loading}>
+              <Button type="submit" className="w-full" disabled={loading || !supabase}>
                 {loading ? "Signing in..." : "Sign In"}
               </Button>
 
@@ -104,11 +161,21 @@ export default function LoginPage() {
               </div>
 
               <div className="grid grid-cols-2 gap-2">
-                <Button variant="outline" type="button">
+                <Button
+                  variant="outline"
+                  type="button"
+                  onClick={() => handleOAuthSignIn("google")}
+                  disabled={loading || !supabase}
+                >
                   Google
                 </Button>
-                <Button variant="outline" type="button">
-                  Apple
+                <Button
+                  variant="outline"
+                  type="button"
+                  onClick={() => handleOAuthSignIn("github")}
+                  disabled={loading || !supabase}
+                >
+                  GitHub
                 </Button>
               </div>
             </form>
