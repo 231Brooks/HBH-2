@@ -1,8 +1,9 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  output: 'standalone',
   reactStrictMode: true,
   images: {
-    domains: ['res.cloudinary.com', 'avatars.githubusercontent.com'],
+    domains: ['res.cloudinary.com', 'placeholder.svg', 'avatars.githubusercontent.com'],
     unoptimized: true,
   },
   async headers() {
@@ -36,7 +37,7 @@ const nextConfig = {
           },
           {
             key: 'Content-Security-Policy',
-            value: "default-src 'self'; img-src 'self' res.cloudinary.com avatars.githubusercontent.com data:; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; font-src 'self'; connect-src 'self' *.vercel.app;",
+            value: "default-src 'self'; img-src 'self' res.cloudinary.com avatars.githubusercontent.com data: placeholder.svg; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; font-src 'self'; connect-src 'self' *.vercel.app;",
           },
         ],
       },
@@ -51,6 +52,8 @@ const nextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
+  // Disable static generation for the entire application
+  staticPageGenerationTimeout: 0,
 }
 
 export default nextConfig
