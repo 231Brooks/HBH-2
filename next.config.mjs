@@ -52,8 +52,6 @@ const nextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
-  // Disable static generation for the entire application
-  staticPageGenerationTimeout: 0,
 }
 
 export default nextConfig
