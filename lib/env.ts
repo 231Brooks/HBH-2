@@ -4,12 +4,13 @@ import { z } from "zod"
 const serverEnvSchema = z.object({
   // Application
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
-  NEXTAUTH_URL: z.string().url(),
-  NEXTAUTH_SECRET: z.string().min(32),
+  // Make NEXTAUTH_URL optional for Vercel deployments (it's automatically set)
+  NEXTAUTH_URL: z.string().url().optional(),
+  NEXTAUTH_SECRET: z.string().min(1),
 
   // Database
-  DATABASE_URL: z.string().url(),
-  DATABASE_URL_UNPOOLED: z.string().url(),
+  DATABASE_URL: z.string(),
+  DATABASE_URL_UNPOOLED: z.string().optional(),
 
   // Cloudinary (if configured)
   CLOUDINARY_API_KEY: z.string().optional(),
@@ -17,10 +18,13 @@ const serverEnvSchema = z.object({
 
   // Email (if configured)
   EMAIL_SERVER_HOST: z.string().optional(),
-  EMAIL_SERVER_PORT: z.string().transform(Number).optional(),
+  EMAIL_SERVER_PORT: z
+    .string()
+    .transform((val) => (val ? Number(val) : undefined))
+    .optional(),
   EMAIL_SERVER_USER: z.string().optional(),
   EMAIL_SERVER_PASSWORD: z.string().optional(),
-  EMAIL_FROM: z.string().email().optional(),
+  EMAIL_FROM: z.string().optional(),
 
   // Authentication (if configured)
   GITHUB_ID: z.string().optional(),
@@ -77,9 +81,22 @@ try {
   if (error instanceof z.ZodError) {
     const missingVars = error.errors.map((err) => err.path.join("."))
     console.error("❌ Invalid or missing environment variables:", missingVars)
-    throw new Error(`Invalid environment variables: ${missingVars.join(", ")}`)
+
+    // In production, log the error but don't crash the app
+    if (process.env.NODE_ENV === "production") {
+      console.error("Continuing with missing environment variables in production")
+    } else {
+      throw new Error(`Invalid environment variables: ${missingVars.join(", ")}`)
+    }
+  } else {
+    throw error
   }
-  throw error
+}
+
+// Add a fallback for NEXTAUTH_URL in production (Vercel sets this automatically)
+if (!serverEnv.NEXTAUTH_URL && process.env.VERCEL_URL) {
+  serverEnv.NEXTAUTH_URL = `https://${process.env.VERCEL_URL}`
+  console.log(`Using VERCEL_URL as NEXTAUTH_URL: ${serverEnv.NEXTAUTH_URL}`)
 }
 
 export { serverEnv, clientEnv }

@@ -3,9 +3,7 @@ import { neonConfig } from "@neondatabase/serverless"
 import { Pool } from "@neondatabase/serverless"
 
 // Configure Neon for serverless environments
-if (process.env.NODE_ENV === "production") {
-  neonConfig.fetchConnectionCache = true
-}
+neonConfig.fetchConnectionCache = true
 
 // This prevents multiple instances of Prisma Client in development
 declare global {
@@ -15,27 +13,23 @@ declare global {
 // Function to create a new PrismaClient instance with error handling
 const createPrismaClient = () => {
   try {
-    // In production, use the Neon serverless driver
-    if (process.env.NODE_ENV === "production") {
-      const connectionString = process.env.DATABASE_URL || ""
+    const connectionString = process.env.DATABASE_URL || ""
 
-      return new PrismaClient({
-        log: ["error"],
-        datasources: {
-          db: {
-            url: connectionString,
-          },
-        },
-        // Use the Neon serverless adapter in production
-        adapter: {
-          pool: new Pool({ connectionString }),
-        },
-      })
-    }
+    // Create the Neon connection pool
+    const pool = new Pool({ connectionString })
 
-    // In development, use the standard configuration
+    // Create Prisma Client with the Neon adapter
     return new PrismaClient({
       log: process.env.NODE_ENV === "development" ? ["query", "error", "warn"] : ["error"],
+      datasources: {
+        db: {
+          url: connectionString,
+        },
+      },
+      // Explicitly configure the adapter
+      adapter: {
+        pool,
+      },
     })
   } catch (error) {
     console.error("Failed to create Prisma client:", error)
