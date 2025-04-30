@@ -1,78 +1,52 @@
 import { NextResponse } from "next/server"
-import prisma from "@/lib/prisma"
+import { pusherServer } from "@/lib/pusher-server"
+import { auth } from "@/lib/auth"
+import { db } from "@/lib/db"
 
 export async function POST(request: Request) {
   try {
-    const data = await request.json()
-    const { content, senderId, receiverId, conversationId } = data
+    const session = await auth()
+    if (!session?.user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
 
-    // Validate required fields
-    if (!content || !senderId || !receiverId) {
+    const { chatId, content } = await request.json()
+
+    if (!chatId || !content) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 })
     }
 
-    let conversation
+    // Save message to database
+    const message = await db.query(
+      `
+      INSERT INTO messages (chat_id, sender_id, content)
+      VALUES ($1, $2, $3)
+      RETURNING id, content, created_at as timestamp
+      `,
+      [chatId, session.user.id, content],
+    )
 
-    // Find or create conversation
-    if (conversationId) {
-      try {
-        conversation = await prisma.conversation.findUnique({
-          where: { id: conversationId },
-        })
-
-        if (!conversation) {
-          conversation = await prisma.conversation.create({
-            data: {},
-          })
-        }
-      } catch (error) {
-        console.error("Error finding/creating conversation:", error)
-        // Create a new conversation if there's an error
-        conversation = { id: `mock-conversation-${Date.now()}` }
-      }
-    } else {
-      try {
-        conversation = await prisma.conversation.create({
-          data: {},
-        })
-      } catch (error) {
-        console.error("Error creating conversation:", error)
-        // Use a mock conversation ID if there's an error
-        conversation = { id: `mock-conversation-${Date.now()}` }
-      }
+    if (!message || !message.rows || message.rows.length === 0) {
+      return NextResponse.json({ error: "Failed to save message" }, { status: 500 })
     }
 
-    // Create message
-    try {
-      const message = await prisma.message.create({
-        data: {
-          content,
-          senderId,
-          receiverId,
-          conversationId: conversation.id,
-        },
-      })
-
-      return NextResponse.json({ message })
-    } catch (error) {
-      console.error("Error creating message:", error)
-
-      // Return a mock response if database operation fails
-      return NextResponse.json({
-        message: {
-          id: `mock-message-${Date.now()}`,
-          content,
-          senderId,
-          receiverId,
-          conversationId: conversation.id,
-          read: false,
-          createdAt: new Date().toISOString(),
-        },
-        note: "Using mock data due to database connection issues",
-      })
+    const newMessage = {
+      id: message.rows[0].id,
+      content: message.rows[0].content,
+      sender: {
+        id: session.user.id,
+        name: session.user.name || "Unknown User",
+        image: session.user.image,
+      },
+      timestamp: message.rows[0].timestamp,
     }
+
+    // Trigger new message event on the chat channel
+    await pusherServer.trigger(`chat-${chatId}`, "new-message", newMessage)
+
+    return NextResponse.json({ success: true, message: newMessage })
   } catch (error) {
-    console.error("Error in messages/send API route:", error)
+    console.error("Error sending message:", error)
     return NextResponse.json({ error: "Failed to send message" }, { status: 500 })
   }
 }

@@ -68,17 +68,16 @@
     "path": "latest",
     "next-auth": "latest",
     "react-dropzone": "latest",
-    "lodash": "latest",
     "@auth/prisma-adapter": "latest",
     "bcryptjs": "latest",
-    "@neondatabase/serverless": "latest",
     "child_process": "latest",
     "util": "latest",
     "nanoid": "latest",
     "crypto": "latest",
-    "pusher-js": "latest",
+    "@neondatabase/serverless": "latest",
+    "react-leaflet": "latest",
     "pusher": "latest",
-    "react-leaflet": "latest"
+    "pusher-js": "latest"
   },
   "devDependencies": {
     "@types/node": "^22",

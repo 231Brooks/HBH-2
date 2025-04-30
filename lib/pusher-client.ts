@@ -8,35 +8,51 @@ let pusher: PusherClient | undefined
 interface PusherConfig {
   key: string
   cluster: string
+  configured: boolean
 }
 
 async function fetchPusherConfig(): Promise<PusherConfig> {
-  const response = await fetch("/api/pusher/config")
-  if (!response.ok) {
-    throw new Error("Failed to fetch Pusher configuration")
+  try {
+    const response = await fetch("/api/pusher/config")
+    if (!response.ok) {
+      console.warn("Failed to fetch Pusher configuration")
+      return { configured: false, key: "", cluster: "" }
+    }
+    return await response.json()
+  } catch (error) {
+    console.error("Error fetching Pusher configuration:", error)
+    return { configured: false, key: "", cluster: "" }
   }
-  return response.json()
 }
 
 export function usePusher() {
   const [client, setClient] = useState<PusherClient | null>(null)
+  const [isConfigured, setIsConfigured] = useState<boolean>(false)
 
   useEffect(() => {
     async function setup() {
       if (typeof window === "undefined") return
 
       try {
-        if (!pusher) {
-          const config = await fetchPusherConfig()
-          pusher = new PusherClient(config.key, {
-            cluster: config.cluster,
-            forceTLS: true,
-          })
-        }
+        // Fetch configuration from the server
+        const config = await fetchPusherConfig()
+        setIsConfigured(config.configured)
 
-        setClient(pusher)
+        if (config.configured && config.key && config.cluster) {
+          if (!pusher) {
+            pusher = new PusherClient(config.key, {
+              cluster: config.cluster,
+              forceTLS: true,
+            })
+          }
+          setClient(pusher)
+        } else {
+          setClient(null)
+        }
       } catch (error) {
         console.error("Error initializing Pusher client:", error)
+        setClient(null)
+        setIsConfigured(false)
       }
     }
 
@@ -47,25 +63,22 @@ export function usePusher() {
     }
   }, [])
 
-  return client
+  return { client, isConfigured }
 }
 
-export function getPusherClient() {
+export async function getPusherClient() {
   if (typeof window === "undefined") {
     return null
   }
 
   if (!pusher) {
-    fetchPusherConfig()
-      .then((config) => {
-        pusher = new PusherClient(config.key, {
-          cluster: config.cluster,
-          forceTLS: true,
-        })
+    const config = await fetchPusherConfig()
+    if (config.configured && config.key && config.cluster) {
+      pusher = new PusherClient(config.key, {
+        cluster: config.cluster,
+        forceTLS: true,
       })
-      .catch((error) => {
-        console.error("Error initializing Pusher client:", error)
-      })
+    }
   }
-  return pusher
+  return pusher || null
 }

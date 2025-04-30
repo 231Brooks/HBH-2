@@ -1,182 +1,111 @@
 "use client"
 
-import type React from "react"
-
-import { useEffect, useState, useRef } from "react"
+import { useState, useEffect, useRef } from "react"
 import { usePusher } from "@/lib/pusher-client"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Send } from "lucide-react"
-import { debounce } from "lodash"
+import { useToast } from "@/components/ui/use-toast"
 
-type Message = {
+interface Message {
   id: string
   content: string
   sender: {
     id: string
     name: string
-    avatar?: string
+    image?: string
   }
   timestamp: string
 }
 
 interface ChatProps {
-  channelName: string
-  currentUser: {
-    id: string
-    name: string
-    avatar?: string
-  }
-  recipientId?: string
-  recipientName?: string
-  recipientAvatar?: string
+  chatId: string
+  userId: string
+  userName: string
+  userImage?: string
+  initialMessages?: Message[]
+  onSendMessage: (content: string) => Promise<void>
 }
 
 export default function RealTimeChat({
-  channelName,
-  currentUser,
-  recipientId,
-  recipientName,
-  recipientAvatar,
+  chatId,
+  userId,
+  userName,
+  userImage,
+  initialMessages = [],
+  onSendMessage,
 }: ChatProps) {
-  const [messages, setMessages] = useState<Message[]>([])
+  const [messages, setMessages] = useState<Message[]>(initialMessages)
   const [newMessage, setNewMessage] = useState("")
-  const [loading, setLoading] = useState(false)
   const [isTyping, setIsTyping] = useState(false)
-  const [typingUsers, setTypingUsers] = useState<Record<string, { name: string; timestamp: number }>>({})
+  const [typingUser, setTypingUser] = useState<string | null>(null)
+  const [isSending, setIsSending] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
-  const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null)
-
-  const pusher = usePusher()
+  const { client: pusher, isConfigured } = usePusher()
+  const { toast } = useToast()
 
   useEffect(() => {
-    if (!pusher) return
+    if (!isConfigured) {
+      toast({
+        title: "Real-time features disabled",
+        description: "Pusher is not configured. Messages will not update in real-time.",
+        variant: "destructive",
+      })
+    }
+  }, [isConfigured, toast])
+
+  useEffect(() => {
+    if (!pusher || !isConfigured) return
 
     // Subscribe to the chat channel
-    const channel = pusher.subscribe(channelName)
+    const channel = pusher.subscribe(`chat-${chatId}`)
 
+    // Listen for new messages
     channel.bind("new-message", (data: Message) => {
       setMessages((prev) => [...prev, data])
-
-      // Clear typing indicator when message is received from the typing user
-      if (typingUsers[data.sender.id]) {
-        setTypingUsers((prev) => {
-          const updated = { ...prev }
-          delete updated[data.sender.id]
-          return updated
-        })
-      }
     })
 
-    channel.bind("typing-indicator", (data: { userId: string; userName: string; isTyping: boolean }) => {
-      if (data.userId === currentUser.id) return
-
-      if (data.isTyping) {
-        setTypingUsers((prev) => ({
-          ...prev,
-          [data.userId]: { name: data.userName, timestamp: Date.now() },
-        }))
-      } else {
-        setTypingUsers((prev) => {
-          const updated = { ...prev }
-          delete updated[data.userId]
-          return updated
-        })
+    // Listen for typing indicators
+    channel.bind("typing", (data: { userId: string; userName: string; isTyping: boolean }) => {
+      if (data.userId !== userId) {
+        setIsTyping(data.isTyping)
+        setTypingUser(data.isTyping ? data.userName : null)
       }
     })
-
-    // Fetch initial messages
-    fetchMessages()
-
-    // Clean up typing indicators after inactivity
-    const typingCleanupInterval = setInterval(() => {
-      const now = Date.now()
-      setTypingUsers((prev) => {
-        const updated = { ...prev }
-        Object.entries(updated).forEach(([userId, data]) => {
-          if (now - data.timestamp > 5000) {
-            delete updated[userId]
-          }
-        })
-        return updated
-      })
-    }, 1000)
 
     return () => {
-      pusher.unsubscribe(channelName)
-      clearInterval(typingCleanupInterval)
-      if (typingTimeoutRef.current) {
-        clearTimeout(typingTimeoutRef.current)
-      }
+      pusher.unsubscribe(`chat-${chatId}`)
     }
-  }, [channelName, currentUser.id, pusher])
+  }, [pusher, chatId, userId, isConfigured])
 
   useEffect(() => {
-    scrollToBottom()
-  }, [messages, typingUsers])
+    // Scroll to bottom when messages change
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
+  }, [messages])
 
-  const fetchMessages = async () => {
-    try {
-      // In a real app, you'd fetch from your API
-      // For now, we'll use mock data
-      const mockMessages: Message[] = [
-        {
-          id: "1",
-          content: "Hello! How can I help you with your real estate needs?",
-          sender: {
-            id: recipientId || "agent1",
-            name: recipientName || "Jane Smith",
-            avatar: recipientAvatar || "/javascript-code-abstract.png",
-          },
-          timestamp: new Date(Date.now() - 3600000).toISOString(),
-        },
-      ]
-
-      setMessages(mockMessages)
-    } catch (error) {
-      console.error("Error fetching messages:", error)
-    }
-  }
-
-  const sendMessage = async () => {
+  const handleSendMessage = async () => {
     if (!newMessage.trim()) return
 
-    setLoading(true)
-
+    setIsSending(true)
     try {
-      const message: Message = {
-        id: crypto.randomUUID(),
-        content: newMessage,
-        sender: currentUser,
-        timestamp: new Date().toISOString(),
-      }
-
-      // In a real app, you'd send to your API
-      await fetch("/api/messages/send", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          channelName,
-          message,
-        }),
-      })
-
-      // Send typing stopped indicator
-      sendTypingIndicator(false)
-
+      await onSendMessage(newMessage)
       setNewMessage("")
     } catch (error) {
-      console.error("Error sending message:", error)
+      console.error("Failed to send message:", error)
+      toast({
+        title: "Failed to send message",
+        description: "Please try again later.",
+        variant: "destructive",
+      })
     } finally {
-      setLoading(false)
+      setIsSending(false)
     }
   }
 
-  const sendTypingIndicator = async (isTyping: boolean) => {
+  const handleTyping = async () => {
+    if (!isConfigured) return
+
     try {
       await fetch("/api/messages/typing", {
         method: "POST",
@@ -184,134 +113,101 @@ export default function RealTimeChat({
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          channelName,
-          userId: currentUser.id,
-          userName: currentUser.name,
-          isTyping,
+          chatId,
+          userId,
+          userName,
+          isTyping: true,
         }),
       })
+
+      // Reset typing indicator after 2 seconds
+      setTimeout(async () => {
+        await fetch("/api/messages/typing", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            chatId,
+            userId,
+            userName,
+            isTyping: false,
+          }),
+        })
+      }, 2000)
     } catch (error) {
-      console.error("Error sending typing indicator:", error)
+      console.error("Failed to send typing indicator:", error)
     }
-  }
-
-  // Debounced function to send typing indicator
-  const debouncedTypingIndicator = useRef(
-    debounce((isTyping: boolean) => {
-      sendTypingIndicator(isTyping)
-    }, 300),
-  ).current
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value
-    setNewMessage(value)
-
-    // Send typing indicator if there's text
-    if (value.length > 0 && !isTyping) {
-      setIsTyping(true)
-      debouncedTypingIndicator(true)
-
-      // Clear previous timeout
-      if (typingTimeoutRef.current) {
-        clearTimeout(typingTimeoutRef.current)
-      }
-
-      // Set timeout to clear typing indicator after inactivity
-      typingTimeoutRef.current = setTimeout(() => {
-        setIsTyping(false)
-        debouncedTypingIndicator(false)
-      }, 3000)
-    } else if (value.length === 0 && isTyping) {
-      setIsTyping(false)
-      debouncedTypingIndicator(false)
-
-      if (typingTimeoutRef.current) {
-        clearTimeout(typingTimeoutRef.current)
-      }
-    }
-  }
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
-  }
-
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault()
-      sendMessage()
-    }
-  }
-
-  const getTypingIndicator = () => {
-    const typingUsersList = Object.values(typingUsers)
-    if (typingUsersList.length === 0) return null
-
-    const names = typingUsersList.map((u) => u.name).join(", ")
-
-    return (
-      <div className="flex items-center text-xs text-muted-foreground mb-2">
-        <div className="flex space-x-1 mr-2">
-          <div className="w-1.5 h-1.5 bg-primary rounded-full animate-bounce" style={{ animationDelay: "0ms" }}></div>
-          <div className="w-1.5 h-1.5 bg-primary rounded-full animate-bounce" style={{ animationDelay: "150ms" }}></div>
-          <div className="w-1.5 h-1.5 bg-primary rounded-full animate-bounce" style={{ animationDelay: "300ms" }}></div>
-        </div>
-        <span>{typingUsersList.length === 1 ? `${names} is typing...` : `${names} are typing...`}</span>
-      </div>
-    )
   }
 
   return (
-    <Card className="flex flex-col h-[600px]">
-      <CardHeader className="px-4 py-3 border-b">
-        <CardTitle className="text-lg">{recipientName ? `Chat with ${recipientName}` : "Chat"}</CardTitle>
+    <Card className="w-full max-w-3xl mx-auto">
+      <CardHeader>
+        <CardTitle>Chat</CardTitle>
       </CardHeader>
-      <CardContent className="flex-1 overflow-y-auto p-4 space-y-4">
-        {messages.map((message) => (
-          <div
-            key={message.id}
-            className={`flex ${message.sender.id === currentUser.id ? "justify-end" : "justify-start"}`}
-          >
-            <div
-              className={`flex ${message.sender.id === currentUser.id ? "flex-row-reverse" : "flex-row"} gap-2 max-w-[80%]`}
-            >
-              <Avatar className="h-8 w-8">
-                <AvatarImage src={message.sender.avatar || "/placeholder.svg?height=32&width=32&query=user"} />
-                <AvatarFallback>
-                  {message.sender.name
-                    .split(" ")
-                    .map((n) => n[0])
-                    .join("")}
-                </AvatarFallback>
-              </Avatar>
-              <div>
+      <CardContent className="h-[400px] overflow-y-auto">
+        <div className="space-y-4">
+          {messages.map((message) => (
+            <div key={message.id} className={`flex ${message.sender.id === userId ? "justify-end" : "justify-start"}`}>
+              <div className="flex items-start gap-2 max-w-[80%]">
+                {message.sender.id !== userId && (
+                  <Avatar className="h-8 w-8">
+                    <AvatarImage src={message.sender.image || "/placeholder.svg"} alt={message.sender.name} />
+                    <AvatarFallback>
+                      {message.sender.name
+                        .split(" ")
+                        .map((n) => n[0])
+                        .join("")}
+                    </AvatarFallback>
+                  </Avatar>
+                )}
                 <div
-                  className={`rounded-lg px-3 py-2 ${
-                    message.sender.id === currentUser.id ? "bg-primary text-primary-foreground" : "bg-muted"
+                  className={`rounded-lg p-3 ${
+                    message.sender.id === userId
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-muted text-muted-foreground"
                   }`}
                 >
-                  {message.content}
+                  {message.sender.id !== userId && <p className="text-xs font-medium mb-1">{message.sender.name}</p>}
+                  <p>{message.content}</p>
+                  <p className="text-xs opacity-70 mt-1">{new Date(message.timestamp).toLocaleTimeString()}</p>
                 </div>
-                <p className="text-xs text-muted-foreground mt-1">
-                  {new Date(message.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-                </p>
+                {message.sender.id === userId && (
+                  <Avatar className="h-8 w-8">
+                    <AvatarImage src={userImage || "/placeholder.svg"} alt={userName} />
+                    <AvatarFallback>
+                      {userName
+                        .split(" ")
+                        .map((n) => n[0])
+                        .join("")}
+                    </AvatarFallback>
+                  </Avatar>
+                )}
               </div>
             </div>
-          </div>
-        ))}
-        {getTypingIndicator()}
-        <div ref={messagesEndRef} />
+          ))}
+          {isTyping && <div className="text-sm text-muted-foreground italic">{typingUser} is typing...</div>}
+          <div ref={messagesEndRef} />
+        </div>
       </CardContent>
-      <CardFooter className="p-3 border-t">
-        <div className="flex w-full items-center gap-2">
+      <CardFooter>
+        <div className="flex w-full gap-2">
           <Input
             value={newMessage}
-            onChange={handleInputChange}
-            onKeyDown={handleKeyPress}
+            onChange={(e) => setNewMessage(e.target.value)}
+            onKeyUp={handleTyping}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault()
+                handleSendMessage()
+              }
+            }}
             placeholder="Type your message..."
+            disabled={isSending}
             className="flex-1"
           />
-          <Button onClick={sendMessage} disabled={loading || !newMessage.trim()} size="icon">
-            <Send className="h-4 w-4" />
+          <Button onClick={handleSendMessage} disabled={isSending || !newMessage.trim()}>
+            {isSending ? "Sending..." : "Send"}
           </Button>
         </div>
       </CardFooter>

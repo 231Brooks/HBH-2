@@ -1,30 +1,25 @@
 import Pusher from "pusher"
-import { serverEnv } from "./env"
 
-let pusherInstance: Pusher | null = null
+// Check if all required environment variables are present
+const isPusherConfigured =
+  process.env.PUSHER_APP_ID && process.env.PUSHER_KEY && process.env.PUSHER_SECRET && process.env.PUSHER_CLUSTER
 
-export function getPusherServer(): Pusher {
-  if (
-    !pusherInstance &&
-    serverEnv.PUSHER_APP_ID &&
-    serverEnv.PUSHER_KEY &&
-    serverEnv.PUSHER_SECRET &&
-    serverEnv.PUSHER_CLUSTER
-  ) {
-    pusherInstance = new Pusher({
-      appId: serverEnv.PUSHER_APP_ID,
-      key: serverEnv.PUSHER_KEY,
-      secret: serverEnv.PUSHER_SECRET,
-      cluster: serverEnv.PUSHER_CLUSTER,
-      useTLS: true,
-    })
-  }
-
-  if (!pusherInstance) {
-    throw new Error("Pusher is not configured. Please check your environment variables.")
-  }
-
-  return pusherInstance
+// Create a dummy pusher instance if not configured
+const dummyPusher = {
+  trigger: async () => {
+    console.warn("Pusher is not configured. Message will not be sent.")
+    return Promise.resolve()
+  },
+  // Add other methods as needed
 }
 
-export const pusherServer = getPusherServer()
+// Initialize Pusher only if all required environment variables are present
+export const pusherServer = isPusherConfigured
+  ? new Pusher({
+      appId: process.env.PUSHER_APP_ID!,
+      key: process.env.PUSHER_KEY!,
+      secret: process.env.PUSHER_SECRET!,
+      cluster: process.env.PUSHER_CLUSTER!,
+      useTLS: true,
+    })
+  : (dummyPusher as unknown as Pusher)

@@ -9,15 +9,14 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const body = await request.json()
-    const { channelName, userId, userName, isTyping } = body
+    const { chatId, userId, userName, isTyping } = await request.json()
 
-    if (!channelName || !userId || !userName) {
+    if (!chatId || !userId || !userName) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 })
     }
 
-    // Trigger event on Pusher
-    await pusherServer.trigger(channelName, "typing-indicator", {
+    // Trigger typing event on the chat channel
+    await pusherServer.trigger(`chat-${chatId}`, "typing", {
       userId,
       userName,
       isTyping,

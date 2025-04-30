@@ -143,9 +143,6 @@ importers:
       leaflet:
         specifier: latest
         version: 1.9.4
-      lodash:
-        specifier: latest
-        version: 4.17.21
       lucide-react:
         specifier: ^0.454.0
         version: 0.454.0(react@19.0.0)
