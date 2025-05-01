@@ -70,7 +70,8 @@
     "@upstash/redis": "latest",
     "fs": "latest",
     "path": "latest",
-    "stripe": "latest"
+    "stripe": "latest",
+    "perf_hooks": "latest"
   },
   "devDependencies": {
     "@types/node": "^22",
