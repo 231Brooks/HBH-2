@@ -1,20 +1,17 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { Input } from "@/components/ui/input"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Slider } from "@/components/ui/slider"
 import {
-  Search,
   MapPin,
-  Filter,
-  Plus,
-  Grid,
-  List,
   Gavel,
   Building,
   Home,
@@ -22,19 +19,118 @@ import {
   ArrowUpRight,
   MessageSquare,
   Heart,
+  Grid,
+  List,
+  Plus,
+  Search,
+  Filter,
 } from "lucide-react"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Checkbox } from "@/components/ui/checkbox"
-import { Slider } from "@/components/ui/slider"
 import dynamic from "next/dynamic"
 import { CachedMarketplaceItems } from "./cached-items"
+import { getProperties } from "../actions/property-actions"
+import { PerformanceTracker } from "./performance-tracker"
+import { Checkbox } from "@/components/ui/checkbox"
 
 // Import PropertyMap with dynamic import to prevent SSR issues
 const PropertyMap = dynamic(() => import("./components/property-map"), { ssr: false })
 
 export default function MarketplaceClient() {
+  const [properties, setProperties] = useState([])
+  const [loading, setLoading] = useState(true)
   const [viewMode, setViewMode] = useState<"grid" | "list" | "map">("grid")
+  const [filters, setFilters] = useState({
+    status: "",
+    type: "",
+    minPrice: 0,
+    maxPrice: 1000000,
+    beds: 0,
+    baths: 0,
+    page: 1,
+  })
+  const [hasMore, setHasMore] = useState(false)
+  const [total, setTotal] = useState(0)
   const [showFilters, setShowFilters] = useState(false)
+
+  // Load properties
+  useEffect(() => {
+    loadProperties()
+  }, [])
+
+  // Function to load properties with filters
+  const loadProperties = async (newFilters?: any) => {
+    setLoading(true)
+    const currentFilters = newFilters || filters
+
+    try {
+      const result = await getProperties(currentFilters)
+      setProperties(result.properties)
+      setHasMore(result.hasMore)
+      setTotal(result.total)
+    } catch (error) {
+      console.error("Failed to load properties:", error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // Apply filters
+  const applyFilters = () => {
+    // Record start time for performance measurement
+    const startTime = performance.now()
+
+    // Reset to page 1 when applying new filters
+    const newFilters = { ...filters, page: 1 }
+    setFilters(newFilters)
+    loadProperties(newFilters)
+
+    // Emit custom event for performance tracking
+    window.dispatchEvent(
+      new CustomEvent("filterApplied", {
+        detail: { startTime, filters: newFilters },
+      }),
+    )
+  }
+
+  // Load more properties
+  const loadMore = () => {
+    const newFilters = { ...filters, page: filters.page + 1 }
+    setFilters(newFilters)
+
+    // Record start time for performance measurement
+    const startTime = performance.now()
+
+    setLoading(true)
+    getProperties(newFilters).then((result) => {
+      setProperties([...properties, ...result.properties])
+      setHasMore(result.hasMore)
+      setTotal(result.total)
+      setLoading(false)
+
+      // Emit custom event for performance tracking
+      window.dispatchEvent(
+        new CustomEvent("filterApplied", {
+          detail: { startTime, filters: newFilters, loadMore: true },
+        }),
+      )
+    })
+  }
+
+  // Reset filters
+  const resetFilters = () => {
+    const defaultFilters = {
+      status: "",
+      type: "",
+      minPrice: 0,
+      maxPrice: 1000000,
+      beds: 0,
+      baths: 0,
+      page: 1,
+    }
+    setFilters(defaultFilters)
+    loadProperties(defaultFilters)
+  }
+
+  // Rest of the component remains the same...
 
   return (
     <div className="container py-8">
@@ -196,8 +292,10 @@ export default function MarketplaceClient() {
             </div>
 
             <div className="md:col-span-4 flex justify-end gap-2">
-              <Button variant="outline">Reset Filters</Button>
-              <Button>Apply Filters</Button>
+              <Button variant="outline" onClick={resetFilters}>
+                Reset Filters
+              </Button>
+              <Button onClick={applyFilters}>Apply Filters</Button>
             </div>
           </div>
         )}
@@ -369,7 +467,9 @@ export default function MarketplaceClient() {
           )}
 
           <div className="mt-8 flex justify-center">
-            <Button variant="outline">Load More Properties</Button>
+            <Button variant="outline" onClick={loadMore} disabled={!hasMore || loading}>
+              {loading ? "Loading..." : hasMore ? "Load More Properties" : "No More Properties"}
+            </Button>
           </div>
         </TabsContent>
 
@@ -392,6 +492,9 @@ export default function MarketplaceClient() {
       <div className="mt-8">
         <CachedMarketplaceItems />
       </div>
+
+      {/* Add the performance tracker */}
+      <PerformanceTracker />
     </div>
   )
 }
