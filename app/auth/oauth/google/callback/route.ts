@@ -5,7 +5,15 @@ import { cookies } from "next/headers"
 export async function GET(request: Request) {
   const requestUrl = new URL(request.url)
   const code = requestUrl.searchParams.get("code")
-  const next = requestUrl.searchParams.get("next") || "/"
+  const error = requestUrl.searchParams.get("error")
+  const error_description = requestUrl.searchParams.get("error_description")
+
+  // Handle errors from OAuth provider
+  if (error) {
+    return NextResponse.redirect(
+      new URL(`/auth/error?error=${error}&description=${error_description}`, requestUrl.origin),
+    )
+  }
 
   if (code) {
     const cookieStore = cookies()
@@ -26,6 +34,5 @@ export async function GET(request: Request) {
     await supabase.auth.exchangeCodeForSession(code)
   }
 
-  // URL to redirect to after sign in process completes
-  return NextResponse.redirect(new URL(next, requestUrl.origin))
+  return NextResponse.redirect(new URL("/", requestUrl.origin))
 }
