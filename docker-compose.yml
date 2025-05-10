@@ -10,9 +10,9 @@ services:
     environment:
       - NODE_ENV=production
       - DATABASE_URL=${DATABASE_URL}
-      - NEXT_PUBLIC_PUSHER_APP_ID=${NEXT_PUBLIC_PUSHER_APP_ID}
-      - NEXT_PUBLIC_PUSHER_KEY=${NEXT_PUBLIC_PUSHER_KEY}
-      - NEXT_PUBLIC_PUSHER_CLUSTER=${NEXT_PUBLIC_PUSHER_CLUSTER}
+      - PUSHER_APP_ID=${PUSHER_APP_ID}
+      - PUSHER_KEY=${PUSHER_KEY}
+      - PUSHER_CLUSTER=${PUSHER_CLUSTER}
       - PUSHER_SECRET=${PUSHER_SECRET}
     restart: unless-stopped
     healthcheck:

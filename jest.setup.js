@@ -2,9 +2,9 @@
 import "@testing-library/jest-dom"
 
 // Mock environment variables
-process.env.NEXT_PUBLIC_PUSHER_APP_ID = "test-app-id"
-process.env.NEXT_PUBLIC_PUSHER_KEY = "test-key"
-process.env.NEXT_PUBLIC_PUSHER_CLUSTER = "test-cluster"
+process.env.PUSHER_APP_ID = "test-app-id"
+process.env.PUSHER_KEY = "test-key"
+process.env.PUSHER_CLUSTER = "test-cluster"
 process.env.PUSHER_SECRET = "test-secret"
 process.env.DATABASE_URL = "test-db-url"
 

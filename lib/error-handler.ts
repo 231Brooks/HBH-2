@@ -74,3 +74,31 @@ export function handleApiError(error: unknown) {
   console.error("[UNHANDLED_ERROR]", error)
   return { statusCode: 500, message: "An unexpected error occurred", type: ErrorType.INTERNAL }
 }
+
+// Add the missing errorHandler export
+export const errorHandler = {
+  handleApiError,
+
+  // General error handler for any part of the application
+  handleError: (error: unknown): { message: string; type: string } => {
+    if (error instanceof AppError) {
+      console.error(`[${error.type}] ${error.message}`)
+      return { message: error.message, type: error.type }
+    }
+
+    // For non-AppError instances, log and return a generic message
+    console.error("[UNHANDLED_ERROR]", error)
+    return { message: "An unexpected error occurred", type: ErrorType.INTERNAL }
+  },
+
+  // Client-side error handler
+  handleClientError: (error: unknown): string => {
+    if (error instanceof Error) {
+      console.error("[CLIENT_ERROR]", error.message)
+      return error.message
+    }
+
+    console.error("[UNHANDLED_CLIENT_ERROR]", error)
+    return "An unexpected error occurred"
+  },
+}

@@ -5,23 +5,13 @@ import { logger } from "@/lib/logger"
 export async function GET() {
   try {
     // Get the Pusher configuration from environment variables
-    const key = process.env.PUSHER_KEY || process.env.NEXT_PUBLIC_PUSHER_KEY
-    const cluster = process.env.PUSHER_CLUSTER || process.env.NEXT_PUBLIC_PUSHER_CLUSTER
+    const key = process.env.PUSHER_KEY
+    const cluster = process.env.PUSHER_CLUSTER
 
     // Log the configuration (without exposing the actual key)
     logger.info("Pusher config requested", {
       hasKey: !!key,
       hasCluster: !!cluster,
-      keySource: process.env.PUSHER_KEY
-        ? "PUSHER_KEY"
-        : process.env.NEXT_PUBLIC_PUSHER_KEY
-          ? "NEXT_PUBLIC_PUSHER_KEY"
-          : "none",
-      clusterSource: process.env.PUSHER_CLUSTER
-        ? "PUSHER_CLUSTER"
-        : process.env.NEXT_PUBLIC_PUSHER_CLUSTER
-          ? "NEXT_PUBLIC_PUSHER_CLUSTER"
-          : "none",
     })
 
     // Check if the configuration is valid

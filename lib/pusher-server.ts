@@ -8,17 +8,12 @@ let pusherServer: Pusher | null = null
 
 try {
   // Only initialize if all required env vars are present
-  if (
-    env.NEXT_PUBLIC_PUSHER_APP_ID &&
-    env.NEXT_PUBLIC_PUSHER_KEY &&
-    env.PUSHER_SECRET &&
-    env.NEXT_PUBLIC_PUSHER_CLUSTER
-  ) {
+  if (env.PUSHER_APP_ID && env.PUSHER_KEY && env.PUSHER_SECRET && env.PUSHER_CLUSTER) {
     pusherServer = new Pusher({
-      appId: env.NEXT_PUBLIC_PUSHER_APP_ID,
-      key: env.NEXT_PUBLIC_PUSHER_KEY,
+      appId: env.PUSHER_APP_ID,
+      key: env.PUSHER_KEY,
       secret: env.PUSHER_SECRET,
-      cluster: env.NEXT_PUBLIC_PUSHER_CLUSTER,
+      cluster: env.PUSHER_CLUSTER,
       useTLS: true,
     })
 

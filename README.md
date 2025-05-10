@@ -17,9 +17,9 @@ Set up the following environment variables in your Vercel project:
 
 \`\`\`
 DATABASE_URL=your_neon_database_url
-NEXT_PUBLIC_PUSHER_APP_ID=your_pusher_app_id
-NEXT_PUBLIC_PUSHER_KEY=your_pusher_key
-NEXT_PUBLIC_PUSHER_CLUSTER=your_pusher_cluster
+PUSHER_APP_ID=your_pusher_app_id
+PUSHER_KEY=your_pusher_key
+PUSHER_CLUSTER=your_pusher_cluster
 PUSHER_SECRET=your_pusher_secret
 \`\`\`
 
@@ -72,4 +72,4 @@ Run tests with: `npm test`
 MIT
 \`\`\`
 
-Let's update the package.json file with proper scripts and dependencies:
+Let's update the jest.setup.js file:

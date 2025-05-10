@@ -13,9 +13,9 @@ export function validateEnv() {
 // Type-safe environment variables
 export const env = {
   DATABASE_URL: process.env.DATABASE_URL as string,
-  NEXT_PUBLIC_PUSHER_APP_ID: process.env.NEXT_PUBLIC_PUSHER_APP_ID as string,
-  NEXT_PUBLIC_PUSHER_KEY: process.env.NEXT_PUBLIC_PUSHER_KEY as string,
-  NEXT_PUBLIC_PUSHER_CLUSTER: process.env.NEXT_PUBLIC_PUSHER_CLUSTER as string,
+  PUSHER_APP_ID: process.env.PUSHER_APP_ID as string,
+  PUSHER_KEY: process.env.PUSHER_KEY as string,
+  PUSHER_CLUSTER: process.env.PUSHER_CLUSTER as string,
   PUSHER_SECRET: process.env.PUSHER_SECRET as string,
   NODE_ENV: process.env.NODE_ENV as "development" | "production" | "test",
   VERCEL_URL: process.env.VERCEL_URL as string,
