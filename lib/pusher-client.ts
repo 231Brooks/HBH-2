@@ -7,6 +7,9 @@ import { logger } from "./logger"
 let pusherClient: Pusher | null = null
 let isInitializing = false
 let initPromise: Promise<Pusher | null> | null = null
+let retryCount = 0
+const MAX_RETRIES = 5
+const RETRY_DELAY_BASE = 2000 // 2 seconds base delay
 
 // We'll initialize Pusher with configuration from a server endpoint
 export async function initializePusherClient(): Promise<Pusher | null> {
@@ -46,20 +49,31 @@ export async function initializePusherClient(): Promise<Pusher | null> {
         return
       }
 
+      // Configure Pusher with fallbacks and better error handling
       pusherClient = new Pusher(config.key, {
         cluster: config.cluster,
         authEndpoint: "/api/pusher/auth",
-        enabledTransports: ["ws", "wss"],
+        // Enable all transports for better fallback options
+        enabledTransports: ["ws", "wss", "xhr_streaming", "xhr_polling"],
         disabledTransports: [],
-        activityTimeout: 30000,
-        pongTimeout: 15000,
+        // Increase timeouts for better reliability
+        activityTimeout: 60000, // 1 minute
+        pongTimeout: 30000, // 30 seconds
+        // Retry configuration
         maxReconnectionAttempts: 10,
-        maxReconnectGapInSeconds: 30,
+        maxReconnectGapInSeconds: 60,
+        // Enable stats for better debugging
+        enableStats: true,
+        // Reduce WebSocket connection issues in some environments
+        wsHost: config.cluster + ".pusher.com",
+        httpHost: config.cluster + ".pusher.com",
       })
 
       // Add connection monitoring
       pusherClient.connection.bind("connected", () => {
         logger.info("Connected to Pusher")
+        // Reset retry count on successful connection
+        retryCount = 0
       })
 
       pusherClient.connection.bind("disconnected", () => {
@@ -68,6 +82,31 @@ export async function initializePusherClient(): Promise<Pusher | null> {
 
       pusherClient.connection.bind("error", (err: any) => {
         logger.error("Pusher connection error", err)
+
+        // Handle WebSocket errors specifically
+        if (err.type === "WebSocketError") {
+          logger.warn("WebSocket connection failed, will try alternative transports")
+
+          // If we've already retried too many times, don't retry again
+          if (retryCount >= MAX_RETRIES) {
+            logger.error(`Maximum retry attempts (${MAX_RETRIES}) reached, giving up`)
+            return
+          }
+
+          // Exponential backoff for retries
+          const delay = RETRY_DELAY_BASE * Math.pow(2, retryCount)
+          retryCount++
+
+          logger.info(`Retrying connection in ${delay}ms (attempt ${retryCount} of ${MAX_RETRIES})`)
+
+          setTimeout(() => {
+            if (pusherClient) {
+              // Force disconnect and reconnect
+              pusherClient.disconnect()
+              pusherClient.connect()
+            }
+          }, delay)
+        }
 
         // Handle specific error codes
         if (err?.data?.code === 4200) {
@@ -79,6 +118,13 @@ export async function initializePusherClient(): Promise<Pusher | null> {
           }, 3000)
         }
       })
+
+      // Add stats monitoring for debugging
+      if (pusherClient.connection.isSupported()) {
+        logger.info("WebSockets are supported in this browser")
+      } else {
+        logger.warn("WebSockets are not supported in this browser, will use HTTP fallbacks")
+      }
 
       resolve(pusherClient)
     } catch (error) {
@@ -119,6 +165,12 @@ export async function subscribeToPusherChannel(
     }
 
     const channel = client.subscribe(channelName)
+
+    // Handle subscription errors
+    channel.bind("subscription_error", (status: any) => {
+      logger.error(`Subscription error for channel ${channelName}:`, status)
+    })
+
     channel.bind(eventName, callback)
 
     // Return unsubscribe function
@@ -135,6 +187,11 @@ export async function subscribeToPusherChannel(
     // Return no-op function
     return () => {}
   }
+}
+
+// Create a function to check if Pusher is connected
+export function isPusherConnected(): boolean {
+  return !!pusherClient && pusherClient.connection.state === "connected"
 }
 
 // Export the client initialization function and the client itself
