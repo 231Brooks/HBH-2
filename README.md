@@ -1,75 +1,115 @@
-# 5Sense Platform
+# Homes Better Hands (HBH) - Real Estate Platform
 
-A comprehensive platform for investments, choirs, and shopping.
+A comprehensive real estate platform with property listings, transaction management, service marketplace, and real-time communication features.
 
-## Deployment
+## Features
+
+- **User Authentication**: Secure login/signup with email/password and GitHub OAuth
+- **Property Marketplace**: Browse, search, and filter property listings
+- **Transaction Management**: Track real estate transactions with progress monitoring
+- **Service Marketplace**: Find and hire real estate professionals
+- **Real-time Chat**: Communicate with agents and service providers
+- **Document Management**: Upload and share transaction documents
+- **Calendar Integration**: Schedule and manage appointments
+- **Notifications**: Real-time updates on important events
+
+## Tech Stack
+
+- **Frontend**: Next.js 14, React, Tailwind CSS, shadcn/ui
+- **Backend**: Next.js API Routes, Server Actions
+- **Database**: PostgreSQL with Prisma ORM
+- **Authentication**: NextAuth.js
+- **Real-time**: Pusher
+- **File Storage**: Cloudinary
+- **Deployment**: Vercel
+
+## Getting Started
 
 ### Prerequisites
 
 - Node.js 18+ and npm
-- Vercel account
-- Neon PostgreSQL database
+- PostgreSQL database
+- Cloudinary account
 - Pusher account
+- GitHub OAuth application (for GitHub login)
 
-### Environment Variables
-
-Set up the following environment variables in your Vercel project:
-
-\`\`\`
-DATABASE_URL=your_neon_database_url
-PUSHER_APP_ID=your_pusher_app_id
-PUSHER_KEY=your_pusher_key
-PUSHER_CLUSTER=your_pusher_cluster
-PUSHER_SECRET=your_pusher_secret
-\`\`\`
-
-### Deployment Steps
-
-1. Fork this repository
-2. Connect your fork to Vercel
-3. Set up the environment variables
-4. Deploy
-
-### Database Setup
-
-Run the following SQL to set up your database:
-
-\`\`\`sql
-CREATE TABLE users (
-  id SERIAL PRIMARY KEY,
-  email VARCHAR(255) UNIQUE NOT NULL,
-  password VARCHAR(255) NOT NULL,
-  name VARCHAR(255),
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
--- Add other tables as needed
-\`\`\`
-
-## Development
-
-### Local Setup
+### Environment Setup
 
 1. Clone the repository
-2. Install dependencies: `npm install`
-3. Create a `.env.local` file with the environment variables
-4. Run the development server: `npm run dev`
+   \`\`\`bash
+   git clone https://github.com/yourusername/homes-better-hands.git
+   cd homes-better-hands
+   \`\`\`
 
-### Testing
+2. Install dependencies
+   \`\`\`bash
+   npm install
+   \`\`\`
 
-Run tests with: `npm test`
+3. Create a `.env` file based on `.env.example`
+   \`\`\`bash
+   cp .env.example .env
+   \`\`\`
 
-## Features
+4. Fill in the environment variables in `.env`
 
-- Real-time notifications with Pusher
-- User authentication
-- Investment tracking
-- Choir management
-- Shopping platform
+5. Set up the database
+   \`\`\`bash
+   npx prisma migrate dev
+   npx prisma db seed
+   \`\`\`
+
+6. Start the development server
+   \`\`\`bash
+   npm run dev
+   \`\`\`
+
+### Using Docker
+
+Alternatively, you can use Docker Compose:
+
+\`\`\`bash
+docker-compose up -d
+\`\`\`
+
+## Deployment
+
+### Vercel Deployment
+
+1. Push your code to GitHub
+2. Import the repository in Vercel
+3. Configure environment variables
+4. Deploy
+
+### Manual Deployment
+
+1. Build the application
+   \`\`\`bash
+   npm run build
+   \`\`\`
+
+2. Start the production server
+   \`\`\`bash
+   npm start
+   \`\`\`
+
+## Project Structure
+
+- `/app`: Next.js App Router pages and layouts
+- `/components`: Reusable React components
+- `/lib`: Utility functions and configuration
+- `/prisma`: Database schema and migrations
+- `/public`: Static assets
+- `/styles`: Global CSS styles
+- `/types`: TypeScript type definitions
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Submit a pull request
 
 ## License
 
-MIT
-\`\`\`
-
-Let's update the jest.setup.js file:
+This project is licensed under the MIT License - see the LICENSE file for details.

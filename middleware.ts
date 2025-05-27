@@ -1,65 +1,78 @@
 import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
-import { logger } from "@/lib/logger"
+import { getToken } from "next-auth/jwt"
 
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
+  // Get the pathname
   const path = request.nextUrl.pathname
 
-  // Define public paths that don't require authentication
-  const isPublicPath = path === "/login" || path === "/signup" || path === "/about" || path === "/"
+  // Public paths that don't require authentication
+  const publicPaths = [
+    "/",
+    "/auth/login",
+    "/auth/signup",
+    "/auth/forgot-password",
+    "/auth/reset-password",
+    "/marketplace",
+    "/services",
+    "/job-marketplace",
+  ]
 
-  // Get the session cookie
-  const session = request.cookies.get("session")?.value
+  // Check if the path is public
+  const isPublicPath = publicPaths.some((publicPath) => path === publicPath || path.startsWith(`${publicPath}/`))
 
-  // Add security headers to all responses
-  const response = applySecurityHeaders(
-    isPublicPath && !session && path !== "/" && path !== "/about"
-      ? NextResponse.redirect(new URL("/login", request.url))
-      : !isPublicPath && !session
-        ? NextResponse.redirect(new URL("/login", request.url))
-        : isPublicPath && path !== "/" && path !== "/about" && session
-          ? NextResponse.redirect(new URL("/dashboard", request.url))
-          : NextResponse.next(),
-  )
+  // Check if the path is for static assets or API
+  const isStaticAsset = path.startsWith("/_next") || path.startsWith("/images") || path.startsWith("/favicon")
 
-  // Log request for monitoring (excluding assets and API health checks)
-  if (!path.match(/\.(ico|png|jpg|jpeg|svg|css|js)$/) && path !== "/api/health") {
-    logger.info(`${request.method} ${path}`, {
-      ip: request.ip || "unknown",
-      userAgent: request.headers.get("user-agent") || "unknown",
-    })
+  const isApiPath = path.startsWith("/api")
+
+  // If it's a static asset or public path, allow access
+  if (isStaticAsset || isPublicPath) {
+    return NextResponse.next()
   }
 
-  return response
+  // For API routes, we'll let them handle their own auth
+  if (isApiPath) {
+    return NextResponse.next()
+  }
+
+  // Get the token
+  const token = await getToken({ req: request })
+  const isAuthenticated = !!token
+
+  // Define protected routes that require authentication
+  const protectedRoutes = ["/profile", "/progress", "/messages", "/calendar"]
+
+  // Define admin-only routes
+  const adminRoutes = ["/admin"]
+
+  // Check if the requested path is a protected route
+  const isProtectedRoute = protectedRoutes.some((route) => path.startsWith(route))
+
+  // Check if the requested path is an admin-only route
+  const isAdminRoute = adminRoutes.some((route) => path.startsWith(route))
+
+  // Redirect to login if trying to access a protected route while not authenticated
+  if (isProtectedRoute && !isAuthenticated) {
+    const loginUrl = new URL("/auth/login", request.url)
+    loginUrl.searchParams.set("callbackUrl", request.nextUrl.pathname)
+    return NextResponse.redirect(loginUrl)
+  }
+
+  // Redirect to unauthorized page if trying to access an admin route without admin privileges
+  if (isAdminRoute && (!isAuthenticated || token?.role !== "ADMIN")) {
+    return NextResponse.redirect(new URL("/unauthorized", request.url))
+  }
+
+  // Redirect to profile if trying to access auth pages while already authenticated
+  if (isAuthenticated && path.startsWith("/auth")) {
+    return NextResponse.redirect(new URL("/profile", request.url))
+  }
+
+  return NextResponse.next()
 }
 
-// Apply security headers to responses
-function applySecurityHeaders(response: NextResponse) {
-  // Security headers
-  const headers = response.headers
-
-  // Content Security Policy
-  headers.set(
-    "Content-Security-Policy",
-    "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.pusher.com; connect-src 'self' https://*.pusher.com wss://*.pusher.com; img-src 'self' data: blob: https://*; style-src 'self' 'unsafe-inline'; font-src 'self' data:;",
-  )
-
-  // Other security headers
-  headers.set("X-DNS-Prefetch-Control", "on")
-  headers.set("Strict-Transport-Security", "max-age=63072000; includeSubDomains; preload")
-  headers.set("X-XSS-Protection", "1; mode=block")
-  headers.set("X-Frame-Options", "SAMEORIGIN")
-  headers.set("X-Content-Type-Options", "nosniff")
-  headers.set("Referrer-Policy", "origin-when-cross-origin")
-  headers.set("Permissions-Policy", "camera=(), microphone=(), geolocation=()")
-
-  return response
-}
-
-// Configure the paths that should trigger this middleware
+// Configure which routes use this middleware
 export const config = {
-  matcher: [
-    // Apply to all paths except static files
-    "/((?!_next/static|_next/image|favicon.ico).*)",
-  ],
+  matcher: ["/((?!api/health|_next/static|_next/image|favicon.ico).*)"],
 }

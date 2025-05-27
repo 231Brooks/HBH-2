@@ -1,6 +1,6 @@
 import type { Config } from "tailwindcss"
 
-const config = {
+const config: Config = {
   darkMode: ["class"],
   content: [
     "./pages/**/*.{ts,tsx}",
@@ -23,7 +23,7 @@ const config = {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
-        background: "hsl(var(--background))",
+        background: "#EBEBEB",
         foreground: "hsl(var(--foreground))",
         primary: {
           DEFAULT: "hsl(var(--primary))",
@@ -53,16 +53,6 @@ const config = {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
-        // Maybe Finance specific colors
-        maybe: {
-          purple: "#7B61FF",
-          blue: "#00B2FF",
-          teal: "#00E2C3",
-          pink: "#FF61DC",
-          dark: "#121212",
-          "dark-gray": "#1E1E1E",
-          "light-gray": "#F5F5F7",
-        },
       },
       borderRadius: {
         lg: "var(--radius)",
@@ -86,6 +76,6 @@ const config = {
     },
   },
   plugins: [require("tailwindcss-animate")],
-} satisfies Config
+}
 
 export default config

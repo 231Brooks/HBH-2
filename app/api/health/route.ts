@@ -1,32 +1,28 @@
 import { NextResponse } from "next/server"
-import { sql } from "@/lib/db"
-import { logger } from "@/lib/logger"
+import prisma from "@/lib/prisma"
 
 export async function GET() {
-  const startTime = Date.now()
-  const checks = { database: false, api: true }
-  let status = 200
-
   try {
     // Check database connection
-    await sql`SELECT 1`
-    checks.database = true
+    await prisma.$queryRaw`SELECT 1`
 
-    logger.info("Health check passed")
-  } catch (error) {
-    logger.error("Health check failed", error)
-    status = 503 // Service Unavailable
-  }
-
-  const responseTime = Date.now() - startTime
-
-  return NextResponse.json(
-    {
-      status: status === 200 ? "ok" : "error",
+    // Return health status
+    return NextResponse.json({
+      status: "ok",
       timestamp: new Date().toISOString(),
-      checks,
-      responseTime: `${responseTime}ms`,
-    },
-    { status },
-  )
+      uptime: process.uptime(),
+      environment: process.env.NODE_ENV,
+    })
+  } catch (error) {
+    console.error("Health check failed:", error)
+
+    return NextResponse.json(
+      {
+        status: "error",
+        message: "Service unavailable",
+        timestamp: new Date().toISOString(),
+      },
+      { status: 503 },
+    )
+  }
 }

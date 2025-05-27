@@ -1,50 +1,36 @@
-import { type NextRequest, NextResponse } from "next/server"
-import { triggerPusherEvent } from "@/lib/pusher-server"
-import { pusherChannels } from "@/lib/pusher-client"
-import { logger } from "@/lib/logger"
-import { ValidationError, handleApiError } from "@/lib/error-handler"
+import { NextResponse } from "next/server"
+import { auth } from "@/lib/auth"
+import prisma from "@/lib/prisma"
 
-export async function POST(request: NextRequest) {
+export async function GET() {
   try {
-    const body = await request.json()
-    const { title, description, type = "default", userId } = body
-
-    // Validate required fields
-    if (!title || !title.trim()) {
-      throw new ValidationError("Title is required")
+    const session = await auth()
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    if (!description || !description.trim()) {
-      throw new ValidationError("Description is required")
-    }
+    const notifications = await prisma.notification.findMany({
+      where: {
+        recipientId: session.user.id,
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+      take: 20,
+      include: {
+        sender: {
+          select: {
+            id: true,
+            name: true,
+            image: true,
+          },
+        },
+      },
+    })
 
-    // Validate notification type
-    const validTypes = ["default", "success", "error", "warning", "info"]
-    if (type && !validTypes.includes(type)) {
-      throw new ValidationError(`Invalid notification type. Must be one of: ${validTypes.join(", ")}`)
-    }
-
-    const notification = {
-      id: crypto.randomUUID(),
-      title,
-      description,
-      type,
-      timestamp: new Date().toISOString(),
-    }
-
-    // If userId is provided, send to a specific user's channel
-    if (userId) {
-      await triggerPusherEvent(pusherChannels.userNotifications(userId), "new-notification", notification)
-      logger.info(`Sent notification to user ${userId}`, { notificationId: notification.id })
-    } else {
-      // Otherwise, broadcast to the public channel
-      await triggerPusherEvent(pusherChannels.notifications, "new-notification", notification)
-      logger.info("Sent broadcast notification", { notificationId: notification.id })
-    }
-
-    return NextResponse.json({ success: true, notificationId: notification.id })
+    return NextResponse.json({ notifications })
   } catch (error) {
-    const { statusCode, message, type } = handleApiError(error)
-    return NextResponse.json({ error: message, type }, { status: statusCode })
+    console.error("Failed to fetch notifications:", error)
+    return NextResponse.json({ error: "Failed to fetch notifications" }, { status: 500 })
   }
 }

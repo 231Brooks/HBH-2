@@ -1,10 +1,21 @@
 {
   "version": 2,
-  "buildCommand": "next build",
-  "devCommand": "next dev",
+  "buildCommand": "npm install && npm run build",
   "installCommand": "npm install",
   "framework": "nextjs",
   "regions": ["iad1"],
+  "outputDirectory": ".next",
+  "env": {
+    "NEXTAUTH_URL": {
+      "description": "URL of your website (in production)",
+      "required": true
+    },
+    "NEXTAUTH_SECRET": {
+      "description": "Secret used for NextAuth.js JWT encryption",
+      "required": true
+    },
+    "NODE_ENV": "production"
+  },
   "headers": [
     {
       "source": "/(.*)",
@@ -24,7 +35,17 @@
       ]
     }
   ],
-  "env": {
-    "NODE_ENV": "production"
+  "crons": [
+    {
+      "path": "/api/cron/cleanup-sessions",
+      "schedule": "0 0 * * *"
+    },
+    {
+      "path": "/api/cron/send-reminders",
+      "schedule": "0 9 * * *"
+    }
+  ],
+  "github": {
+    "silent": true
   }
 }

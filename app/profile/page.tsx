@@ -1,350 +1,562 @@
-"use client"
-
-import { useState } from "react"
-import { Activity, Award, Briefcase, CheckCircle, Clock, DollarSign, Star, TrendingUp, User } from "lucide-react"
+import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Progress } from "@/components/ui/progress"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge"
-import { cn } from "@/lib/utils"
+import {
+  User,
+  Mail,
+  Phone,
+  MapPin,
+  Star,
+  Building,
+  FileText,
+  Settings,
+  Edit,
+  Plus,
+  MessageSquare,
+  Calendar,
+  Clock,
+  ArrowUpRight,
+  Gavel,
+} from "lucide-react"
+import Link from "next/link"
+import Image from "next/image"
 
 export default function ProfilePage() {
-  // Mock data - in a real app, this would come from an API
-  const userData = {
-    name: "Jane Smith",
-    email: "jane.smith@example.com",
-    joinedDate: "January 2023",
-    completedChoirs: 24,
-    earnings: 1250.75,
-    rating: 4.8,
-    qualifications: [
-      { id: "1", name: "Web Development", level: "Expert" },
-      { id: "2", name: "Graphic Design", level: "Intermediate" },
-      { id: "3", name: "Content Writing", level: "Advanced" },
-      { id: "4", name: "Data Analysis", level: "Beginner" },
-    ],
-    recentChoirs: [
-      { id: "c1", title: "Website Redesign", date: "2023-04-15", status: "completed", payment: 350 },
-      { id: "c2", title: "Logo Creation", date: "2023-04-10", status: "completed", payment: 120 },
-      { id: "c3", title: "Blog Article", date: "2023-04-05", status: "completed", payment: 85 },
-    ],
-    investments: [
-      { id: "i1", name: "Tech Growth Fund", amount: 500, performance: 12.5 },
-      { id: "i2", name: "Sustainable Energy", amount: 300, performance: -2.1 },
-      { id: "i3", name: "Real Estate Trust", amount: 450, performance: 5.8 },
-    ],
-  }
-
-  const [activeTab, setActiveTab] = useState("stats")
-
   return (
-    <div className="container py-8 max-w-6xl mx-auto">
-      <div className="flex flex-col md:flex-row gap-6">
-        {/* Profile Summary */}
-        <Card className="md:w-1/3">
-          <CardHeader>
-            <div className="flex items-center gap-4">
-              <div className="h-16 w-16 rounded-full bg-blue-100 flex items-center justify-center">
-                <User className="h-8 w-8 text-blue-600" />
-              </div>
-              <div>
-                <CardTitle>{userData.name}</CardTitle>
-                <CardDescription>{userData.email}</CardDescription>
-                <div className="text-sm text-muted-foreground mt-1">Member since {userData.joinedDate}</div>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-3 gap-4 text-center">
-              <div>
-                <div className="text-2xl font-bold">{userData.completedChoirs}</div>
-                <div className="text-xs text-muted-foreground">Choirs</div>
-              </div>
-              <div>
-                <div className="text-2xl font-bold">${userData.earnings}</div>
-                <div className="text-xs text-muted-foreground">Earned</div>
-              </div>
-              <div>
-                <div className="text-2xl font-bold flex items-center justify-center">
-                  {userData.rating}
-                  <Star className="h-4 w-4 text-yellow-500 ml-1" fill="currentColor" />
-                </div>
-                <div className="text-xs text-muted-foreground">Rating</div>
-              </div>
-            </div>
-
-            <div>
-              <h3 className="text-sm font-medium mb-2">Qualifications</h3>
-              <div className="flex flex-wrap gap-2">
-                {userData.qualifications.map((qual) => (
-                  <Badge key={qual.id} variant="outline">
-                    {qual.name} • {qual.level}
-                  </Badge>
-                ))}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Main Content */}
-        <div className="flex-1 space-y-6">
-          {/* Custom Tabs Implementation */}
-          <div className="border rounded-md p-1 flex space-x-1 bg-muted">
-            <button
-              onClick={() => setActiveTab("stats")}
-              className={cn(
-                "flex-1 px-3 py-1.5 text-sm font-medium rounded-sm transition-all",
-                activeTab === "stats"
-                  ? "bg-background text-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground",
-              )}
+    <div className="container py-8">
+      <div className="relative mb-8">
+        <div className="h-48 w-full rounded-lg bg-gradient-to-r from-slate-800 to-slate-700 overflow-hidden">
+          <Image src="/vibrant-flow.png" alt="Cover" fill className="object-cover opacity-50" />
+          <Button
+            variant="ghost"
+            size="icon"
+            className="absolute top-2 right-2 bg-white/20 hover:bg-white/40 text-white rounded-full h-8 w-8"
+          >
+            <Edit className="h-4 w-4" />
+          </Button>
+        </div>
+        <div className="absolute -bottom-16 left-8 flex items-end">
+          <div className="relative">
+            <Image
+              src="/confident-professional.png"
+              alt="Profile"
+              width={120}
+              height={120}
+              className="rounded-full border-4 border-white"
+            />
+            <Button
+              variant="ghost"
+              size="icon"
+              className="absolute bottom-0 right-0 bg-white hover:bg-slate-100 text-slate-700 rounded-full h-8 w-8 shadow-sm"
             >
-              Stats & Activity
-            </button>
-            <button
-              onClick={() => setActiveTab("choirs")}
-              className={cn(
-                "flex-1 px-3 py-1.5 text-sm font-medium rounded-sm transition-all",
-                activeTab === "choirs"
-                  ? "bg-background text-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground",
-              )}
-            >
-              Recent Choirs
-            </button>
-            <button
-              onClick={() => setActiveTab("investments")}
-              className={cn(
-                "flex-1 px-3 py-1.5 text-sm font-medium rounded-sm transition-all",
-                activeTab === "investments"
-                  ? "bg-background text-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground",
-              )}
-            >
-              Investments
-            </button>
+              <Edit className="h-4 w-4" />
+            </Button>
           </div>
+        </div>
+      </div>
 
-          {/* Tab Content */}
-          <div className="mt-4">
-            {/* Stats Tab */}
-            {activeTab === "stats" && (
+      <div className="mt-20 flex flex-col md:flex-row justify-between items-start gap-6">
+        <div className="md:w-1/3 space-y-6">
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle>John Smith</CardTitle>
+              <CardDescription>Real Estate Investor</CardDescription>
+            </CardHeader>
+            <CardContent>
               <div className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <Card>
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-sm font-medium flex items-center">
-                        <Activity className="h-4 w-4 mr-2" />
-                        Activity Score
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="text-2xl font-bold">87/100</div>
-                      <Progress value={87} className="h-2 mt-2" />
-                    </CardContent>
-                  </Card>
-
-                  <Card>
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-sm font-medium flex items-center">
-                        <CheckCircle className="h-4 w-4 mr-2" />
-                        Completion Rate
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="text-2xl font-bold">98%</div>
-                      <Progress value={98} className="h-2 mt-2" />
-                    </CardContent>
-                  </Card>
-
-                  <Card>
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-sm font-medium flex items-center">
-                        <Clock className="h-4 w-4 mr-2" />
-                        Response Time
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="text-2xl font-bold">1.2 hrs</div>
-                      <Progress value={85} className="h-2 mt-2" />
-                    </CardContent>
-                  </Card>
+                <div className="flex items-center gap-2">
+                  <User className="h-4 w-4 text-muted-foreground" />
+                  <span>Member since January 2023</span>
                 </div>
+                <div className="flex items-center gap-2">
+                  <Mail className="h-4 w-4 text-muted-foreground" />
+                  <span>john.smith@example.com</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Phone className="h-4 w-4 text-muted-foreground" />
+                  <span>(555) 123-4567</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <MapPin className="h-4 w-4 text-muted-foreground" />
+                  <span>Phoenix, Arizona</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Star className="h-4 w-4 text-muted-foreground" />
+                  <span>4.9 Rating (24 reviews)</span>
+                </div>
+                <div className="pt-4 border-t">
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Real estate investor with 5+ years of experience in residential and commercial properties. Focused
+                    on property flips and long-term rentals in the Phoenix area.
+                  </p>
+                  <Button variant="outline" className="w-full">
+                    <Edit className="mr-2 h-4 w-4" /> Edit Profile
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle>Verification Status</CardTitle>
+              <CardDescription>Your account verification</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Mail className="h-4 w-4 text-muted-foreground" />
+                    <span>Email</span>
+                  </div>
+                  <Badge className="bg-green-500">Verified</Badge>
+                </div>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Phone className="h-4 w-4 text-muted-foreground" />
+                    <span>Phone</span>
+                  </div>
+                  <Badge className="bg-green-500">Verified</Badge>
+                </div>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <FileText className="h-4 w-4 text-muted-foreground" />
+                    <span>ID Verification</span>
+                  </div>
+                  <Badge className="bg-green-500">Verified</Badge>
+                </div>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Building className="h-4 w-4 text-muted-foreground" />
+                    <span>Business Verification</span>
+                  </div>
+                  <Button variant="outline" size="sm">
+                    Verify
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle>Quick Links</CardTitle>
+              <CardDescription>Frequently used pages</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                <Button variant="outline" className="w-full justify-start" asChild>
+                  <Link href="/marketplace/create">
+                    <Plus className="mr-2 h-4 w-4" /> List New Property
+                  </Link>
+                </Button>
+                <Button variant="outline" className="w-full justify-start" asChild>
+                  <Link href="/progress/create">
+                    <FileText className="mr-2 h-4 w-4" /> Start New Transaction
+                  </Link>
+                </Button>
+                <Button variant="outline" className="w-full justify-start" asChild>
+                  <Link href="/calendar">
+                    <Calendar className="mr-2 h-4 w-4" /> View Calendar
+                  </Link>
+                </Button>
+                <Button variant="outline" className="w-full justify-start" asChild>
+                  <Link href="/services">
+                    <Building className="mr-2 h-4 w-4" /> Find Services
+                  </Link>
+                </Button>
+                <Button variant="outline" className="w-full justify-start" asChild>
+                  <Link href="/profile/settings">
+                    <Settings className="mr-2 h-4 w-4" /> Account Settings
+                  </Link>
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        <div className="md:w-2/3">
+          <Tabs defaultValue="properties">
+            <TabsList className="mb-6">
+              <TabsTrigger value="properties">My Properties</TabsTrigger>
+              <TabsTrigger value="transactions">Transactions</TabsTrigger>
+              <TabsTrigger value="projects">Projects</TabsTrigger>
+              <TabsTrigger value="reviews">Reviews</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="properties" className="mt-0 space-y-6">
+              <div className="flex justify-between items-center">
+                <h3 className="text-lg font-semibold">Listed Properties</h3>
+                <Button asChild>
+                  <Link href="/marketplace/create">
+                    <Plus className="mr-2 h-4 w-4" /> List Property
+                  </Link>
+                </Button>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <Card className="overflow-hidden">
+                  <div className="relative h-48">
+                    <Image src="/placeholder.svg?key=cjmtx" alt="Property" fill className="object-cover" />
+                    <Badge className="absolute top-2 right-2 bg-primary">For Sale</Badge>
+                  </div>
+                  <CardContent className="p-4">
+                    <div className="flex justify-between items-start mb-2">
+                      <h3 className="font-semibold">Modern Family Home</h3>
+                      <p className="font-bold text-primary">$425,000</p>
+                    </div>
+                    <div className="flex items-center text-muted-foreground text-sm mb-3">
+                      <MapPin className="h-4 w-4 mr-1" />
+                      <span>123 Main Street, Phoenix, AZ</span>
+                    </div>
+                    <div className="flex justify-between mb-4">
+                      <div className="flex gap-2">
+                        <Badge variant="outline">4 Beds</Badge>
+                        <Badge variant="outline">3 Baths</Badge>
+                        <Badge variant="outline">2,400 sqft</Badge>
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button variant="outline" size="sm" className="flex-1" asChild>
+                        <Link href="/marketplace/1">
+                          <ArrowUpRight className="mr-1 h-4 w-4" /> View
+                        </Link>
+                      </Button>
+                      <Button variant="outline" size="sm" className="flex-1">
+                        <Edit className="mr-1 h-4 w-4" /> Edit
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card className="overflow-hidden">
+                  <div className="relative h-48">
+                    <Image src="/house-key-growth.png" alt="Property" fill className="object-cover" />
+                    <Badge className="absolute top-2 right-2 bg-amber-500">
+                      <Gavel className="mr-1 h-3 w-3" /> Auction
+                    </Badge>
+                  </div>
+                  <CardContent className="p-4">
+                    <div className="flex justify-between items-start mb-2">
+                      <h3 className="font-semibold">Investment Property</h3>
+                      <p className="font-bold text-primary">Starting Bid: $350,000</p>
+                    </div>
+                    <div className="flex items-center text-muted-foreground text-sm mb-3">
+                      <MapPin className="h-4 w-4 mr-1" />
+                      <span>789 Pine Road, Tempe, AZ</span>
+                    </div>
+                    <div className="flex items-center text-amber-600 text-sm mb-3">
+                      <Clock className="h-4 w-4 mr-1" />
+                      <span>Ends: Jul 15, 2023</span>
+                    </div>
+                    <div className="flex justify-between mb-4">
+                      <div className="flex gap-2">
+                        <Badge variant="outline">3 Beds</Badge>
+                        <Badge variant="outline">2 Baths</Badge>
+                        <Badge variant="outline">2,100 sqft</Badge>
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button variant="outline" size="sm" className="flex-1" asChild>
+                        <Link href="/marketplace/3">
+                          <ArrowUpRight className="mr-1 h-4 w-4" /> View
+                        </Link>
+                      </Button>
+                      <Button variant="outline" size="sm" className="flex-1">
+                        <Edit className="mr-1 h-4 w-4" /> Edit
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              <div className="flex justify-between items-center mt-8">
+                <h3 className="text-lg font-semibold">Saved Properties</h3>
+                <Button variant="outline" asChild>
+                  <Link href="/marketplace?tab=saved">View All Saved</Link>
+                </Button>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <Card className="overflow-hidden">
+                  <div className="relative h-48">
+                    <Image src="/city-lights-condo.png" alt="Property" fill className="object-cover" />
+                    <Badge className="absolute top-2 right-2 bg-primary">For Sale</Badge>
+                  </div>
+                  <CardContent className="p-4">
+                    <div className="flex justify-between items-start mb-2">
+                      <h3 className="font-semibold">Downtown Condo</h3>
+                      <p className="font-bold text-primary">$750,000</p>
+                    </div>
+                    <div className="flex items-center text-muted-foreground text-sm mb-3">
+                      <MapPin className="h-4 w-4 mr-1" />
+                      <span>456 Oak Avenue, Scottsdale, AZ</span>
+                    </div>
+                    <div className="flex justify-between mb-4">
+                      <div className="flex gap-2">
+                        <Badge variant="outline">2 Beds</Badge>
+                        <Badge variant="outline">2 Baths</Badge>
+                        <Badge variant="outline">1,800 sqft</Badge>
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button variant="outline" size="sm" className="flex-1" asChild>
+                        <Link href="/marketplace/2">
+                          <ArrowUpRight className="mr-1 h-4 w-4" /> View
+                        </Link>
+                      </Button>
+                      <Button size="sm" className="flex-1">
+                        <MessageSquare className="mr-1 h-4 w-4" /> Contact
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </TabsContent>
+
+            <TabsContent value="transactions" className="mt-0 space-y-6">
+              <div className="flex justify-between items-center">
+                <h3 className="text-lg font-semibold">Active Transactions</h3>
+                <Button asChild>
+                  <Link href="/progress/create">
+                    <Plus className="mr-2 h-4 w-4" /> New Transaction
+                  </Link>
+                </Button>
+              </div>
+
+              <div className="space-y-4">
+                <Card>
+                  <CardContent className="p-4">
+                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                      <div>
+                        <div className="flex items-center gap-2 mb-1">
+                          <h3 className="font-semibold">123 Main Street, Phoenix, AZ</h3>
+                          <Badge className="bg-amber-500">In Progress</Badge>
+                        </div>
+                        <p className="text-muted-foreground text-sm">Purchase - $425,000 - Due: Jul 15, 2023</p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="text-sm text-muted-foreground">Progress: 65%</div>
+                        <div className="w-32 bg-slate-200 rounded-full h-2">
+                          <div className="bg-primary rounded-full h-2 w-[65%]"></div>
+                        </div>
+                        <Button variant="outline" size="sm" asChild>
+                          <Link href="/progress/1">
+                            <ArrowUpRight className="mr-1 h-4 w-4" /> View
+                          </Link>
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
 
                 <Card>
-                  <CardHeader>
-                    <CardTitle className="text-base">Skills Assessment</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
+                  <CardContent className="p-4">
+                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                       <div>
-                        <div className="flex justify-between text-sm mb-1">
-                          <span>Web Development</span>
-                          <span>Expert</span>
+                        <div className="flex items-center gap-2 mb-1">
+                          <h3 className="font-semibold">456 Oak Avenue, Scottsdale, AZ</h3>
+                          <Badge className="bg-blue-500">Pending Approval</Badge>
                         </div>
-                        <Progress value={95} className="h-2" />
+                        <p className="text-muted-foreground text-sm">Purchase - $750,000 - Due: Aug 3, 2023</p>
                       </div>
-                      <div>
-                        <div className="flex justify-between text-sm mb-1">
-                          <span>Graphic Design</span>
-                          <span>Intermediate</span>
+                      <div className="flex items-center gap-2">
+                        <div className="text-sm text-muted-foreground">Progress: 40%</div>
+                        <div className="w-32 bg-slate-200 rounded-full h-2">
+                          <div className="bg-primary rounded-full h-2 w-[40%]"></div>
                         </div>
-                        <Progress value={65} className="h-2" />
-                      </div>
-                      <div>
-                        <div className="flex justify-between text-sm mb-1">
-                          <span>Content Writing</span>
-                          <span>Advanced</span>
-                        </div>
-                        <Progress value={85} className="h-2" />
-                      </div>
-                      <div>
-                        <div className="flex justify-between text-sm mb-1">
-                          <span>Data Analysis</span>
-                          <span>Beginner</span>
-                        </div>
-                        <Progress value={40} className="h-2" />
+                        <Button variant="outline" size="sm" asChild>
+                          <Link href="/progress/2">
+                            <ArrowUpRight className="mr-1 h-4 w-4" /> View
+                          </Link>
+                        </Button>
                       </div>
                     </div>
                   </CardContent>
                 </Card>
               </div>
-            )}
 
-            {/* Choirs Tab */}
-            {activeTab === "choirs" && (
+              <div className="flex justify-between items-center mt-8">
+                <h3 className="text-lg font-semibold">Completed Transactions</h3>
+                <Button variant="outline" asChild>
+                  <Link href="/progress?tab=completed">View All Completed</Link>
+                </Button>
+              </div>
+
               <div className="space-y-4">
                 <Card>
-                  <CardHeader>
-                    <CardTitle className="text-base flex items-center">
-                      <Briefcase className="h-4 w-4 mr-2" />
-                      Recent Choirs
-                    </CardTitle>
+                  <CardContent className="p-4">
+                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                      <div>
+                        <div className="flex items-center gap-2 mb-1">
+                          <h3 className="font-semibold">222 Valley View, Chandler, AZ</h3>
+                          <Badge className="bg-green-600">Completed</Badge>
+                        </div>
+                        <p className="text-muted-foreground text-sm">Purchase - $475,000 - Closed: Jun 10, 2023</p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="text-sm text-muted-foreground">Progress: 100%</div>
+                        <div className="w-32 bg-slate-200 rounded-full h-2">
+                          <div className="bg-green-600 rounded-full h-2 w-full"></div>
+                        </div>
+                        <Button variant="outline" size="sm" asChild>
+                          <Link href="/progress/3">
+                            <ArrowUpRight className="mr-1 h-4 w-4" /> View
+                          </Link>
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </TabsContent>
+
+            <TabsContent value="projects" className="mt-0 space-y-6">
+              <div className="flex justify-between items-center">
+                <h3 className="text-lg font-semibold">Active Projects</h3>
+                <Button asChild>
+                  <Link href="/projects/create">
+                    <Plus className="mr-2 h-4 w-4" /> New Project
+                  </Link>
+                </Button>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle>Kitchen Renovation</CardTitle>
+                    <CardDescription>101 River Lane, Mesa, AZ</CardDescription>
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-4">
-                      {userData.recentChoirs.map((choir) => (
-                        <div
-                          key={choir.id}
-                          className="flex items-center justify-between border-b pb-3 last:border-0 last:pb-0"
-                        >
-                          <div>
-                            <div className="font-medium">{choir.title}</div>
-                            <div className="text-sm text-muted-foreground">Completed on {choir.date}</div>
-                          </div>
-                          <div className="text-right">
-                            <div className="font-medium text-green-600">${choir.payment}</div>
-                            <Badge variant="outline" className="capitalize">
-                              {choir.status}
+                      <div className="flex justify-between text-sm mb-1">
+                        <span>Progress</span>
+                        <span>45%</span>
+                      </div>
+                      <div className="w-full bg-slate-200 rounded-full h-2">
+                        <div className="bg-primary rounded-full h-2 w-[45%]"></div>
+                      </div>
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <Clock className="h-4 w-4" />
+                        <span>Due: Aug 15, 2023</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <Building className="h-4 w-4" />
+                        <span>Contractor: Reliable Renovation</span>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button variant="outline" size="sm" className="flex-1" asChild>
+                          <Link href="/projects/1">
+                            <ArrowUpRight className="mr-1 h-4 w-4" /> View
+                          </Link>
+                        </Button>
+                        <Button size="sm" className="flex-1">
+                          <MessageSquare className="mr-1 h-4 w-4" /> Contact
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </TabsContent>
+
+            <TabsContent value="reviews" className="mt-0 space-y-6">
+              <div className="flex justify-between items-center">
+                <h3 className="text-lg font-semibold">Reviews & Ratings</h3>
+                <div className="flex items-center gap-1">
+                  <Star className="h-5 w-5 fill-amber-400 text-amber-400" />
+                  <span className="font-bold text-lg">4.9</span>
+                  <span className="text-muted-foreground">(24 reviews)</span>
+                </div>
+              </div>
+
+              <Card>
+                <CardContent className="p-6">
+                  <div className="space-y-6">
+                    <div className="border-b pb-6">
+                      <div className="flex justify-between items-start mb-2">
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <h3 className="font-medium">Michael Thompson</h3>
+                            <Badge variant="outline" className="text-xs">
+                              Buyer
                             </Badge>
                           </div>
-                        </div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-base flex items-center">
-                      <Award className="h-4 w-4 mr-2" />
-                      Achievements
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                      <div className="flex flex-col items-center text-center p-2 border rounded-lg">
-                        <Award className="h-8 w-8 text-amber-500 mb-2" />
-                        <div className="font-medium">Top Performer</div>
-                        <div className="text-xs text-muted-foreground">March 2023</div>
-                      </div>
-                      <div className="flex flex-col items-center text-center p-2 border rounded-lg">
-                        <CheckCircle className="h-8 w-8 text-green-500 mb-2" />
-                        <div className="font-medium">Perfect Completion</div>
-                        <div className="text-xs text-muted-foreground">10 Choirs</div>
-                      </div>
-                      <div className="flex flex-col items-center text-center p-2 border rounded-lg">
-                        <Star className="h-8 w-8 text-yellow-500 mb-2" />
-                        <div className="font-medium">5-Star Rating</div>
-                        <div className="text-xs text-muted-foreground">15 Reviews</div>
-                      </div>
-                      <div className="flex flex-col items-center text-center p-2 border rounded-lg">
-                        <Clock className="h-8 w-8 text-blue-500 mb-2" />
-                        <div className="font-medium">Quick Response</div>
-                        <div className="text-xs text-muted-foreground">Under 1 hour</div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-            )}
-
-            {/* Investments Tab */}
-            {activeTab === "investments" && (
-              <div className="space-y-4">
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-base flex items-center">
-                      <TrendingUp className="h-4 w-4 mr-2" />
-                      Your Investments
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      {userData.investments.map((inv) => (
-                        <div
-                          key={inv.id}
-                          className="flex items-center justify-between border-b pb-3 last:border-0 last:pb-0"
-                        >
-                          <div>
-                            <div className="font-medium">{inv.name}</div>
-                            <div className="text-sm text-muted-foreground">Invested: ${inv.amount}</div>
-                          </div>
-                          <div className="text-right">
-                            <div className={`font-medium ${inv.performance >= 0 ? "text-green-600" : "text-red-600"}`}>
-                              {inv.performance >= 0 ? "+" : ""}
-                              {inv.performance}%
-                            </div>
-                            <div className="text-sm text-muted-foreground">
-                              ${(inv.amount * (1 + inv.performance / 100)).toFixed(2)}
-                            </div>
+                          <div className="flex items-center mt-1">
+                            <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
+                            <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
+                            <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
+                            <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
+                            <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
                           </div>
                         </div>
-                      ))}
+                        <span className="text-sm text-muted-foreground">2 weeks ago</span>
+                      </div>
+                      <p className="text-sm">
+                        John was exceptional in handling our property transaction. His attention to detail and proactive
+                        communication made the process smooth and efficient. Highly recommend!
+                      </p>
                     </div>
-                  </CardContent>
-                </Card>
 
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-base flex items-center">
-                      <DollarSign className="h-4 w-4 mr-2" />
-                      Investment Summary
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
-                      <div className="p-2 border rounded-lg">
-                        <div className="text-xs text-muted-foreground">Total Invested</div>
-                        <div className="text-xl font-bold">$1,250</div>
+                    <div className="border-b pb-6">
+                      <div className="flex justify-between items-start mb-2">
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <h3 className="font-medium">Jennifer Garcia</h3>
+                            <Badge variant="outline" className="text-xs">
+                              Seller
+                            </Badge>
+                          </div>
+                          <div className="flex items-center mt-1">
+                            <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
+                            <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
+                            <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
+                            <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
+                            <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
+                          </div>
+                        </div>
+                        <span className="text-sm text-muted-foreground">1 month ago</span>
                       </div>
-                      <div className="p-2 border rounded-lg">
-                        <div className="text-xs text-muted-foreground">Current Value</div>
-                        <div className="text-xl font-bold">$1,325</div>
-                      </div>
-                      <div className="p-2 border rounded-lg">
-                        <div className="text-xs text-muted-foreground">Total Return</div>
-                        <div className="text-xl font-bold text-green-600">+$75</div>
-                      </div>
-                      <div className="p-2 border rounded-lg">
-                        <div className="text-xs text-muted-foreground">ROI</div>
-                        <div className="text-xl font-bold text-green-600">+6%</div>
-                      </div>
+                      <p className="text-sm">
+                        Working with John was a pleasure. He was responsive, knowledgeable, and made selling my property
+                        a breeze. I got more than my asking price thanks to his market expertise.
+                      </p>
                     </div>
-                  </CardContent>
-                </Card>
-              </div>
-            )}
-          </div>
+
+                    <div className="border-b pb-6">
+                      <div className="flex justify-between items-start mb-2">
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <h3 className="font-medium">Robert Wilson</h3>
+                            <Badge variant="outline" className="text-xs">
+                              Business Partner
+                            </Badge>
+                          </div>
+                          <div className="flex items-center mt-1">
+                            <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
+                            <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
+                            <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
+                            <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
+                            <Star className="h-4 w-4" />
+                          </div>
+                        </div>
+                        <span className="text-sm text-muted-foreground">2 months ago</span>
+                      </div>
+                      <p className="text-sm">
+                        I've worked with John on multiple investment properties and he consistently delivers excellent
+                        results. He's thorough, professional, and always meets deadlines.
+                      </p>
+                    </div>
+
+                    <Button variant="outline" className="w-full">
+                      Load More Reviews
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </Tabs>
         </div>
       </div>
     </div>

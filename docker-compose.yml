@@ -1,4 +1,4 @@
-version: '3'
+version: '3.8'
 
 services:
   app:
@@ -8,15 +8,26 @@ services:
     ports:
       - "3000:3000"
     environment:
-      - NODE_ENV=production
-      - DATABASE_URL=${DATABASE_URL}
-      - PUSHER_APP_ID=${PUSHER_APP_ID}
-      - PUSHER_KEY=${PUSHER_KEY}
-      - PUSHER_CLUSTER=${PUSHER_CLUSTER}
-      - PUSHER_SECRET=${PUSHER_SECRET}
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/api/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/hbh_db?schema=public
+      - NEXTAUTH_URL=http://localhost:3000
+      - NEXTAUTH_SECRET=your-development-secret
+    depends_on:
+      - db
+    volumes:
+      - ./:/app
+      - /app/node_modules
+      - /app/.next
+
+  db:
+    image: postgres:14
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=hbh_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:

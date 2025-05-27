@@ -1,21 +1,59 @@
-import { neon } from "@neondatabase/serverless"
-import { validateEnv, env } from "./env"
+import { Pool } from "pg"
+import { logger } from "./logger"
 
-// Validate environment variables
-validateEnv()
+// Connection pool for direct database access when needed
+let pool: Pool | null = null
 
-// For connection pooling in production
-const connectionString = env.DATABASE_URL
+export function getPool() {
+  if (!pool) {
+    try {
+      pool = new Pool({
+        connectionString: process.env.DATABASE_URL,
+        max: 20,
+        idleTimeoutMillis: 30000,
+        connectionTimeoutMillis: 2000,
+        ssl: process.env.NODE_ENV === "production" ? { rejectUnauthorized: true } : false,
+      })
 
-// Create a SQL client
-export const sql = neon(connectionString)
+      // Log pool creation
+      logger.info("Database connection pool created")
 
-// Helper function to execute queries with error handling
-export async function query<T>(query: string, params: any[] = []): Promise<T[]> {
+      // Handle pool errors
+      pool.on("error", (err) => {
+        logger.error("Unexpected database pool error", err)
+      })
+    } catch (error) {
+      logger.error("Failed to create database pool", error)
+      throw error
+    }
+  }
+
+  return pool
+}
+
+// Clean up pool on application shutdown
+if (typeof process !== "undefined") {
+  process.on("SIGTERM", () => {
+    if (pool) {
+      logger.info("Closing database pool due to SIGTERM")
+      pool.end()
+    }
+  })
+}
+
+// Helper function for transactions
+export async function withTransaction<T>(callback: (client: any) => Promise<T>): Promise<T> {
+  const client = await getPool().connect()
+
   try {
-    return (await sql(query, params)) as T[]
+    await client.query("BEGIN")
+    const result = await callback(client)
+    await client.query("COMMIT")
+    return result
   } catch (error) {
-    console.error("Database query error:", error)
-    throw new Error("Database query failed")
+    await client.query("ROLLBACK")
+    throw error
+  } finally {
+    client.release()
   }
 }
