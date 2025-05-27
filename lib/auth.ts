@@ -3,8 +3,21 @@ import { PrismaAdapter } from "@auth/prisma-adapter"
 import CredentialsProvider from "next-auth/providers/credentials"
 import GithubProvider from "next-auth/providers/github"
 import bcrypt from "bcryptjs"
-import { getServerSession } from "next-auth/next"
 import prisma from "./prisma"
+import { getServerSession } from "next-auth/next"
+import { validateEmail } from "./validation-utils"
+import { withTimeout, TIMEOUT_DURATIONS } from "./operation-timeout"
+
+// Get allowed domains from environment or use defaults
+const getAllowedDomains = (): string[] => {
+  const configuredDomains = process.env.ALLOWED_REDIRECT_DOMAINS
+  if (configuredDomains) {
+    return configuredDomains.split(",").map((domain) => domain.trim())
+  }
+
+  // Default allowed domains
+  return ["localhost", "vercel.app"]
+}
 
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma),
@@ -23,14 +36,11 @@ export const authOptions: NextAuthOptions = {
     GithubProvider({
       clientId: process.env.GITHUB_ID as string,
       clientSecret: process.env.GITHUB_SECRET as string,
-      profile(profile) {
-        return {
-          id: profile.id.toString(),
-          name: profile.name || profile.login,
-          email: profile.email,
-          image: profile.avatar_url,
-          role: "USER",
-        }
+      authorization: {
+        params: {
+          // Enable state parameter for CSRF protection
+          state: true,
+        },
       },
     }),
     CredentialsProvider({
@@ -44,26 +54,77 @@ export const authOptions: NextAuthOptions = {
           return null
         }
 
-        const user = await prisma.user.findUnique({
-          where: { email: credentials.email },
-        })
-
-        if (!user || !user.password) {
+        // Validate email format
+        if (!validateEmail(credentials.email)) {
           return null
         }
 
-        const passwordMatch = await bcrypt.compare(credentials.password, user.password)
+        try {
+          // Apply timeout to prevent long-running database queries
+          const user = await withTimeout(
+            prisma.user.findUnique({
+              where: { email: credentials.email },
+            }),
+            TIMEOUT_DURATIONS.DB_QUERY,
+            "Database query timed out during authentication",
+          )
 
-        if (!passwordMatch) {
+          if (!user || !user.password) {
+            return null
+          }
+
+          // Apply timeout to password comparison
+          const passwordMatch = await withTimeout(
+            bcrypt.compare(credentials.password, user.password),
+            TIMEOUT_DURATIONS.AUTH_OPERATION,
+            "Password verification timed out",
+          )
+
+          if (!passwordMatch) {
+            // Log failed login attempt
+            await prisma.loginAttempt.create({
+              data: {
+                userId: user.id,
+                success: false,
+                ip: "unknown", // In a real implementation, you'd pass the IP
+                userAgent: "unknown", // In a real implementation, you'd pass the user agent
+              },
+            })
+            return null
+          }
+
+          // Check if email is verified
+          if (!user.emailVerified) {
+            // You could throw a custom error here that your error page would handle
+            // For now, just return null
+            return null
+          }
+
+          // Check if account is disabled
+          if (user.disabled) {
+            return null
+          }
+
+          // Log successful login
+          await prisma.loginAttempt.create({
+            data: {
+              userId: user.id,
+              success: true,
+              ip: "unknown", // In a real implementation, you'd pass the IP
+              userAgent: "unknown", // In a real implementation, you'd pass the user agent
+            },
+          })
+
+          return {
+            id: user.id,
+            email: user.email,
+            name: user.name,
+            image: user.image,
+            role: user.role,
+          }
+        } catch (error) {
+          console.error("Authentication error:", error)
           return null
-        }
-
-        return {
-          id: user.id,
-          email: user.email,
-          name: user.name,
-          image: user.image,
-          role: user.role,
         }
       },
     }),
@@ -79,47 +140,53 @@ export const authOptions: NextAuthOptions = {
       }
       return session
     },
-    async jwt({ token, user, account }) {
+    async jwt({ token, user }) {
       if (user) {
         token.id = user.id
         token.role = user.role
       }
-
-      // If using OAuth, update user info in database
-      if (account && user) {
-        await prisma.user.update({
-          where: { id: user.id },
-          data: {
-            emailVerified: true,
-          },
-        })
-      }
-
       return token
     },
-  },
-  events: {
-    async signIn({ user }) {
-      // Create activity for sign in
-      await prisma.activity.create({
-        data: {
-          type: "auth",
-          title: "User signed in",
-          userId: user.id,
-          metadata: { action: "sign_in" },
-        },
-      })
+    // Add secure redirect callback to prevent open redirects
+    async redirect({ url, baseUrl }) {
+      // Only allow relative URLs or URLs matching allowed domains
+      const allowedDomains = getAllowedDomains()
+
+      if (url.startsWith("/")) {
+        return `${baseUrl}${url}`
+      }
+
+      try {
+        const parsedUrl = new URL(url)
+        const isAllowedDomain = allowedDomains.some(
+          (domain) => parsedUrl.hostname === domain || parsedUrl.hostname.endsWith(`.${domain}`),
+        )
+
+        if (isAllowedDomain) {
+          return url
+        }
+      } catch (error) {
+        // Invalid URL, redirect to base URL
+      }
+
+      // Default fallback for security
+      return baseUrl
     },
-    async createUser({ user }) {
-      // Create activity for new user
-      await prisma.activity.create({
-        data: {
-          type: "auth",
-          title: "New user registered",
-          userId: user.id,
-          metadata: { action: "register" },
-        },
-      })
+  },
+  // Add additional security settings
+  secret: process.env.NEXTAUTH_SECRET,
+  debug: process.env.NODE_ENV === "development",
+  // Add CSRF protection
+  useSecureCookies: process.env.NODE_ENV === "production",
+  cookies: {
+    sessionToken: {
+      name: `__Secure-next-auth.session-token`,
+      options: {
+        httpOnly: true,
+        sameSite: "lax",
+        path: "/",
+        secure: process.env.NODE_ENV === "production",
+      },
     },
   },
 }

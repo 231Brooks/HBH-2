@@ -1,5 +1,15 @@
 import prisma from "./prisma"
 import { sendEmail } from "./email"
+import Pusher from "pusher"
+
+// Replace direct environment variable access
+const pusher = new Pusher({
+  appId: process.env.PUSHER_APP_ID!,
+  key: process.env.PUSHER_KEY!,
+  secret: process.env.PUSHER_SECRET!,
+  cluster: process.env.PUSHER_CLUSTER!,
+  useTLS: true,
+})
 
 type NotificationType =
   | "TRANSACTION_CREATED"
@@ -57,6 +67,11 @@ export async function createNotification(type: NotificationType, data: Notificat
         `,
       })
     }
+
+    // Trigger Pusher event
+    await pusher.trigger(data.recipientId, "notification", {
+      message: data.message,
+    })
 
     return notification
   } catch (error) {

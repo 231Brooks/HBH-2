@@ -9,27 +9,29 @@ export function formatCurrency(amount: number): string {
   return new Intl.NumberFormat("en-US", {
     style: "currency",
     currency: "USD",
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
   }).format(amount)
 }
 
 export function formatDate(date: Date | string): string {
-  return new Intl.DateTimeFormat("en-US", {
+  const d = typeof date === "string" ? new Date(date) : date
+  return d.toLocaleDateString("en-US", {
+    year: "numeric",
     month: "short",
     day: "numeric",
-    year: "numeric",
-  }).format(new Date(date))
+  })
+}
+
+export function formatTime(date: Date | string): string {
+  const d = typeof date === "string" ? new Date(date) : date
+  return d.toLocaleTimeString("en-US", {
+    hour: "2-digit",
+    minute: "2-digit",
+  })
 }
 
 export function formatDateTime(date: Date | string): string {
-  return new Intl.DateTimeFormat("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-    hour: "numeric",
-    minute: "numeric",
-  }).format(new Date(date))
+  const d = typeof date === "string" ? new Date(date) : date
+  return `${formatDate(d)} at ${formatTime(d)}`
 }
 
 export function truncateText(text: string, maxLength: number): string {
@@ -37,37 +39,49 @@ export function truncateText(text: string, maxLength: number): string {
   return text.slice(0, maxLength) + "..."
 }
 
-export function formatTimeAgo(date: Date | string): string {
-  const now = new Date()
-  const pastDate = new Date(date)
-  const diffInSeconds = Math.floor((now.getTime() - pastDate.getTime()) / 1000)
+export function generateSessionId(): string {
+  return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15)
+}
 
-  if (diffInSeconds < 60) return `${diffInSeconds} seconds ago`
+export function calculatePercentage(value: number, total: number): number {
+  if (total === 0) return 0
+  return Math.round((value / total) * 100)
+}
 
-  const diffInMinutes = Math.floor(diffInSeconds / 60)
-  if (diffInMinutes < 60) return `${diffInMinutes} minute${diffInMinutes !== 1 ? "s" : ""} ago`
+export function debounce<T extends (...args: any[]) => any>(func: T, wait: number): (...args: Parameters<T>) => void {
+  let timeout: ReturnType<typeof setTimeout> | null = null
 
-  const diffInHours = Math.floor(diffInMinutes / 60)
-  if (diffInHours < 24) return `${diffInHours} hour${diffInHours !== 1 ? "s" : ""} ago`
-
-  const diffInDays = Math.floor(diffInHours / 24)
-  if (diffInDays < 7) return `${diffInDays} day${diffInDays !== 1 ? "s" : ""} ago`
-
-  const diffInWeeks = Math.floor(diffInDays / 7)
-  if (diffInWeeks < 4) return `${diffInWeeks} week${diffInWeeks !== 1 ? "s" : ""} ago`
-
-  const diffInMonths = Math.floor(diffInDays / 30)
-  if (diffInMonths < 12) return `${diffInMonths} month${diffInMonths !== 1 ? "s" : ""} ago`
-
-  const diffInYears = Math.floor(diffInDays / 365)
-  return `${diffInYears} year${diffInYears !== 1 ? "s" : ""} ago`
+  return (...args: Parameters<T>) => {
+    if (timeout) clearTimeout(timeout)
+    timeout = setTimeout(() => func(...args), wait)
+  }
 }
 
 export function getInitials(name: string): string {
   if (!name) return ""
+  return name
+    .split(" ")
+    .map((part) => part[0])
+    .join("")
+    .toUpperCase()
+    .substring(0, 2)
+}
 
-  const names = name.split(" ")
-  if (names.length === 1) return names[0].charAt(0).toUpperCase()
+export function calculateTimeAgo(date: Date | string): string {
+  const d = typeof date === "string" ? new Date(date) : date
+  const now = new Date()
+  const diffInSeconds = Math.floor((now.getTime() - d.getTime()) / 1000)
 
-  return (names[0].charAt(0) + names[names.length - 1].charAt(0)).toUpperCase()
+  if (diffInSeconds < 60) {
+    return `${diffInSeconds} seconds ago`
+  } else if (diffInSeconds < 3600) {
+    const diffInMinutes = Math.floor(diffInSeconds / 60)
+    return `${diffInMinutes} minute${diffInMinutes > 1 ? "s" : ""} ago`
+  } else if (diffInSeconds < 86400) {
+    const diffInHours = Math.floor(diffInSeconds / 3600)
+    return `${diffInHours} hour${diffInHours > 1 ? "s" : ""} ago`
+  } else {
+    const diffInDays = Math.floor(diffInSeconds / 86400)
+    return `${diffInDays} day${diffInDays > 1 ? "s" : ""} ago`
+  }
 }

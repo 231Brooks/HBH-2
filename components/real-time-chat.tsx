@@ -1,317 +1,346 @@
 "use client"
 
-import type React from "react"
-
-import { useEffect, useState, useRef } from "react"
-import { usePusher } from "@/lib/pusher-client"
+import { useState, useEffect, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { ScrollArea } from "@/components/ui/scroll-area"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Send } from "lucide-react"
-import { debounce } from "lodash"
+import { Send, Loader2 } from "lucide-react"
+import { getCachedData, cacheData } from "@/lib/redis"
+import { UserAvatarWithPresence } from "./user-avatar-with-presence"
+import { useGetPresence } from "@/lib/presence"
+import { usePusher } from "./pusher-provider"
+import { createClient } from "@supabase/supabase-js"
 
 type Message = {
   id: string
   content: string
-  sender: {
-    id: string
-    name: string
-    avatar?: string
-  }
-  timestamp: string
+  user_id: string
+  user_name: string
+  user_avatar?: string
+  created_at: string
+  conversation_id: string
 }
 
-interface ChatProps {
-  channelName: string
-  currentUser: {
-    id: string
-    name: string
-    avatar?: string
+type RealTimeChatProps = {
+  conversationId: string
+  currentUserId: string
+  currentUserName: string
+  currentUserAvatar?: string
+  otherUserId: string
+  otherUserName: string
+  otherUserAvatar?: string
+}
+
+// Get Supabase client (client-side only)
+const getSupabaseClient = () => {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+
+  if (!supabaseUrl || !supabaseAnonKey) {
+    throw new Error("Supabase URL and anon key must be defined")
   }
-  recipientId?: string
-  recipientName?: string
-  recipientAvatar?: string
+
+  return createClient(supabaseUrl, supabaseAnonKey)
 }
 
 export default function RealTimeChat({
-  channelName,
-  currentUser,
-  recipientId,
-  recipientName,
-  recipientAvatar,
-}: ChatProps) {
+  conversationId,
+  currentUserId,
+  currentUserName,
+  currentUserAvatar,
+  otherUserId,
+  otherUserName,
+  otherUserAvatar,
+}: RealTimeChatProps) {
   const [messages, setMessages] = useState<Message[]>([])
   const [newMessage, setNewMessage] = useState("")
-  const [loading, setLoading] = useState(false)
-  const [isTyping, setIsTyping] = useState(false)
-  const [typingUsers, setTypingUsers] = useState<Record<string, { name: string; timestamp: number }>>({})
+  const [loading, setLoading] = useState(true)
+  const [sending, setSending] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const [isTyping, setIsTyping] = useState(false)
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
-  const pusher = usePusher()
+  // Get presence data for the conversation
+  const { isUserOnline } = useGetPresence(`chat:${conversationId}`)
+  const isOtherUserOnline = isUserOnline(otherUserId)
 
+  // Get Pusher client
+  const { pusher, loading: pusherLoading } = usePusher()
+
+  // Scroll to bottom when messages change
   useEffect(() => {
-    if (!pusher) return
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
+  }, [messages])
 
-    // Subscribe to the chat channel
-    const channel = pusher.subscribe(channelName)
+  // Load initial messages and set up realtime subscription
+  useEffect(() => {
+    const loadMessages = async () => {
+      setLoading(true)
 
-    channel.bind("new-message", (data: Message) => {
-      setMessages((prev) => [...prev, data])
+      try {
+        // Try to get messages from cache first
+        const cachedMessages = await getCachedData<Message[]>(`chat:${conversationId}`)
 
-      // Clear typing indicator when message is received from the typing user
-      if (typingUsers[data.sender.id]) {
-        setTypingUsers((prev) => {
-          const updated = { ...prev }
-          delete updated[data.sender.id]
-          return updated
-        })
+        if (cachedMessages) {
+          setMessages(cachedMessages)
+          setLoading(false)
+        }
+
+        // Fetch messages from Supabase
+        const supabase = getSupabaseClient()
+        const { data, error } = await supabase
+          .from("messages")
+          .select("*")
+          .eq("conversation_id", conversationId)
+          .order("created_at", { ascending: true })
+
+        if (error) {
+          console.error("Error fetching messages:", error)
+          return
+        }
+
+        if (data) {
+          setMessages(data)
+          // Cache the messages for 5 minutes
+          await cacheData(`chat:${conversationId}`, data, 300)
+        }
+      } catch (error) {
+        console.error("Error loading messages:", error)
+      } finally {
+        setLoading(false)
       }
-    })
+    }
 
-    channel.bind("typing-indicator", (data: { userId: string; userName: string; isTyping: boolean }) => {
-      if (data.userId === currentUser.id) return
+    loadMessages()
 
-      if (data.isTyping) {
-        setTypingUsers((prev) => ({
-          ...prev,
-          [data.userId]: { name: data.userName, timestamp: Date.now() },
-        }))
-      } else {
-        setTypingUsers((prev) => {
-          const updated = { ...prev }
-          delete updated[data.userId]
-          return updated
-        })
-      }
-    })
+    // Only set up subscriptions if Pusher is loaded
+    if (!pusher || pusherLoading) return
 
-    // Fetch initial messages
-    fetchMessages()
-
-    // Clean up typing indicators after inactivity
-    const typingCleanupInterval = setInterval(() => {
-      const now = Date.now()
-      setTypingUsers((prev) => {
-        const updated = { ...prev }
-        Object.entries(updated).forEach(([userId, data]) => {
-          if (now - data.timestamp > 5000) {
-            delete updated[userId]
-          }
-        })
-        return updated
+    // Subscribe to new messages
+    const supabase = getSupabaseClient()
+    const subscription = supabase
+      .channel(`messages:${conversationId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "messages",
+          filter: `conversation_id=eq.${conversationId}`,
+        },
+        (payload) => {
+          const newMessage = payload.new as Message
+          setMessages((current) => [...current, newMessage])
+        },
+      )
+      .on("presence", { event: "sync" }, () => {
+        // Handle presence sync
       })
-    }, 1000)
+      .on("broadcast", { event: "typing" }, ({ payload }) => {
+        if (payload.user_id !== currentUserId) {
+          setIsTyping(true)
+
+          // Clear previous timeout
+          if (typingTimeoutRef.current) {
+            clearTimeout(typingTimeoutRef.current)
+          }
+
+          // Set new timeout
+          typingTimeoutRef.current = setTimeout(() => {
+            setIsTyping(false)
+          }, 2000)
+        }
+      })
+      .subscribe(async (status) => {
+        if (status === "SUBSCRIBED") {
+          // Track presence for the current user
+          await subscription.track({
+            user_id: currentUserId,
+            status: "online",
+            last_seen: new Date().toISOString(),
+          })
+        }
+      })
+
+    // Set up heartbeat to keep presence active
+    const heartbeatInterval = setInterval(async () => {
+      await subscription.track({
+        user_id: currentUserId,
+        status: "online",
+        last_seen: new Date().toISOString(),
+      })
+    }, 30000) // Update every 30 seconds
 
     return () => {
-      pusher.unsubscribe(channelName)
-      clearInterval(typingCleanupInterval)
+      clearInterval(heartbeatInterval)
+      subscription.unsubscribe()
       if (typingTimeoutRef.current) {
         clearTimeout(typingTimeoutRef.current)
       }
     }
-  }, [channelName, currentUser.id, pusher])
+  }, [conversationId, currentUserId, otherUserId, pusher, pusherLoading])
 
-  useEffect(() => {
-    scrollToBottom()
-  }, [messages, typingUsers])
-
-  const fetchMessages = async () => {
-    try {
-      // In a real app, you'd fetch from your API
-      // For now, we'll use mock data
-      const mockMessages: Message[] = [
-        {
-          id: "1",
-          content: "Hello! How can I help you with your real estate needs?",
-          sender: {
-            id: recipientId || "agent1",
-            name: recipientName || "Jane Smith",
-            avatar: recipientAvatar || "/javascript-code-abstract.png",
-          },
-          timestamp: new Date(Date.now() - 3600000).toISOString(),
-        },
-      ]
-
-      setMessages(mockMessages)
-    } catch (error) {
-      console.error("Error fetching messages:", error)
-    }
-  }
-
-  const sendMessage = async () => {
+  // Handle sending a new message
+  const handleSendMessage = async () => {
     if (!newMessage.trim()) return
 
-    setLoading(true)
+    setSending(true)
 
     try {
-      const message: Message = {
-        id: crypto.randomUUID(),
+      const newMsg = {
         content: newMessage,
-        sender: currentUser,
-        timestamp: new Date().toISOString(),
+        user_id: currentUserId,
+        user_name: currentUserName,
+        user_avatar: currentUserAvatar,
+        conversation_id: conversationId,
+        created_at: new Date().toISOString(),
       }
 
-      // In a real app, you'd send to your API
-      await fetch("/api/messages/send", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          channelName,
-          message,
-        }),
-      })
+      const supabase = getSupabaseClient()
+      const { error } = await supabase.from("messages").insert(newMsg)
 
-      // Send typing stopped indicator
-      sendTypingIndicator(false)
+      if (error) {
+        console.error("Error sending message:", error)
+        return
+      }
 
       setNewMessage("")
     } catch (error) {
       console.error("Error sending message:", error)
     } finally {
-      setLoading(false)
+      setSending(false)
     }
   }
 
-  const sendTypingIndicator = async (isTyping: boolean) => {
-    try {
-      await fetch("/api/messages/typing", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          channelName,
-          userId: currentUser.id,
-          userName: currentUser.name,
-          isTyping,
-        }),
-      })
-    } catch (error) {
-      console.error("Error sending typing indicator:", error)
-    }
-  }
-
-  // Debounced function to send typing indicator
-  const debouncedTypingIndicator = useRef(
-    debounce((isTyping: boolean) => {
-      sendTypingIndicator(isTyping)
-    }, 300),
-  ).current
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value
-    setNewMessage(value)
-
-    // Send typing indicator if there's text
-    if (value.length > 0 && !isTyping) {
-      setIsTyping(true)
-      debouncedTypingIndicator(true)
-
-      // Clear previous timeout
-      if (typingTimeoutRef.current) {
-        clearTimeout(typingTimeoutRef.current)
-      }
-
-      // Set timeout to clear typing indicator after inactivity
-      typingTimeoutRef.current = setTimeout(() => {
-        setIsTyping(false)
-        debouncedTypingIndicator(false)
-      }, 3000)
-    } else if (value.length === 0 && isTyping) {
-      setIsTyping(false)
-      debouncedTypingIndicator(false)
-
-      if (typingTimeoutRef.current) {
-        clearTimeout(typingTimeoutRef.current)
-      }
-    }
-  }
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
-  }
-
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault()
-      sendMessage()
-    }
-  }
-
-  const getTypingIndicator = () => {
-    const typingUsersList = Object.values(typingUsers)
-    if (typingUsersList.length === 0) return null
-
-    const names = typingUsersList.map((u) => u.name).join(", ")
-
-    return (
-      <div className="flex items-center text-xs text-muted-foreground mb-2">
-        <div className="flex space-x-1 mr-2">
-          <div className="w-1.5 h-1.5 bg-primary rounded-full animate-bounce" style={{ animationDelay: "0ms" }}></div>
-          <div className="w-1.5 h-1.5 bg-primary rounded-full animate-bounce" style={{ animationDelay: "150ms" }}></div>
-          <div className="w-1.5 h-1.5 bg-primary rounded-full animate-bounce" style={{ animationDelay: "300ms" }}></div>
-        </div>
-        <span>{typingUsersList.length === 1 ? `${names} is typing...` : `${names} are typing...`}</span>
-      </div>
-    )
+  // Handle typing indicator
+  const handleTyping = () => {
+    const supabase = getSupabaseClient()
+    supabase.channel(`messages:${conversationId}`).send({
+      type: "broadcast",
+      event: "typing",
+      payload: { user_id: currentUserId },
+    })
   }
 
   return (
-    <Card className="flex flex-col h-[600px]">
-      <CardHeader className="px-4 py-3 border-b">
-        <CardTitle className="text-lg">{recipientName ? `Chat with ${recipientName}` : "Chat"}</CardTitle>
-      </CardHeader>
-      <CardContent className="flex-1 overflow-y-auto p-4 space-y-4">
-        {messages.map((message) => (
-          <div
-            key={message.id}
-            className={`flex ${message.sender.id === currentUser.id ? "justify-end" : "justify-start"}`}
-          >
-            <div
-              className={`flex ${message.sender.id === currentUser.id ? "flex-row-reverse" : "flex-row"} gap-2 max-w-[80%]`}
-            >
-              <Avatar className="h-8 w-8">
-                <AvatarImage src={message.sender.avatar || "/placeholder.svg?height=32&width=32&query=user"} />
-                <AvatarFallback>
-                  {message.sender.name
-                    .split(" ")
-                    .map((n) => n[0])
-                    .join("")}
-                </AvatarFallback>
-              </Avatar>
-              <div>
-                <div
-                  className={`rounded-lg px-3 py-2 ${
-                    message.sender.id === currentUser.id ? "bg-primary text-primary-foreground" : "bg-muted"
-                  }`}
-                >
-                  {message.content}
-                </div>
-                <p className="text-xs text-muted-foreground mt-1">
-                  {new Date(message.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-                </p>
-              </div>
-            </div>
+    <Card className="w-full h-[600px] flex flex-col">
+      <CardHeader className="pb-3">
+        <CardTitle className="flex items-center gap-2">
+          <UserAvatarWithPresence
+            userId={otherUserId}
+            userName={otherUserName}
+            userAvatar={otherUserAvatar}
+            size="sm"
+          />
+          <div className="flex flex-col">
+            <span>{otherUserName}</span>
+            <span className="text-xs text-muted-foreground">{isOtherUserOnline ? "Online" : "Offline"}</span>
           </div>
-        ))}
-        {getTypingIndicator()}
-        <div ref={messagesEndRef} />
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="flex-1 overflow-hidden p-0">
+        <ScrollArea className="h-full p-4">
+          {loading ? (
+            <div className="flex justify-center items-center h-full">
+              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+            </div>
+          ) : messages.length === 0 ? (
+            <div className="flex justify-center items-center h-full text-muted-foreground">
+              No messages yet. Start the conversation!
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {messages.map((message) => (
+                <div
+                  key={message.id}
+                  className={`flex ${message.user_id === currentUserId ? "justify-end" : "justify-start"}`}
+                >
+                  <div className="flex gap-2 max-w-[80%]">
+                    {message.user_id !== currentUserId && (
+                      <UserAvatarWithPresence
+                        userId={message.user_id}
+                        userName={message.user_name}
+                        userAvatar={message.user_avatar || otherUserAvatar}
+                        size="sm"
+                      />
+                    )}
+                    <div
+                      className={`rounded-lg p-3 ${
+                        message.user_id === currentUserId ? "bg-primary text-primary-foreground" : "bg-muted"
+                      }`}
+                    >
+                      <p className="text-sm">{message.content}</p>
+                      <p
+                        className={`text-xs mt-1 ${
+                          message.user_id === currentUserId ? "text-primary-foreground/80" : "text-muted-foreground"
+                        }`}
+                      >
+                        {new Date(message.created_at).toLocaleTimeString([], {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </p>
+                    </div>
+                    {message.user_id === currentUserId && (
+                      <UserAvatarWithPresence
+                        userId={currentUserId}
+                        userName={currentUserName}
+                        userAvatar={currentUserAvatar}
+                        size="sm"
+                      />
+                    )}
+                  </div>
+                </div>
+              ))}
+              {isTyping && (
+                <div className="flex justify-start">
+                  <div className="flex gap-2 max-w-[80%]">
+                    <UserAvatarWithPresence
+                      userId={otherUserId}
+                      userName={otherUserName}
+                      userAvatar={otherUserAvatar}
+                      size="sm"
+                    />
+                    <div className="rounded-lg p-3 bg-muted">
+                      <div className="flex space-x-1">
+                        <div className="h-2 w-2 bg-muted-foreground rounded-full animate-bounce"></div>
+                        <div
+                          className="h-2 w-2 bg-muted-foreground rounded-full animate-bounce"
+                          style={{ animationDelay: "0.2s" }}
+                        ></div>
+                        <div
+                          className="h-2 w-2 bg-muted-foreground rounded-full animate-bounce"
+                          style={{ animationDelay: "0.4s" }}
+                        ></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+              <div ref={messagesEndRef} />
+            </div>
+          )}
+        </ScrollArea>
       </CardContent>
-      <CardFooter className="p-3 border-t">
-        <div className="flex w-full items-center gap-2">
+      <CardFooter className="p-4 pt-2">
+        <div className="flex w-full gap-2">
           <Input
+            placeholder="Type a message..."
             value={newMessage}
-            onChange={handleInputChange}
-            onKeyDown={handleKeyPress}
-            placeholder="Type your message..."
+            onChange={(e) => setNewMessage(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault()
+                handleSendMessage()
+              }
+            }}
+            onKeyUp={handleTyping}
+            disabled={sending}
             className="flex-1"
           />
-          <Button onClick={sendMessage} disabled={loading || !newMessage.trim()} size="icon">
-            <Send className="h-4 w-4" />
+          <Button onClick={handleSendMessage} disabled={sending || !newMessage.trim()}>
+            {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
           </Button>
         </div>
       </CardFooter>

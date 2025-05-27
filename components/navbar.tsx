@@ -22,7 +22,6 @@ import {
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { useState, useEffect } from "react"
 import { useIsMobile } from "@/hooks/use-mobile"
-import RealTimeNotifications from "./real-time-notifications"
 
 const navItems = [
   { name: "Home", href: "/", icon: <Home className="h-5 w-5" /> },
@@ -80,7 +79,6 @@ export default function Navbar() {
         </div>
 
         <div className="flex items-center gap-4">
-          <RealTimeNotifications />
           {!isMobile && (
             <>
               <Button variant="outline" size="icon" asChild>

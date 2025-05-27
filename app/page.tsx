@@ -4,6 +4,17 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Calendar, Building2, Briefcase, Gavel, FileText, Users, MapPin, ArrowRight } from "lucide-react"
+import type { Metadata } from "next"
+import { generateMetadata as baseGenerateMetadata } from "@/lib/metadata-utils"
+
+export function generateMetadata(): Metadata {
+  return baseGenerateMetadata({
+    title: "Home",
+    description: "Find your dream home with HBH - Homes in Better Hands",
+    path: "/",
+    canonicalPath: "/", // Explicitly set canonical URL for home page
+  })
+}
 
 export default function Home() {
   return (
@@ -179,7 +190,7 @@ export default function Home() {
               <Card key={i} className="overflow-hidden">
                 <div className="relative h-48">
                   <Image
-                    src={`/placeholder.svg?height=400&width=600&text=Property+${i}`}
+                    src={`/placeholder.svg?key=8295g&height=400&width=600&text=Property+${i}`}
                     alt={`Property ${i}`}
                     fill
                     className="object-cover"
@@ -226,7 +237,7 @@ export default function Home() {
             <Card key={i} className="overflow-hidden">
               <div className="relative h-40">
                 <Image
-                  src={`/placeholder.svg?height=300&width=400&text=${service.replace(" ", "+")}`}
+                  src={`/placeholder_image.png?height=300&width=400&text=${service.replace(" ", "+")}`}
                   alt={service}
                   fill
                   className="object-cover"

@@ -1,3 +1,6 @@
+import type { Metadata } from "next"
+import { generateMetadata as baseGenerateMetadata } from "@/lib/metadata-utils"
+import { getCanonicalPath } from "@/lib/canonical-utils"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -23,6 +26,27 @@ import {
 } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
+
+interface ServicesPageProps {
+  searchParams?: {
+    page?: string
+    sort?: string
+    category?: string
+    location?: string
+  }
+}
+
+export async function generateMetadata({ searchParams }: ServicesPageProps): Promise<Metadata> {
+  // Create a canonical path that includes meaningful filters but excludes pagination
+  const canonicalPath = getCanonicalPath("/services", searchParams)
+
+  return baseGenerateMetadata({
+    title: "Real Estate Services",
+    description: "Browse and book real estate services from trusted professionals",
+    path: "/services",
+    canonicalPath,
+  })
+}
 
 export default function ServicesPage() {
   return (

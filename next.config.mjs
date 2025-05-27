@@ -1,9 +1,27 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  swcMinify: true,
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
+  typescript: {
+    ignoreBuildErrors: true,
+  },
   images: {
-    domains: ['res.cloudinary.com', 'avatars.githubusercontent.com'],
+    domains: [
+      'res.cloudinary.com',
+      'cloudinary.com',
+      'images.unsplash.com',
+      'via.placeholder.com',
+      'lh3.googleusercontent.com',
+      'avatars.githubusercontent.com'
+    ],
+    formats: ['image/avif', 'image/webp'],
     unoptimized: true,
+  },
+  experimental: {
+    serverActions: true,
   },
   async headers() {
     return [
@@ -22,31 +40,10 @@ const nextConfig = {
             key: 'X-XSS-Protection',
             value: '1; mode=block',
           },
-          {
-            key: 'Referrer-Policy',
-            value: 'strict-origin-when-cross-origin',
-          },
-          {
-            key: 'Permissions-Policy',
-            value: 'camera=(), microphone=(), geolocation=(self)',
-          },
-          {
-            key: 'Strict-Transport-Security',
-            value: 'max-age=63072000; includeSubDomains; preload',
-          },
         ],
       },
-    ]
-  },
-  experimental: {
-    serverActions: true,
-  },
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
-  typescript: {
-    ignoreBuildErrors: true,
+    ];
   },
 }
 
-export default nextConfig
+export default nextConfig;
