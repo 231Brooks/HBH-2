@@ -70,5 +70,6 @@
   }
   body {
     @apply bg-background text-foreground;
+    font-family: system-ui, sans-serif;
   }
 }
