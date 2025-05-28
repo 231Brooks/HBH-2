@@ -238,7 +238,7 @@ importers:
         version: 0.9.6(@types/react-dom@19.0.0)(@types/react@19.0.0)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
       zod:
         specifier: latest
-        version: 3.25.31
+        version: 3.25.32
     devDependencies:
       '@types/node':
         specifier: ^22
@@ -3858,8 +3858,8 @@ packages:
     resolution: {integrity: sha512-rVksvsnNCdJ/ohGc6xgPwyN8eheCxsiLM8mxuE/t/mOVqJewPuO1miLpTHQiRgTKCLexL4MeAFVagts7HmNZ2Q==}
     engines: {node: '>=10'}
 
-  zod@3.25.31:
-    resolution: {integrity: sha512-SVCtUpZ1D9TFcRnCY7wlCpGEzV4+2HlXnJiwrgq1T93m98BIT6M5lbxRrEm7v6pYZXV4QNQo1t2KVv93JXk6XA==}
+  zod@3.25.32:
+    resolution: {integrity: sha512-OSm2xTIRfW8CV5/QKgngwmQW/8aPfGdaQFlrGoErlgg/Epm7cjb6K6VEyExfe65a3VybUOnu381edLb0dfJl0g==}
 
 snapshots:
 
@@ -7697,4 +7697,4 @@ snapshots:
 
   yocto-queue@0.1.0: {}
 
-  zod@3.25.31: {}
+  zod@3.25.32: {}
