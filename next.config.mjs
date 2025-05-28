@@ -11,18 +11,27 @@ const nextConfig = {
   images: {
     domains: [
       'res.cloudinary.com',
-      'cloudinary.com',
       'images.unsplash.com',
-      'via.placeholder.com',
-      'lh3.googleusercontent.com',
-      'avatars.githubusercontent.com'
+      'via.placeholder.com'
     ],
     formats: ['image/avif', 'image/webp'],
     unoptimized: true,
   },
   experimental: {
     serverActions: true,
+    outputFileTracingExcludes: {
+      '*': [
+        'node_modules/@swc/core-linux-x64-gnu',
+        'node_modules/@swc/core-linux-x64-musl',
+        'node_modules/@esbuild/linux-x64',
+        'node_modules/sharp',
+        'node_modules/canvas',
+        'node_modules/puppeteer',
+      ],
+    },
   },
+  outputFileTracing: true,
+  output: 'standalone',
   async headers() {
     return [
       {
