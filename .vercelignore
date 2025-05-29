@@ -1,61 +1,71 @@
-# Dependencies
+# All non-essential directories
 node_modules
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-
-# Testing
+.git
+.next
+out
+build
+dist
 coverage
 .nyc_output
 
-# Next.js
-.next/
-out/
-
-# Production
-build
-dist
-
-# Misc
-.DS_Store
-*.tgz
-*.tar.gz
-
-# Debug
-*.log
-
-# Local env files
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
-
-# IDE
-.vscode
-.idea
-
-# OS generated files
-Thumbs.db
-
-# Large files that shouldn't be in functions
-*.pdf
-*.zip
-*.tar
-*.gz
-public/images/large/
+# All documentation and tests
 docs/
 scripts/
 __tests__/
 e2e/
 load-tests/
+*.md
+README*
 
-# Database
+# All database and config files
+prisma/
 *.db
 *.sqlite
+*.sql
 
-# Logs
-logs
+# All large assets
+public/images/
+public/*.png
+public/*.jpg
+public/*.jpeg
+public/*.gif
+public/*.svg
+*.pdf
+*.zip
+*.tar
+*.gz
+
+# All logs and temp files
 *.log
+logs/
+tmp/
+temp/
 
-# Prisma
-prisma/migrations/
+# All IDE and OS files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# All environment files
+.env*
+!.env.example
+
+# All lock files
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# TypeScript build info
+*.tsbuildinfo
+
+# All component libraries (temporarily)
+components/
+lib/
+hooks/
+contexts/
+types/
+
+# All API routes except health check
+app/api/
+!app/api/health/
