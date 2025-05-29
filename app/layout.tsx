@@ -1,11 +1,4 @@
 import type React from "react"
-
-export const metadata = {
-  title: "Real Estate Platform",
-  description: "A minimal real estate platform",
-    generator: 'v0.dev'
-}
-
 export default function RootLayout({
   children,
 }: {
@@ -13,10 +6,16 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body style={{ margin: 0, padding: "20px", fontFamily: "Arial, sans-serif" }}>{children}</body>
+      <body>
+        <div className="min-h-screen bg-white">{children}</div>
+      </body>
     </html>
   )
 }
 
 
 import './globals.css'
+
+export const metadata = {
+      generator: 'v0.dev'
+    };

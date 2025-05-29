@@ -13,6 +13,7 @@ const nextConfig = {
     unoptimized: true,
   },
   experimental: {
+    appDir: true,
     outputFileTracingExcludes: {
       '*': [
         'node_modules/**/*',
