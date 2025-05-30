@@ -1,4 +1,5 @@
 import type React from "react"
+
 export default function RootLayout({
   children,
 }: {
@@ -6,9 +7,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body>
-        <div className="min-h-screen bg-white">{children}</div>
-      </body>
+      <body style={{ margin: 0, padding: "20px", fontFamily: "Arial, sans-serif" }}>{children}</body>
     </html>
   )
 }

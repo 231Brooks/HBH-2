@@ -309,3 +309,67 @@ export function checkNodeModules(): {
     }
   }
 }
+
+// Add a comprehensive deployment readiness check function at the end of the file
+
+export function runDeploymentReadinessCheck(): {
+  ready: boolean
+  issues: string[]
+  warnings: string[]
+  recommendations: string[]
+} {
+  const issues: string[] = []
+  const warnings: string[] = []
+  const recommendations: string[] = []
+
+  // Check Vercel configuration
+  const vercelConfig = checkVercelConfig()
+  if (!vercelConfig.valid && vercelConfig.issues) {
+    issues.push(...vercelConfig.issues)
+  }
+
+  // Check package.json
+  const packageJson = checkPackageJson()
+  if (packageJson.issues) {
+    issues.push(...packageJson.issues)
+  }
+
+  // Check Next.js configuration
+  const nextConfig = checkNextConfig()
+  if (!nextConfig.valid && nextConfig.issues) {
+    warnings.push(...nextConfig.issues)
+  }
+
+  // Check build output
+  const buildOutput = checkBuildOutputDirectory()
+  if (!buildOutput.exists) {
+    warnings.push("Build output not found - run 'npm run build' before deploying")
+  }
+
+  // Check node_modules
+  const nodeModules = checkNodeModules()
+  if (!nodeModules.exists) {
+    issues.push("node_modules not found - run 'npm install' before deploying")
+  }
+
+  // Bundle size recommendations
+  if (buildOutput.size && buildOutput.size > 200 * 1024 * 1024) {
+    // 200MB
+    warnings.push(`Build output is large (${Math.round(buildOutput.size / 1024 / 1024)}MB) - consider optimizing`)
+    recommendations.push("Use outputFileTracingExcludes in next.config.js to reduce bundle size")
+    recommendations.push("Add more files to .vercelignore")
+    recommendations.push("Consider code splitting and dynamic imports")
+  }
+
+  // Environment variable recommendations
+  recommendations.push("Verify all environment variables are set in Vercel dashboard")
+  recommendations.push("Run diagnostics API endpoint to test integrations")
+  recommendations.push("Test authentication flow before going live")
+
+  return {
+    ready: issues.length === 0,
+    issues,
+    warnings,
+    recommendations,
+  }
+}

@@ -50,6 +50,7 @@
     "@upstash/redis": "latest",
     "autoprefixer": "latest",
     "bcryptjs": "latest",
+    "chalk": "latest",
     "chart.js": "latest",
     "child_process": "latest",
     "class-variance-authority": "^0.7.1",
