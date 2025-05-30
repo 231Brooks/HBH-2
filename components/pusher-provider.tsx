@@ -26,7 +26,7 @@ export function PusherProvider({ children }: { children: ReactNode }) {
     if (config && !pusherClient) {
       const client = new Pusher(config.key, {
         cluster: config.cluster,
-        forceTLS: true,
+        forceTLS: config.forceTLS,
       })
 
       setPusherClient(client)

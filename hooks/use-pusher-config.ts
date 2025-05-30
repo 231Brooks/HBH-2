@@ -3,9 +3,9 @@
 import { useState, useEffect } from "react"
 
 type PusherConfig = {
-  appId: string
   key: string
   cluster: string
+  forceTLS: boolean
 }
 
 export function usePusherConfig() {

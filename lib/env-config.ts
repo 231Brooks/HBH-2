@@ -33,11 +33,11 @@ const envSchema = z.object({
   CLOUDINARY_API_KEY: z.string().optional(),
   CLOUDINARY_API_SECRET: z.string().optional(),
 
-  // Pusher
-  NEXT_PUBLIC_PUSHER_APP_ID: z.string().optional(),
-  NEXT_PUBLIC_PUSHER_KEY: z.string().optional(),
+  // Pusher (Server-side only - removed NEXT_PUBLIC_ prefix)
+  PUSHER_APP_ID: z.string().optional(),
+  PUSHER_KEY: z.string().optional(),
   PUSHER_SECRET: z.string().optional(),
-  NEXT_PUBLIC_PUSHER_CLUSTER: z.string().optional(),
+  PUSHER_CLUSTER: z.string().optional(),
 
   // Redis
   KV_URL: z.string().optional(),
@@ -86,7 +86,7 @@ export const features = {
     cloudinary: !!(env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME && env.CLOUDINARY_API_KEY),
   },
   realtime: {
-    pusher: !!(env.NEXT_PUBLIC_PUSHER_KEY && env.PUSHER_SECRET),
+    pusher: !!(env.PUSHER_KEY && env.PUSHER_SECRET),
   },
   payments: {
     stripe: !!(env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY && env.STRIPE_SECRET_KEY),
@@ -111,7 +111,6 @@ export const envGroups = {
     "NEXT_PUBLIC_SUPABASE_URL",
     "NEXT_PUBLIC_SUPABASE_ANON_KEY",
     "NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME",
-    "NEXT_PUBLIC_PUSHER_KEY",
     "NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY",
   ],
 } as const
