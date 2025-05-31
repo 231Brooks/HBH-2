@@ -2,7 +2,6 @@
 const nextConfig = {
   // Core Next.js settings
   reactStrictMode: true,
-  swcMinify: true,
   
   // Build and performance optimizations
   poweredByHeader: false,

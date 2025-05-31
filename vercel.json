@@ -1,15 +1,11 @@
 {
   "version": 2,
   "buildCommand": "npm run build",
-  "outputDirectory": ".next",
   "installCommand": "npm install",
   "framework": "nextjs",
   "functions": {
     "app/api/**/*.ts": {
       "maxDuration": 30
-    },
-    "app/api/admin/**/*.ts": {
-      "maxDuration": 60
     }
   },
   "headers": [
@@ -27,33 +23,13 @@
         {
           "key": "X-XSS-Protection",
           "value": "1; mode=block"
-        },
-        {
-          "key": "Referrer-Policy",
-          "value": "strict-origin-when-cross-origin"
         }
       ]
-    },
-    {
-      "source": "/api/(.*)",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "no-store, no-cache, must-revalidate"
-        }
-      ]
-    }
-  ],
-  "redirects": [
-    {
-      "source": "/home",
-      "destination": "/",
-      "permanent": true
     }
   ],
   "rewrites": [
     {
-      "source": "/healthz",
+      "source": "/health",
       "destination": "/api/health"
     }
   ]
