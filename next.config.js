@@ -13,6 +13,10 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
+  // If you are using the /app directory for routing, you must enable this:
+  experimental: {
+    appDir: true,
+  },
 }
 
 module.exports = nextConfig
