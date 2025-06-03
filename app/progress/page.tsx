@@ -1,5 +1,3 @@
-import type { Metadata } from "next"
-import { generateMetadata as baseGenerateMetadata } from "@/lib/metadata-utils"
 import type React from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -7,15 +5,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { FileText, Clock, CheckCircle, AlertCircle, Users, Search, Plus, Filter, ArrowUpRight } from "lucide-react"
-
-export function generateMetadata(): Metadata {
-  return baseGenerateMetadata({
-    title: "Transaction Progress",
-    description: "Track the progress of your real estate transactions",
-    path: "/progress",
-    canonicalPath: "/progress", // Explicitly set canonical URL
-  })
-}
 
 export default function ProgressPage() {
   return (

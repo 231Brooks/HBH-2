@@ -13,12 +13,6 @@ import { AlertCircle } from "lucide-react"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { useSupabase } from "@/contexts/supabase-context"
 
-// Add this validation function
-function validateEmail(email: string): boolean {
-  const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/
-  return emailRegex.test(email)
-}
-
 export default function SignupPage() {
   const router = useRouter()
   const { supabase, user, loading: authLoading } = useSupabase()
@@ -52,13 +46,6 @@ export default function SignupPage() {
     // Validate passwords match
     if (password !== confirmPassword) {
       setError("Passwords do not match")
-      setLoading(false)
-      return
-    }
-
-    // Validate email format
-    if (!validateEmail(email)) {
-      setError("Invalid email format")
       setLoading(false)
       return
     }

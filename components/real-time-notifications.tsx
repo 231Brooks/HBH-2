@@ -6,7 +6,6 @@ import { Bell, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { getCachedData, cacheData } from "@/lib/redis"
-import { usePusher } from "./pusher-provider"
 
 type Notification = {
   id: string
@@ -25,7 +24,6 @@ export default function RealTimeNotifications({ userId }: RealTimeNotificationsP
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [showNotifications, setShowNotifications] = useState(false)
   const [unreadCount, setUnreadCount] = useState(0)
-  const { pusher, loading: pusherLoading } = usePusher()
 
   // Get Supabase client (client-side only)
   const getSupabaseClient = () => {
@@ -109,26 +107,6 @@ export default function RealTimeNotifications({ userId }: RealTimeNotificationsP
       subscription.unsubscribe()
     }
   }, [userId])
-
-  useEffect(() => {
-    if (!pusher || pusherLoading) return
-
-    // Set up Pusher subscription
-    const channel = pusher.subscribe(`user-${userId}-notifications`)
-
-    channel.bind("new-notification", (data: Notification) => {
-      setNotifications((prev) => [data, ...prev])
-      setUnreadCount((prev) => prev + 1)
-
-      // if (data.type === 'message') {
-      //   playNotificationSound();
-      // }
-    })
-
-    return () => {
-      pusher.unsubscribe(`user-${userId}-notifications`)
-    }
-  }, [userId, pusher, pusherLoading])
 
   // Mark notification as read
   const markAsRead = async (id: string) => {

@@ -34,7 +34,7 @@ type MarketplaceItem = {
   createdAt: string
 }
 
-export default function CachedItems() {
+export function CachedMarketplaceItems() {
   const [items, setItems] = useState<MarketplaceItem[]>([])
   const [loading, setLoading] = useState(true)
   const [usingCache, setUsingCache] = useState(false)
@@ -100,7 +100,7 @@ export default function CachedItems() {
 
   return (
     <Card>
-      <CardHeader className="pb-3">
+      <CardHeader>
         <CardTitle className="flex items-center justify-between">
           <span>Marketplace Items</span>
           {usingCache && <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">Cached</span>}

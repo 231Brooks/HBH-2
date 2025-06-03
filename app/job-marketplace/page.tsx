@@ -1,6 +1,3 @@
-import type { Metadata } from "next"
-import { generateMetadata as baseGenerateMetadata } from "@/lib/metadata-utils"
-import { getCanonicalPath } from "@/lib/canonical-utils"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -8,28 +5,6 @@ import { Search, MapPin, Filter } from "lucide-react"
 import JobListingCard from "./components/job-listing-card"
 import ProfessionalCard from "./components/professional-card"
 import FeaturedCategories from "./components/featured-categories"
-
-interface JobMarketplacePageProps {
-  searchParams?: {
-    page?: string
-    sort?: string
-    category?: string
-    location?: string
-    experience?: string
-  }
-}
-
-export async function generateMetadata({ searchParams }: JobMarketplacePageProps): Promise<Metadata> {
-  // Create a canonical path that includes meaningful filters but excludes pagination
-  const canonicalPath = getCanonicalPath("/job-marketplace", searchParams)
-
-  return baseGenerateMetadata({
-    title: "Job Marketplace",
-    description: "Find real estate professionals or list your services",
-    path: "/job-marketplace",
-    canonicalPath,
-  })
-}
 
 export default function JobMarketplace() {
   return (

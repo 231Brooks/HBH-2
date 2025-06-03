@@ -29,29 +29,10 @@ export default function LoginPage() {
     }
   }, [user, router])
 
-  // Add this validation function
-  function validateEmail(email: string): boolean {
-    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/
-    return emailRegex.test(email)
-  }
-
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-
-    // Get form data
-    const formData = new FormData(e.currentTarget)
-    const email = formData.get("email") as string
-    const password = formData.get("password") as string
-
     setLoading(true)
     setError("")
-
-    // Validate email format
-    if (!validateEmail(email)) {
-      setError("Invalid email format")
-      setLoading(false)
-      return
-    }
 
     if (!supabase) {
       setError("Authentication system is not available. Please try again later.")
@@ -137,7 +118,6 @@ export default function LoginPage() {
                   id="email"
                   type="email"
                   placeholder="name@example.com"
-                  name="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
@@ -154,7 +134,6 @@ export default function LoginPage() {
                 <Input
                   id="password"
                   type="password"
-                  name="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required

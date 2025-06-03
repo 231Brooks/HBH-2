@@ -3,19 +3,10 @@ import { NextResponse } from "next/server"
 import { cookies } from "next/headers"
 
 export async function GET(request: Request) {
-  const { searchParams } = new URL(request.url)
-  const code = searchParams.get("code")
-  const state = searchParams.get("state")
-  const error = searchParams.get("error")
-  const error_description = searchParams.get("error_description")
   const requestUrl = new URL(request.url)
-
-  // Verify the state parameter matches what we sent
-  const storedState = cookies().get("google_oauth_state")?.value
-
-  if (!state || !storedState || state !== storedState) {
-    return new Response("Invalid state parameter", { status: 400 })
-  }
+  const code = requestUrl.searchParams.get("code")
+  const error = requestUrl.searchParams.get("error")
+  const error_description = requestUrl.searchParams.get("error_description")
 
   // Handle errors from OAuth provider
   if (error) {

@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react"
+import { createClient } from "@supabase/supabase-js"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { ScrollArea } from "@/components/ui/scroll-area"
@@ -9,8 +10,6 @@ import { Send, Loader2 } from "lucide-react"
 import { getCachedData, cacheData } from "@/lib/redis"
 import { UserAvatarWithPresence } from "./user-avatar-with-presence"
 import { useGetPresence } from "@/lib/presence"
-import { usePusher } from "./pusher-provider"
-import { createClient } from "@supabase/supabase-js"
 
 type Message = {
   id: string
@@ -65,9 +64,6 @@ export default function RealTimeChat({
   const { isUserOnline } = useGetPresence(`chat:${conversationId}`)
   const isOtherUserOnline = isUserOnline(otherUserId)
 
-  // Get Pusher client
-  const { pusher, loading: pusherLoading } = usePusher()
-
   // Scroll to bottom when messages change
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
@@ -113,9 +109,6 @@ export default function RealTimeChat({
     }
 
     loadMessages()
-
-    // Only set up subscriptions if Pusher is loaded
-    if (!pusher || pusherLoading) return
 
     // Subscribe to new messages
     const supabase = getSupabaseClient()
@@ -179,7 +172,7 @@ export default function RealTimeChat({
         clearTimeout(typingTimeoutRef.current)
       }
     }
-  }, [conversationId, currentUserId, otherUserId, pusher, pusherLoading])
+  }, [conversationId, currentUserId, otherUserId])
 
   // Handle sending a new message
   const handleSendMessage = async () => {

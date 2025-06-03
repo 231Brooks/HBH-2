@@ -1,130 +1,217 @@
 "use client"
 
-import { useState } from "react"
+import { Suspense } from "react"
+import Link from "next/link"
 import Image from "next/image"
-
-// Mock data for properties
-const mockProperties = [
-  {
-    id: "1",
-    title: "Modern Family Home",
-    address: "123 Main Street, Phoenix, AZ",
-    price: 425000,
-    beds: 4,
-    baths: 3,
-    sqft: 2100,
-    type: "sale",
-    image: "/placeholder.svg?height=300&width=400&text=Property+1",
-  },
-  {
-    id: "2",
-    title: "Downtown Condo",
-    address: "456 Oak Avenue, Scottsdale, AZ",
-    price: 750000,
-    beds: 2,
-    baths: 2,
-    sqft: 1200,
-    type: "sale",
-    image: "/placeholder.svg?height=300&width=400&text=Property+2",
-  },
-  {
-    id: "3",
-    title: "Investment Property",
-    address: "789 Pine Road, Tempe, AZ",
-    price: 350000,
-    beds: 3,
-    baths: 2,
-    sqft: 1800,
-    type: "auction",
-    image: "/placeholder.svg?height=300&width=400&text=Property+3",
-  },
-]
+import { Button } from "@/components/ui/button"
+import { Card, CardContent } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
+import { MapPin, Gavel, Building, Home, Clock, ArrowUpRight, MessageSquare, Heart } from "lucide-react"
+import MarketplaceClient from "./marketplace-client"
+import { Skeleton } from "@/components/ui/skeleton"
 
 export default function MarketplacePage() {
-  const [searchTerm, setSearchTerm] = useState("")
-  const [filterType, setFilterType] = useState("all")
-
-  const filteredProperties = mockProperties.filter((property) => {
-    const matchesSearch =
-      property.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      property.address.toLowerCase().includes(searchTerm.toLowerCase())
-    const matchesFilter = filterType === "all" || property.type === filterType
-    return matchesSearch && matchesFilter
-  })
-
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-4">Property Marketplace</h1>
+    <Suspense fallback={<MarketplaceSkeleton />}>
+      <MarketplaceClient />
+    </Suspense>
+  )
+}
 
-        {/* Search and Filter */}
-        <div className="flex flex-col sm:flex-row gap-4 mb-6">
-          <input
-            type="text"
-            placeholder="Search properties..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          />
-          <select
-            value={filterType}
-            onChange={(e) => setFilterType(e.target.value)}
-            className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          >
-            <option value="all">All Properties</option>
-            <option value="sale">For Sale</option>
-            <option value="auction">Auction</option>
-          </select>
+function MarketplaceSkeleton() {
+  return (
+    <div className="container py-8">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+        <div>
+          <Skeleton className="h-10 w-64 mb-2" />
+          <Skeleton className="h-5 w-80" />
         </div>
+        <Skeleton className="h-10 w-32" />
       </div>
 
-      {/* Property Grid */}
+      <Skeleton className="h-24 w-full mb-8" />
+
+      <div className="flex justify-between items-center mb-6">
+        <Skeleton className="h-10 w-64" />
+        <Skeleton className="h-10 w-40" />
+      </div>
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredProperties.map((property) => (
-          <PropertyCard key={property.id} property={property} />
-        ))}
+        {Array(6)
+          .fill(0)
+          .map((_, i) => (
+            <Skeleton key={i} className="h-80 w-full" />
+          ))}
       </div>
-
-      {filteredProperties.length === 0 && (
-        <div className="text-center py-12">
-          <p className="text-gray-500">No properties found matching your criteria.</p>
-        </div>
-      )}
     </div>
   )
 }
 
-function PropertyCard({ property }: { property: any }) {
-  return (
-    <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
-      <div className="relative h-48">
-        <Image src={property.image || "/placeholder.svg"} alt={property.title} fill className="object-cover" />
-        <div className="absolute top-2 right-2">
-          <span
-            className={`px-2 py-1 text-xs font-semibold rounded ${
-              property.type === "auction" ? "bg-yellow-100 text-yellow-800" : "bg-green-100 text-green-800"
-            }`}
+interface PropertyCardProps {
+  id: string
+  title: string
+  address: string
+  price: string
+  beds: number
+  baths: number
+  sqft: number
+  type: "sale" | "auction"
+  image: string
+  viewMode: "grid" | "list" | "map"
+  auctionEnds?: string
+  description?: string
+}
+
+function PropertyCard({
+  id,
+  title,
+  address,
+  price,
+  beds,
+  baths,
+  sqft,
+  type,
+  image,
+  viewMode,
+  auctionEnds,
+  description,
+}: PropertyCardProps) {
+  if (viewMode === "grid") {
+    return (
+      <Card className="overflow-hidden transition-all hover:shadow-md">
+        <div className="relative">
+          <Image
+            src={image || "/placeholder.svg"}
+            alt={title}
+            width={600}
+            height={400}
+            className="h-48 w-full object-cover"
+          />
+          <Badge className={`absolute top-2 right-2 ${type === "auction" ? "bg-amber-500" : "bg-primary"} text-white`}>
+            {type === "auction" ? (
+              <>
+                <Gavel className="mr-1 h-3 w-3" /> Auction
+              </>
+            ) : (
+              "For Sale"
+            )}
+          </Badge>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="absolute top-2 left-2 bg-white/80 hover:bg-white text-slate-700 rounded-full h-8 w-8"
           >
-            {property.type === "auction" ? "Auction" : "For Sale"}
-          </span>
+            <Heart className="h-4 w-4" />
+          </Button>
         </div>
-      </div>
-
-      <div className="p-4">
-        <h3 className="text-lg font-semibold text-gray-900 mb-2">{property.title}</h3>
-        <p className="text-gray-600 text-sm mb-2">{property.address}</p>
-        <p className="text-2xl font-bold text-blue-600 mb-3">${property.price.toLocaleString()}</p>
-
-        <div className="flex justify-between text-sm text-gray-500 mb-4">
-          <span>{property.beds} beds</span>
-          <span>{property.baths} baths</span>
-          <span>{property.sqft.toLocaleString()} sqft</span>
+        <CardContent className="p-4">
+          <div className="flex justify-between items-start mb-2">
+            <h3 className="text-lg font-semibold">{title}</h3>
+            <p className="font-bold text-primary">{price}</p>
+          </div>
+          <div className="flex items-center text-muted-foreground text-sm mb-3">
+            <MapPin className="h-4 w-4 mr-1" />
+            <span>{address}</span>
+          </div>
+          {type === "auction" && auctionEnds && (
+            <div className="flex items-center text-amber-600 text-sm mb-3">
+              <Clock className="h-4 w-4 mr-1" />
+              <span>Ends: {auctionEnds}</span>
+            </div>
+          )}
+          <div className="flex justify-between mb-4">
+            <div className="flex gap-2">
+              <Badge variant="outline">{beds} Beds</Badge>
+              <Badge variant="outline">{baths} Baths</Badge>
+              <Badge variant="outline">{sqft.toLocaleString()} sqft</Badge>
+            </div>
+          </div>
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" className="flex-1" asChild>
+              <Link href={`/marketplace/${id}`}>Details</Link>
+            </Button>
+            <Button size="sm" className="flex-1">
+              <MessageSquare className="mr-1 h-4 w-4" /> Contact
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    )
+  } else {
+    // List view
+    return (
+      <Card className="overflow-hidden transition-all hover:shadow-md">
+        <div className="flex flex-col md:flex-row">
+          <div className="relative md:w-1/3">
+            <Image
+              src={image || "/placeholder.svg"}
+              alt={title}
+              width={600}
+              height={400}
+              className="h-48 md:h-full w-full object-cover"
+            />
+            <Badge
+              className={`absolute top-2 right-2 ${type === "auction" ? "bg-amber-500" : "bg-primary"} text-white`}
+            >
+              {type === "auction" ? (
+                <>
+                  <Gavel className="mr-1 h-3 w-3" /> Auction
+                </>
+              ) : (
+                "For Sale"
+              )}
+            </Badge>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="absolute top-2 left-2 bg-white/80 hover:bg-white text-slate-700 rounded-full h-8 w-8"
+            >
+              <Heart className="h-4 w-4" />
+            </Button>
+          </div>
+          <div className="p-6 md:w-2/3">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-2 gap-2">
+              <h3 className="text-lg font-semibold">{title}</h3>
+              <p className="font-bold text-primary">{price}</p>
+            </div>
+            <div className="flex items-center text-muted-foreground text-sm mb-3">
+              <MapPin className="h-4 w-4 mr-1" />
+              <span>{address}</span>
+            </div>
+            {type === "auction" && auctionEnds && (
+              <div className="flex items-center text-amber-600 text-sm mb-3">
+                <Clock className="h-4 w-4 mr-1" />
+                <span>Ends: {auctionEnds}</span>
+              </div>
+            )}
+            <p className="text-sm text-muted-foreground mb-4">{description}</p>
+            <div className="flex gap-4 mb-4">
+              <div className="flex items-center">
+                <Home className="h-4 w-4 text-muted-foreground mr-1" />
+                <span className="text-sm">{beds} Beds</span>
+              </div>
+              <div className="flex items-center">
+                <Building className="h-4 w-4 text-muted-foreground mr-1" />
+                <span className="text-sm">{baths} Baths</span>
+              </div>
+              <div className="flex items-center">
+                <MapPin className="h-4 w-4 text-muted-foreground mr-1" />
+                <span className="text-sm">{sqft.toLocaleString()} sqft</span>
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <Button variant="outline" asChild>
+                <Link href={`/marketplace/${id}`}>
+                  <ArrowUpRight className="mr-1 h-4 w-4" /> View Details
+                </Link>
+              </Button>
+              <Button>
+                <MessageSquare className="mr-1 h-4 w-4" /> Contact Seller
+              </Button>
+            </div>
+          </div>
         </div>
-
-        <button className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors">
-          View Details
-        </button>
-      </div>
-    </div>
-  )
+      </Card>
+    )
+  }
 }

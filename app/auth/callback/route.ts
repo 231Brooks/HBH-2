@@ -1,16 +1,9 @@
 import { createClient } from "@supabase/supabase-js"
 import { NextResponse } from "next/server"
 import { cookies } from "next/headers"
-import { getBaseUrl } from "@/lib/url-utils"
 
 export async function GET(request: Request) {
-  // Log URLs for debugging
-  console.log("Auth callback request URL:", request.url)
-
   const requestUrl = new URL(request.url)
-  console.log("Request origin:", requestUrl.origin)
-  console.log("Base URL from utils:", getBaseUrl())
-
   const code = requestUrl.searchParams.get("code")
   const next = requestUrl.searchParams.get("next") || "/"
 
