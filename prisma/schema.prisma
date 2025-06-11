@@ -1,0 +1,363 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// User model
+model User {
+  id                String              @id @default(cuid())
+  email             String              @unique
+  name              String?
+  password          String?
+  image             String?
+  role              UserRole            @default(USER)
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+  emailVerified     Boolean             @default(false)
+  phoneVerified     Boolean             @default(false)
+  identityVerified  Boolean             @default(false)
+  location          String?
+  bio               String?
+  phone             String?
+  rating            Float?
+  reviewCount       Int                 @default(0)
+  
+  // Relations
+  properties        Property[]          @relation("UserProperties")
+  savedProperties   SavedProperty[]
+  transactions      Transaction[]       @relation("UserTransactions")
+  transactionParty  TransactionParty[]
+  reviews           Review[]            @relation("UserReviews")
+  reviewsReceived   Review[]            @relation("ReceivedReviews")
+  services          Service[]
+  projects          Project[]
+  appointments      Appointment[]
+  messages          Message[]           @relation("SentMessages")
+  receivedMessages  Message[]           @relation("ReceivedMessages")
+}
+
+enum UserRole {
+  USER
+  PROFESSIONAL
+  ADMIN
+}
+
+// Property model
+model Property {
+  id              String            @id @default(cuid())
+  title           String
+  description     String?           @db.Text
+  address         String
+  city            String
+  state           String
+  zipCode         String
+  price           Float
+  beds            Int?
+  baths           Float?
+  sqft            Int?
+  type            PropertyType
+  status          PropertyStatus    @default(FOR_SALE)
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  images          PropertyImage[]
+  features        String[]
+  latitude        Float?
+  longitude       Float?
+  
+  // Relations
+  ownerId         String
+  owner           User              @relation("UserProperties", fields: [ownerId], references: [id])
+  savedBy         SavedProperty[]
+  transactions    Transaction[]
+}
+
+enum PropertyType {
+  RESIDENTIAL
+  COMMERCIAL
+  LAND
+  MULTI_FAMILY
+}
+
+enum PropertyStatus {
+  FOR_SALE
+  AUCTION
+  PENDING
+  SOLD
+}
+
+model PropertyImage {
+  id          String    @id @default(cuid())
+  url         String
+  propertyId  String
+  property    Property  @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  isPrimary   Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+}
+
+model SavedProperty {
+  id          String    @id @default(cuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  propertyId  String
+  property    Property  @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  createdAt   DateTime  @default(now())
+
+  @@unique([userId, propertyId])
+}
+
+// Transaction model
+model Transaction {
+  id                String              @id @default(cuid())
+  propertyId        String
+  property          Property            @relation(fields: [propertyId], references: [id])
+  creatorId         String
+  creator           User                @relation("UserTransactions", fields: [creatorId], references: [id])
+  type              TransactionType
+  status            TransactionStatus   @default(IN_PROGRESS)
+  price             Float
+  closingDate       DateTime?
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+  progress          Int                 @default(0)
+  notes             String?             @db.Text
+  
+  // Relations
+  parties           TransactionParty[]
+  documents         Document[]
+  titleCompanyId    String?
+  titleCompany      TitleCompany?       @relation(fields: [titleCompanyId], references: [id])
+  milestones        Milestone[]
+}
+
+enum TransactionType {
+  PURCHASE
+  SALE
+}
+
+enum TransactionStatus {
+  IN_PROGRESS
+  PENDING_APPROVAL
+  DOCUMENT_REVIEW
+  CLOSING_SOON
+  COMPLETED
+  CANCELLED
+}
+
+model TransactionParty {
+  id              String        @id @default(cuid())
+  transactionId   String
+  transaction     Transaction   @relation(fields: [transactionId], references: [id], onDelete: Cascade)
+  userId          String
+  user            User          @relation(fields: [userId], references: [id])
+  role            PartyRole
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@unique([transactionId, userId, role])
+}
+
+enum PartyRole {
+  BUYER
+  SELLER
+  AGENT
+  TITLE_AGENT
+  ATTORNEY
+  OTHER
+}
+
+model Document {
+  id              String        @id @default(cuid())
+  name            String
+  url             String
+  type            DocumentType
+  transactionId   String
+  transaction     Transaction   @relation(fields: [transactionId], references: [id], onDelete: Cascade)
+  uploadedById    String?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+}
+
+enum DocumentType {
+  PURCHASE_AGREEMENT
+  DISCLOSURE
+  INSPECTION
+  APPRAISAL
+  TITLE_COMMITMENT
+  CLOSING_STATEMENT
+  OTHER
+}
+
+model Milestone {
+  id              String        @id @default(cuid())
+  transactionId   String
+  transaction     Transaction   @relation(fields: [transactionId], references: [id], onDelete: Cascade)
+  title           String
+  description     String?
+  dueDate         DateTime
+  completedDate   DateTime?
+  status          MilestoneStatus @default(PENDING)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+}
+
+enum MilestoneStatus {
+  PENDING
+  COMPLETED
+  OVERDUE
+}
+
+// Title Company model
+model TitleCompany {
+  id              String        @id @default(cuid())
+  name            String
+  address         String?
+  city            String?
+  state           String?
+  zipCode         String?
+  phone           String?
+  email           String?
+  website         String?
+  logo            String?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  
+  // Relations
+  transactions    Transaction[]
+}
+
+// Service model
+model Service {
+  id              String        @id @default(cuid())
+  name            String
+  description     String?       @db.Text
+  category        ServiceCategory
+  price           String?
+  hourlyRate      Float?
+  providerId      String
+  provider        User          @relation(fields: [providerId], references: [id])
+  location        String?
+  image           String?
+  verified        Boolean       @default(false)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  
+  // Relations
+  reviews         Review[]
+  projects        Project[]
+}
+
+enum ServiceCategory {
+  TITLE_SERVICES
+  HOME_INSPECTION
+  PHOTOGRAPHY
+  CONTRACTORS
+  LEGAL_SERVICES
+  MORTGAGE
+  INTERIOR_DESIGN
+  MOVING_SERVICES
+}
+
+// Project model
+model Project {
+  id              String        @id @default(cuid())
+  title           String
+  description     String?       @db.Text
+  status          ProjectStatus @default(IN_PROGRESS)
+  progress        Int           @default(0)
+  startDate       DateTime?
+  endDate         DateTime?
+  budget          Float?
+  ownerId         String
+  owner           User          @relation(fields: [ownerId], references: [id])
+  serviceId       String?
+  service         Service?      @relation(fields: [serviceId], references: [id])
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+}
+
+enum ProjectStatus {
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+// Review model
+model Review {
+  id              String        @id @default(cuid())
+  rating          Float
+  comment         String?       @db.Text
+  authorId        String
+  author          User          @relation("UserReviews", fields: [authorId], references: [id])
+  receiverId      String
+  receiver        User          @relation("ReceivedReviews", fields: [receiverId], references: [id])
+  serviceId       String?
+  service         Service?      @relation(fields: [serviceId], references: [id])
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+}
+
+// Calendar/Appointment model
+model Appointment {
+  id              String        @id @default(cuid())
+  title           String
+  description     String?
+  startTime       DateTime
+  endTime         DateTime
+  location        String?
+  type            AppointmentType
+  userId          String
+  user            User          @relation(fields: [userId], references: [id])
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+}
+
+enum AppointmentType {
+  CLOSING
+  INSPECTION
+  PHOTOGRAPHY
+  LEGAL
+  RENOVATION
+  OTHER
+}
+
+// Messaging model
+model Message {
+  id              String        @id @default(cuid())
+  content         String        @db.Text
+  senderId        String
+  sender          User          @relation("SentMessages", fields: [senderId], references: [id])
+  receiverId      String
+  receiver        User          @relation("ReceivedMessages", fields: [receiverId], references: [id])
+  read            Boolean       @default(false)
+  createdAt       DateTime      @default(now())
+  conversationId  String
+  conversation    Conversation  @relation(fields: [conversationId], references: [id])
+}
+
+model Conversation {
+  id              String        @id @default(cuid())
+  messages        Message[]
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+}
+
+// Job Marketplace models
+model JobListing {
+  id              String        @id @default(cuid())
+  title           String
+  description     String        @db.Text
+  location        String
+  budget          String
+  category        ServiceCategory
+  skills          String[]
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  proposals       Int           @default(0)
+}
