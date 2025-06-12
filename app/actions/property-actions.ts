@@ -71,8 +71,10 @@ export async function getProperties(options: {
   baths?: number
   limit?: number
   page?: number
+  search?: string
+  sortBy?: string
 }) {
-  const { status, type, minPrice, maxPrice, beds, baths, limit = 10, page = 1 } = options
+  const { status, type, minPrice, maxPrice, beds, baths, limit = 10, page = 1, search, sortBy } = options
   const offset = (page - 1) * limit
 
   try {
@@ -98,9 +100,17 @@ export async function getProperties(options: {
           (${minPrice}::decimal IS NULL OR p.price >= ${minPrice}::decimal) AND
           (${maxPrice}::decimal IS NULL OR p.price <= ${maxPrice}::decimal) AND
           (${beds}::int IS NULL OR p.beds >= ${beds}::int) AND
-          (${baths}::float IS NULL OR p.baths >= ${baths}::float)
+          (${baths}::float IS NULL OR p.baths >= ${baths}::float) AND
+          (${search}::text IS NULL OR
+           p.title ILIKE '%' || ${search} || '%' OR
+           p.address ILIKE '%' || ${search} || '%' OR
+           p.city ILIKE '%' || ${search} || '%' OR
+           p.description ILIKE '%' || ${search} || '%')
         GROUP BY p.id, u.id
-        ORDER BY p."createdAt" DESC
+        ORDER BY
+          CASE WHEN ${sortBy} = 'price-asc' THEN p.price END ASC,
+          CASE WHEN ${sortBy} = 'price-desc' THEN p.price END DESC,
+          CASE WHEN ${sortBy} = 'newest' OR ${sortBy}::text IS NULL THEN p."createdAt" END DESC
         LIMIT ${limit} OFFSET ${offset}
       `
 
@@ -118,6 +128,14 @@ export async function getProperties(options: {
             : {}),
           ...(beds ? { beds: { gte: beds } } : {}),
           ...(baths ? { baths: { gte: baths } } : {}),
+          ...(search ? {
+            OR: [
+              { title: { contains: search, mode: 'insensitive' } },
+              { address: { contains: search, mode: 'insensitive' } },
+              { city: { contains: search, mode: 'insensitive' } },
+              { description: { contains: search, mode: 'insensitive' } },
+            ]
+          } : {}),
         },
       })
 
@@ -162,10 +180,10 @@ export async function getPropertyById(id: string) {
       })
     }, "getPropertyById")
 
-    return { property }
+    return { success: true, property }
   } catch (error) {
     console.error("Failed to fetch property:", error)
-    return { property: null }
+    return { success: false, property: null }
   }
 }
 

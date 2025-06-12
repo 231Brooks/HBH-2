@@ -4,7 +4,7 @@ import type React from "react"
 
 import { useState, useEffect } from "react"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
@@ -16,18 +16,22 @@ import { useSupabase } from "@/contexts/supabase-context"
 
 export default function LoginPage() {
   const router = useRouter()
-  const { supabase, user, loading: authLoading } = useSupabase()
+  const searchParams = useSearchParams()
+  const { supabase, user, loading: authLoading, isHydrated } = useSupabase()
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
 
+  // Get the callback URL from search params
+  const callbackUrl = searchParams.get("callbackUrl") || "/"
+
   // Redirect if already logged in
   useEffect(() => {
-    if (user) {
-      router.push("/profile")
+    if (isHydrated && user) {
+      router.push(callbackUrl)
     }
-  }, [user, router])
+  }, [user, router, isHydrated, callbackUrl])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -69,7 +73,7 @@ export default function LoginPage() {
       const { error: signInError } = await supabase.auth.signInWithOAuth({
         provider,
         options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
+          redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(callbackUrl)}`,
         },
       })
 
@@ -82,7 +86,7 @@ export default function LoginPage() {
     }
   }
 
-  if (authLoading) {
+  if (!isHydrated || authLoading) {
     return (
       <div className="container flex items-center justify-center min-h-[calc(100vh-4rem)] py-8">
         <div className="text-center">
@@ -183,7 +187,10 @@ export default function LoginPage() {
           <CardFooter className="flex flex-col space-y-2 border-t pt-5">
             <div className="text-sm text-center text-muted-foreground">
               Don't have an account?{" "}
-              <Link href="/auth/signup" className="text-primary underline hover:no-underline">
+              <Link
+                href={`/auth/signup${callbackUrl !== "/" ? `?callbackUrl=${encodeURIComponent(callbackUrl)}` : ""}`}
+                className="text-primary underline hover:no-underline"
+              >
                 Sign up
               </Link>
             </div>

@@ -39,6 +39,7 @@ model User {
   services          Service[]
   projects          Project[]
   appointments      Appointment[]
+  calendarIntegrations CalendarIntegration[]
   messages          Message[]           @relation("SentMessages")
   receivedMessages  Message[]           @relation("ReceivedMessages")
 }
@@ -314,6 +315,9 @@ model Appointment {
   type            AppointmentType
   userId          String
   user            User          @relation(fields: [userId], references: [id])
+  externalId      String?       // For calendar sync
+  externalData    String?       // JSON data from external calendar
+  synced          Boolean       @default(false)
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
 }
@@ -325,6 +329,27 @@ enum AppointmentType {
   LEGAL
   RENOVATION
   OTHER
+}
+
+// Calendar Integration model
+model CalendarIntegration {
+  id              String        @id @default(cuid())
+  userId          String
+  user            User          @relation(fields: [userId], references: [id])
+  provider        CalendarProvider
+  accessToken     String
+  refreshToken    String?
+  expiresAt       DateTime?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@unique([userId, provider])
+}
+
+enum CalendarProvider {
+  GOOGLE
+  OUTLOOK
+  APPLE
 }
 
 // Messaging model

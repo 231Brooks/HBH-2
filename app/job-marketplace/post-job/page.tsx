@@ -1,3 +1,5 @@
+"use client"
+
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
@@ -7,8 +9,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox"
 import Link from "next/link"
 import { ArrowLeft } from "lucide-react"
+import { ProtectedRoute } from "@/components/protected-route"
+import { RoleGuard } from "@/components/role-guard"
 
-export default function PostJob() {
+function PostJobContent() {
   return (
     <div className="container mx-auto px-4 py-12">
       <Link href="/job-marketplace" className="flex items-center gap-2 text-slate-600 hover:text-slate-900 mb-6">
@@ -177,5 +181,35 @@ export default function PostJob() {
         </Card>
       </div>
     </div>
+  )
+}
+
+export default function PostJob() {
+  return (
+    <ProtectedRoute>
+      <RoleGuard
+        requiredPermission="canPostJobs"
+        fallback={
+          <div className="container mx-auto px-4 py-12">
+            <div className="max-w-2xl mx-auto text-center">
+              <h1 className="text-3xl font-bold mb-4">Access Restricted</h1>
+              <p className="text-muted-foreground mb-6">
+                You need a User account to post jobs. Professionals can apply to existing jobs.
+              </p>
+              <div className="flex gap-4 justify-center">
+                <Button asChild>
+                  <Link href="/profile">Update Account Type</Link>
+                </Button>
+                <Button variant="outline" asChild>
+                  <Link href="/job-marketplace">Browse Jobs</Link>
+                </Button>
+              </div>
+            </div>
+          </div>
+        }
+      >
+        <PostJobContent />
+      </RoleGuard>
+    </ProtectedRoute>
   )
 }

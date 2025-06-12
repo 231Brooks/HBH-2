@@ -9,6 +9,7 @@ type SupabaseContextType = {
   user: User | null
   loading: boolean
   error: Error | null
+  isHydrated: boolean
 }
 
 const SupabaseContext = createContext<SupabaseContextType>({
@@ -16,6 +17,7 @@ const SupabaseContext = createContext<SupabaseContextType>({
   user: null,
   loading: true,
   error: null,
+  isHydrated: false,
 })
 
 export function SupabaseProvider({ children }: { children: ReactNode }) {
@@ -23,39 +25,48 @@ export function SupabaseProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<Error | null>(null)
+  const [isHydrated, setIsHydrated] = useState(false)
 
   useEffect(() => {
-    try {
-      const client = getSupabaseClient()
-      setSupabase(client)
+    // Mark as hydrated on client
+    setIsHydrated(true)
 
-      // Get initial auth state
-      const {
-        data: { session },
-      } = client.auth.getSession()
-      setUser(session?.user || null)
+    async function initializeAuth() {
+      try {
+        const client = getSupabaseClient()
+        setSupabase(client)
 
-      // Set up auth state listener
-      const {
-        data: { subscription },
-      } = client.auth.onAuthStateChange((_event, session) => {
+        // Get initial auth state (await the promise)
+        const {
+          data: { session },
+        } = await client.auth.getSession()
         setUser(session?.user || null)
-      })
 
-      setLoading(false)
+        // Set up auth state listener
+        const {
+          data: { subscription },
+        } = client.auth.onAuthStateChange((_event, session) => {
+          console.log("Auth state changed:", _event, session?.user?.email)
+          setUser(session?.user || null)
+        })
 
-      // Clean up subscription
-      return () => {
-        subscription.unsubscribe()
+        setLoading(false)
+
+        // Clean up subscription
+        return () => {
+          subscription.unsubscribe()
+        }
+      } catch (err) {
+        console.error("Error initializing Supabase client:", err)
+        setError(err instanceof Error ? err : new Error("Failed to initialize Supabase client"))
+        setLoading(false)
       }
-    } catch (err) {
-      console.error("Error initializing Supabase client:", err)
-      setError(err instanceof Error ? err : new Error("Failed to initialize Supabase client"))
-      setLoading(false)
     }
+
+    initializeAuth()
   }, [])
 
-  return <SupabaseContext.Provider value={{ supabase, user, loading, error }}>{children}</SupabaseContext.Provider>
+  return <SupabaseContext.Provider value={{ supabase, user, loading, error, isHydrated }}>{children}</SupabaseContext.Provider>
 }
 
 export function useSupabase() {

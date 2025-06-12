@@ -27,15 +27,15 @@ export function getPrismaClient(config: Partial<PrismaPoolConfig> = {}): PrismaC
           url: process.env.DATABASE_URL,
         },
       },
-      // Connection pooling config
-      // Note: In Prisma, connection pooling is handled automatically
-      // These settings help tune it for production
-      connectionLimit: poolConfig.maxConnections,
+      // Connection pooling is handled automatically by Prisma
+      // For advanced connection pooling, use Prisma Accelerate or connection poolers like PgBouncer
     })
 
     // Add event listeners for connection issues
-    prismaClientSingleton.$on("beforeExit", async () => {
+    // Note: beforeExit is not available in Prisma 5.0+, using process event instead
+    process.on("beforeExit", async () => {
       console.log("Prisma Client is shutting down")
+      await prismaClientSingleton.$disconnect()
     })
   }
 

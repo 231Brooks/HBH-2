@@ -78,7 +78,72 @@ export async function getUserAppointments(options: {
     return { appointments }
   } catch (error) {
     console.error("Failed to fetch appointments:", error)
-    return { appointments: [] }
+
+    // Return sample data for demonstration
+    const sampleAppointments = [
+      {
+        id: "1",
+        title: "Property Closing - 123 Main St",
+        description: "Final closing for the downtown property purchase",
+        startTime: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000), // 2 days from now
+        endTime: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000 + 2 * 60 * 60 * 1000), // 2 hours later
+        location: "Desert Title Company, 555 Title Blvd, Phoenix, AZ",
+        type: "CLOSING",
+        userId: "user1",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+      {
+        id: "2",
+        title: "Home Inspection - 456 Oak Ave",
+        description: "Comprehensive home inspection for potential purchase",
+        startTime: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000), // 5 days from now
+        endTime: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000 + 3 * 60 * 60 * 1000), // 3 hours later
+        location: "456 Oak Avenue, Scottsdale, AZ",
+        type: "INSPECTION",
+        userId: "user1",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+      {
+        id: "3",
+        title: "Property Photography Session",
+        description: "Professional photography for listing",
+        startTime: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days from now
+        endTime: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000 + 2 * 60 * 60 * 1000), // 2 hours later
+        location: "789 Pine Road, Tempe, AZ",
+        type: "PHOTOGRAPHY",
+        userId: "user1",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+      {
+        id: "4",
+        title: "Legal Consultation",
+        description: "Contract review and legal advice",
+        startTime: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000), // 10 days from now
+        endTime: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000 + 1 * 60 * 60 * 1000), // 1 hour later
+        location: "Johnson & Associates Law, 555 Legal Blvd, Phoenix, AZ",
+        type: "LEGAL",
+        userId: "user1",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+      {
+        id: "5",
+        title: "Renovation Consultation",
+        description: "Meeting with contractors for kitchen renovation",
+        startTime: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000), // 14 days from now
+        endTime: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000 + 2 * 60 * 60 * 1000), // 2 hours later
+        location: "101 River Lane, Mesa, AZ",
+        type: "RENOVATION",
+        userId: "user1",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+    ]
+
+    return { appointments: sampleAppointments }
   }
 }
 

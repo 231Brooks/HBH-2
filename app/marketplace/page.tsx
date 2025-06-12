@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge"
 import { MapPin, Gavel, Building, Home, Clock, ArrowUpRight, MessageSquare, Heart } from "lucide-react"
 import MarketplaceClient from "./marketplace-client"
 import { Skeleton } from "@/components/ui/skeleton"
+import { QuickContactButton } from "@/components/contact-dialog"
 
 export default function MarketplacePage() {
   return (
@@ -48,52 +49,51 @@ function MarketplaceSkeleton() {
 }
 
 interface PropertyCardProps {
-  id: string
-  title: string
-  address: string
-  price: string
-  beds: number
-  baths: number
-  sqft: number
-  type: "sale" | "auction"
-  image: string
+  property: any
   viewMode: "grid" | "list" | "map"
-  auctionEnds?: string
-  description?: string
 }
 
-function PropertyCard({
-  id,
-  title,
-  address,
-  price,
-  beds,
-  baths,
-  sqft,
-  type,
-  image,
-  viewMode,
-  auctionEnds,
-  description,
-}: PropertyCardProps) {
+export function PropertyCard({ property, viewMode }: PropertyCardProps) {
+  const formatPrice = (price: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(price)
+  }
+
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case "ACTIVE": return { label: "For Sale", color: "bg-primary" }
+      case "PENDING": return { label: "Pending", color: "bg-amber-500" }
+      case "SOLD": return { label: "Sold", color: "bg-green-500" }
+      case "AUCTION": return { label: "Auction", color: "bg-amber-500" }
+      default: return { label: status, color: "bg-gray-500" }
+    }
+  }
+
+  const statusBadge = getStatusBadge(property.status)
+  const primaryImage = property.images?.[0]?.url || "/placeholder.svg?height=400&width=600"
+  const fullAddress = `${property.address}, ${property.city}, ${property.state} ${property.zipCode}`
   if (viewMode === "grid") {
     return (
       <Card className="overflow-hidden transition-all hover:shadow-md">
         <div className="relative">
           <Image
-            src={image || "/placeholder.svg"}
-            alt={title}
+            src={primaryImage}
+            alt={property.title}
             width={600}
             height={400}
             className="h-48 w-full object-cover"
           />
-          <Badge className={`absolute top-2 right-2 ${type === "auction" ? "bg-amber-500" : "bg-primary"} text-white`}>
-            {type === "auction" ? (
+          <Badge className={`absolute top-2 right-2 ${statusBadge.color} text-white`}>
+            {property.status === "AUCTION" ? (
               <>
-                <Gavel className="mr-1 h-3 w-3" /> Auction
+                <Gavel className="mr-1 h-3 w-3" /> {statusBadge.label}
               </>
             ) : (
-              "For Sale"
+              statusBadge.label
             )}
           </Badge>
           <Button
@@ -106,33 +106,36 @@ function PropertyCard({
         </div>
         <CardContent className="p-4">
           <div className="flex justify-between items-start mb-2">
-            <h3 className="text-lg font-semibold">{title}</h3>
-            <p className="font-bold text-primary">{price}</p>
+            <h3 className="text-lg font-semibold">{property.title}</h3>
+            <p className="font-bold text-primary">{formatPrice(property.price)}</p>
           </div>
           <div className="flex items-center text-muted-foreground text-sm mb-3">
             <MapPin className="h-4 w-4 mr-1" />
-            <span>{address}</span>
+            <span>{fullAddress}</span>
           </div>
-          {type === "auction" && auctionEnds && (
-            <div className="flex items-center text-amber-600 text-sm mb-3">
-              <Clock className="h-4 w-4 mr-1" />
-              <span>Ends: {auctionEnds}</span>
-            </div>
-          )}
           <div className="flex justify-between mb-4">
             <div className="flex gap-2">
-              <Badge variant="outline">{beds} Beds</Badge>
-              <Badge variant="outline">{baths} Baths</Badge>
-              <Badge variant="outline">{sqft.toLocaleString()} sqft</Badge>
+              {property.beds && <Badge variant="outline">{property.beds} Beds</Badge>}
+              {property.baths && <Badge variant="outline">{property.baths} Baths</Badge>}
+              {property.sqft && <Badge variant="outline">{property.sqft.toLocaleString()} sqft</Badge>}
             </div>
           </div>
           <div className="flex gap-2">
             <Button variant="outline" size="sm" className="flex-1" asChild>
-              <Link href={`/marketplace/${id}`}>Details</Link>
+              <Link href={`/marketplace/property/${property.id}`}>Details</Link>
             </Button>
-            <Button size="sm" className="flex-1">
+            <QuickContactButton
+              contactId={property.ownerId || "demo-seller-1"}
+              contactName={property.ownerName || "Property Owner"}
+              contactType="seller"
+              contextType="property"
+              contextId={property.id}
+              contextTitle={property.title}
+              size="sm"
+              className="flex-1"
+            >
               <MessageSquare className="mr-1 h-4 w-4" /> Contact
-            </Button>
+            </QuickContactButton>
           </div>
         </CardContent>
       </Card>
@@ -144,21 +147,21 @@ function PropertyCard({
         <div className="flex flex-col md:flex-row">
           <div className="relative md:w-1/3">
             <Image
-              src={image || "/placeholder.svg"}
-              alt={title}
+              src={primaryImage}
+              alt={property.title}
               width={600}
               height={400}
               className="h-48 md:h-full w-full object-cover"
             />
             <Badge
-              className={`absolute top-2 right-2 ${type === "auction" ? "bg-amber-500" : "bg-primary"} text-white`}
+              className={`absolute top-2 right-2 ${statusBadge.color} text-white`}
             >
-              {type === "auction" ? (
+              {property.status === "AUCTION" ? (
                 <>
-                  <Gavel className="mr-1 h-3 w-3" /> Auction
+                  <Gavel className="mr-1 h-3 w-3" /> {statusBadge.label}
                 </>
               ) : (
-                "For Sale"
+                statusBadge.label
               )}
             </Badge>
             <Button
@@ -171,43 +174,50 @@ function PropertyCard({
           </div>
           <div className="p-6 md:w-2/3">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-2 gap-2">
-              <h3 className="text-lg font-semibold">{title}</h3>
-              <p className="font-bold text-primary">{price}</p>
+              <h3 className="text-lg font-semibold">{property.title}</h3>
+              <p className="font-bold text-primary">{formatPrice(property.price)}</p>
             </div>
             <div className="flex items-center text-muted-foreground text-sm mb-3">
               <MapPin className="h-4 w-4 mr-1" />
-              <span>{address}</span>
+              <span>{fullAddress}</span>
             </div>
-            {type === "auction" && auctionEnds && (
-              <div className="flex items-center text-amber-600 text-sm mb-3">
-                <Clock className="h-4 w-4 mr-1" />
-                <span>Ends: {auctionEnds}</span>
-              </div>
-            )}
-            <p className="text-sm text-muted-foreground mb-4">{description}</p>
+            <p className="text-sm text-muted-foreground mb-4">{property.description}</p>
             <div className="flex gap-4 mb-4">
-              <div className="flex items-center">
-                <Home className="h-4 w-4 text-muted-foreground mr-1" />
-                <span className="text-sm">{beds} Beds</span>
-              </div>
-              <div className="flex items-center">
-                <Building className="h-4 w-4 text-muted-foreground mr-1" />
-                <span className="text-sm">{baths} Baths</span>
-              </div>
-              <div className="flex items-center">
-                <MapPin className="h-4 w-4 text-muted-foreground mr-1" />
-                <span className="text-sm">{sqft.toLocaleString()} sqft</span>
-              </div>
+              {property.beds && (
+                <div className="flex items-center">
+                  <Home className="h-4 w-4 text-muted-foreground mr-1" />
+                  <span className="text-sm">{property.beds} Beds</span>
+                </div>
+              )}
+              {property.baths && (
+                <div className="flex items-center">
+                  <Building className="h-4 w-4 text-muted-foreground mr-1" />
+                  <span className="text-sm">{property.baths} Baths</span>
+                </div>
+              )}
+              {property.sqft && (
+                <div className="flex items-center">
+                  <MapPin className="h-4 w-4 text-muted-foreground mr-1" />
+                  <span className="text-sm">{property.sqft.toLocaleString()} sqft</span>
+                </div>
+              )}
             </div>
             <div className="flex gap-2">
               <Button variant="outline" asChild>
-                <Link href={`/marketplace/${id}`}>
+                <Link href={`/marketplace/property/${property.id}`}>
                   <ArrowUpRight className="mr-1 h-4 w-4" /> View Details
                 </Link>
               </Button>
-              <Button>
+              <QuickContactButton
+                contactId={property.ownerId || "demo-seller-1"}
+                contactName={property.ownerName || "Property Owner"}
+                contactType="seller"
+                contextType="property"
+                contextId={property.id}
+                contextTitle={property.title}
+              >
                 <MessageSquare className="mr-1 h-4 w-4" /> Contact Seller
-              </Button>
+              </QuickContactButton>
             </div>
           </div>
         </div>

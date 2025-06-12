@@ -1,12 +1,66 @@
+"use client"
+
 import type React from "react"
+import { useState, useEffect } from "react"
+import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
-import { FileText, Clock, CheckCircle, AlertCircle, Users, Search, Plus, Filter, ArrowUpRight } from "lucide-react"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { FileText, Clock, CheckCircle, AlertCircle, Users, Search, Plus, Filter, ArrowUpRight, Building2 } from "lucide-react"
+import { ProtectedRoute } from "@/components/protected-route"
+import { getUserTransactions } from "@/app/actions/transaction-actions"
+import { useSupabase } from "@/contexts/supabase-context"
 
-export default function ProgressPage() {
+function ProgressPageContent() {
+  const { user } = useSupabase()
+  const [transactions, setTransactions] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+  const [searchTerm, setSearchTerm] = useState("")
+  const [statusFilter, setStatusFilter] = useState("all")
+  const [activeTab, setActiveTab] = useState("active")
+
+  useEffect(() => {
+    loadTransactions()
+  }, [statusFilter])
+
+  const loadTransactions = async () => {
+    setLoading(true)
+    try {
+      const result = await getUserTransactions({
+        status: statusFilter === "all" ? undefined : statusFilter,
+        limit: 50
+      })
+      setTransactions(result.transactions || [])
+    } catch (error) {
+      console.error("Failed to load transactions:", error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const filteredTransactions = transactions.filter(transaction => {
+    const matchesSearch = searchTerm === "" ||
+      transaction.property?.address?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      transaction.property?.title?.toLowerCase().includes(searchTerm.toLowerCase())
+
+    if (activeTab === "active") {
+      return matchesSearch && transaction.status !== "COMPLETED" && transaction.status !== "CANCELLED"
+    } else if (activeTab === "completed") {
+      return matchesSearch && (transaction.status === "COMPLETED" || transaction.status === "CANCELLED")
+    }
+    return matchesSearch
+  })
+
+  const activeTransactions = filteredTransactions.filter(t =>
+    t.status !== "COMPLETED" && t.status !== "CANCELLED"
+  )
+  const completedTransactions = filteredTransactions.filter(t =>
+    t.status === "COMPLETED" || t.status === "CANCELLED"
+  )
+
   return (
     <div className="container py-8">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
@@ -14,8 +68,10 @@ export default function ProgressPage() {
           <h1 className="text-3xl font-bold mb-1">Transaction Progress</h1>
           <p className="text-muted-foreground">Track and manage your real estate transactions with title companies</p>
         </div>
-        <Button>
-          <Plus className="mr-2 h-4 w-4" /> New Transaction
+        <Button asChild>
+          <Link href="/progress/create">
+            <Plus className="mr-2 h-4 w-4" /> New Transaction
+          </Link>
         </Button>
       </div>
 
@@ -24,114 +80,107 @@ export default function ProgressPage() {
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
             <div className="relative w-full sm:w-auto">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-              <Input placeholder="Search transactions..." className="pl-10 w-full sm:w-[300px]" />
+              <Input
+                placeholder="Search transactions..."
+                className="pl-10 w-full sm:w-[300px]"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
             </div>
             <div className="flex items-center gap-2 w-full sm:w-auto">
               <Button variant="outline" size="sm" className="flex items-center gap-1">
                 <Filter className="h-4 w-4" />
                 Filter
               </Button>
-              <select className="border rounded-md px-3 py-1 text-sm bg-white">
-                <option>All Statuses</option>
-                <option>In Progress</option>
-                <option>Pending</option>
-                <option>Completed</option>
-              </select>
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-[150px]">
+                  <SelectValue placeholder="All Statuses" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Statuses</SelectItem>
+                  <SelectItem value="IN_PROGRESS">In Progress</SelectItem>
+                  <SelectItem value="PENDING_APPROVAL">Pending</SelectItem>
+                  <SelectItem value="DOCUMENT_REVIEW">Document Review</SelectItem>
+                  <SelectItem value="CLOSING_SOON">Closing Soon</SelectItem>
+                  <SelectItem value="COMPLETED">Completed</SelectItem>
+                  <SelectItem value="CANCELLED">Cancelled</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
 
-          <Tabs defaultValue="active">
+          <Tabs value={activeTab} onValueChange={setActiveTab}>
             <TabsList className="mb-6">
-              <TabsTrigger value="active">Active (4)</TabsTrigger>
-              <TabsTrigger value="completed">Completed (2)</TabsTrigger>
-              <TabsTrigger value="all">All Transactions</TabsTrigger>
+              <TabsTrigger value="active">Active ({activeTransactions.length})</TabsTrigger>
+              <TabsTrigger value="completed">Completed ({completedTransactions.length})</TabsTrigger>
+              <TabsTrigger value="all">All Transactions ({filteredTransactions.length})</TabsTrigger>
             </TabsList>
 
             <TabsContent value="active" className="space-y-4">
-              <TransactionCard
-                address="123 Main Street, Phoenix, AZ 85001"
-                price="$425,000"
-                status="In Progress"
-                statusColor="bg-amber-500"
-                progress={65}
-                dueDate="Jul 15, 2023"
-                titleCompany="Desert Title Company"
-                parties={["John Smith (Buyer)", "Sarah Johnson (Seller)"]}
-                lastUpdate="Document uploaded: Purchase Agreement"
-                lastUpdateTime="2 hours ago"
-              />
-
-              <TransactionCard
-                address="456 Oak Avenue, Scottsdale, AZ 85251"
-                price="$750,000"
-                status="Pending Approval"
-                statusColor="bg-blue-500"
-                progress={40}
-                dueDate="Aug 3, 2023"
-                titleCompany="Arizona Reliable Title"
-                parties={["Michael Brown (Buyer)", "Jennifer Davis (Seller)"]}
-                lastUpdate="Waiting for: Inspection Report"
-                lastUpdateTime="1 day ago"
-              />
-
-              <TransactionCard
-                address="789 Pine Road, Tempe, AZ 85281"
-                price="$350,000"
-                status="Document Review"
-                statusColor="bg-purple-500"
-                progress={25}
-                dueDate="Aug 22, 2023"
-                titleCompany="Secure Title Services"
-                parties={["Robert Wilson (Buyer)", "Lisa Martinez (Seller)"]}
-                lastUpdate="Signature requested: Disclosure Form"
-                lastUpdateTime="3 days ago"
-              />
-
-              <TransactionCard
-                address="101 River Lane, Mesa, AZ 85201"
-                price="$525,000"
-                status="Closing Soon"
-                statusColor="bg-green-500"
-                progress={85}
-                dueDate="Jul 5, 2023"
-                titleCompany="First American Title"
-                parties={["David Thompson (Buyer)", "Amanda Garcia (Seller)"]}
-                lastUpdate="Scheduled: Closing appointment"
-                lastUpdateTime="12 hours ago"
-              />
+              {loading ? (
+                <div className="flex items-center justify-center py-8">
+                  <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+                </div>
+              ) : activeTransactions.length > 0 ? (
+                activeTransactions.map((transaction) => (
+                  <TransactionCard
+                    key={transaction.id}
+                    transaction={transaction}
+                  />
+                ))
+              ) : (
+                <div className="text-center py-8">
+                  <p className="text-muted-foreground mb-4">No active transactions found</p>
+                  <Button asChild>
+                    <Link href="/progress/create">
+                      <Plus className="mr-2 h-4 w-4" /> Create Your First Transaction
+                    </Link>
+                  </Button>
+                </div>
+              )}
             </TabsContent>
 
             <TabsContent value="completed" className="space-y-4">
-              <TransactionCard
-                address="222 Valley View, Chandler, AZ 85224"
-                price="$475,000"
-                status="Completed"
-                statusColor="bg-green-600"
-                progress={100}
-                dueDate="Jun 10, 2023"
-                titleCompany="Southwest Title Company"
-                parties={["James Wilson (Buyer)", "Patricia Moore (Seller)"]}
-                lastUpdate="Transaction completed successfully"
-                lastUpdateTime="2 weeks ago"
-              />
-
-              <TransactionCard
-                address="333 Mountain Drive, Gilbert, AZ 85233"
-                price="$620,000"
-                status="Completed"
-                statusColor="bg-green-600"
-                progress={100}
-                dueDate="May 28, 2023"
-                titleCompany="Fidelity National Title"
-                parties={["Thomas Anderson (Buyer)", "Elizabeth Taylor (Seller)"]}
-                lastUpdate="Transaction completed successfully"
-                lastUpdateTime="1 month ago"
-              />
+              {loading ? (
+                <div className="flex items-center justify-center py-8">
+                  <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+                </div>
+              ) : completedTransactions.length > 0 ? (
+                completedTransactions.map((transaction) => (
+                  <TransactionCard
+                    key={transaction.id}
+                    transaction={transaction}
+                  />
+                ))
+              ) : (
+                <div className="text-center py-8">
+                  <p className="text-muted-foreground">No completed transactions found</p>
+                </div>
+              )}
             </TabsContent>
 
             <TabsContent value="all" className="space-y-4">
-              <p className="text-muted-foreground">Showing all 6 transactions</p>
-              {/* Would include all transactions here */}
+              {loading ? (
+                <div className="flex items-center justify-center py-8">
+                  <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+                </div>
+              ) : filteredTransactions.length > 0 ? (
+                filteredTransactions.map((transaction) => (
+                  <TransactionCard
+                    key={transaction.id}
+                    transaction={transaction}
+                  />
+                ))
+              ) : (
+                <div className="text-center py-8">
+                  <p className="text-muted-foreground">No transactions found</p>
+                  <Button asChild className="mt-4">
+                    <Link href="/progress/create">
+                      <Plus className="mr-2 h-4 w-4" /> Create Your First Transaction
+                    </Link>
+                  </Button>
+                </div>
+              )}
             </TabsContent>
           </Tabs>
         </div>
@@ -274,6 +323,14 @@ export default function ProgressPage() {
   )
 }
 
+export default function ProgressPage() {
+  return (
+    <ProtectedRoute>
+      <ProgressPageContent />
+    </ProtectedRoute>
+  )
+}
+
 function Building(props: React.SVGProps<SVGSVGElement>) {
   return (
     <svg
@@ -304,30 +361,71 @@ function Building(props: React.SVGProps<SVGSVGElement>) {
 }
 
 interface TransactionCardProps {
-  address: string
-  price: string
-  status: string
-  statusColor: string
-  progress: number
-  dueDate: string
-  titleCompany: string
-  parties: string[]
-  lastUpdate: string
-  lastUpdateTime: string
+  transaction: any
 }
 
-function TransactionCard({
-  address,
-  price,
-  status,
-  statusColor,
-  progress,
-  dueDate,
-  titleCompany,
-  parties,
-  lastUpdate,
-  lastUpdateTime,
-}: TransactionCardProps) {
+function TransactionCard({ transaction }: TransactionCardProps) {
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "IN_PROGRESS": return "bg-amber-500"
+      case "PENDING_APPROVAL": return "bg-blue-500"
+      case "DOCUMENT_REVIEW": return "bg-purple-500"
+      case "CLOSING_SOON": return "bg-green-500"
+      case "COMPLETED": return "bg-green-600"
+      case "CANCELLED": return "bg-red-500"
+      default: return "bg-gray-500"
+    }
+  }
+
+  const getStatusLabel = (status: string) => {
+    switch (status) {
+      case "IN_PROGRESS": return "In Progress"
+      case "PENDING_APPROVAL": return "Pending Approval"
+      case "DOCUMENT_REVIEW": return "Document Review"
+      case "CLOSING_SOON": return "Closing Soon"
+      case "COMPLETED": return "Completed"
+      case "CANCELLED": return "Cancelled"
+      default: return status
+    }
+  }
+
+  const formatDate = (date: string | Date) => {
+    if (!date) return "Not set"
+    return new Date(date).toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric'
+    })
+  }
+
+  const formatPrice = (price: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(price)
+  }
+
+  const getPartyNames = () => {
+    if (!transaction.parties || transaction.parties.length === 0) {
+      return ["No parties assigned"]
+    }
+    return transaction.parties.map((party: any) =>
+      `${party.user?.name || 'Unknown'} (${party.role})`
+    )
+  }
+  const progress = transaction.progress || 0
+  const address = transaction.property?.address || transaction.property?.title || "Property Address"
+  const price = transaction.property?.price ? formatPrice(transaction.property.price) : "Price TBD"
+  const status = getStatusLabel(transaction.status)
+  const statusColor = getStatusColor(transaction.status)
+  const dueDate = formatDate(transaction.closingDate)
+  const titleCompany = transaction.titleCompany?.name || "Title Company TBD"
+  const parties = getPartyNames()
+  const lastUpdate = transaction.lastUpdate || "No recent updates"
+  const lastUpdateTime = transaction.updatedAt ? formatDate(transaction.updatedAt) : "Unknown"
+
   return (
     <Card className="overflow-hidden">
       <div className="flex flex-col md:flex-row">
@@ -356,7 +454,7 @@ function TransactionCard({
               <span className="text-sm">Due: {dueDate}</span>
             </div>
             <div className="flex items-center gap-2">
-              <Building className="h-4 w-4 text-muted-foreground" />
+              <Building2 className="h-4 w-4 text-muted-foreground" />
               <span className="text-sm">{titleCompany}</span>
             </div>
           </div>
@@ -381,17 +479,25 @@ function TransactionCard({
 
         <div className="bg-slate-50 p-6 border-t md:border-t-0 md:border-l flex flex-col justify-between">
           <div className="space-y-3">
-            <Button variant="outline" className="w-full justify-start">
-              <FileText className="mr-2 h-4 w-4" /> View Documents
+            <Button variant="outline" className="w-full justify-start" asChild>
+              <Link href={`/progress/${transaction.id}/documents`}>
+                <FileText className="mr-2 h-4 w-4" /> View Documents
+              </Link>
             </Button>
-            <Button variant="outline" className="w-full justify-start">
-              <Users className="mr-2 h-4 w-4" /> Contact Parties
+            <Button variant="outline" className="w-full justify-start" asChild>
+              <Link href={`/progress/${transaction.id}/parties`}>
+                <Users className="mr-2 h-4 w-4" /> Contact Parties
+              </Link>
             </Button>
-            <Button variant="outline" className="w-full justify-start">
-              <Clock className="mr-2 h-4 w-4" /> View Timeline
+            <Button variant="outline" className="w-full justify-start" asChild>
+              <Link href={`/progress/${transaction.id}/timeline`}>
+                <Clock className="mr-2 h-4 w-4" /> View Timeline
+              </Link>
             </Button>
           </div>
-          <Button className="mt-4 w-full">Manage Transaction</Button>
+          <Button className="mt-4 w-full" asChild>
+            <Link href={`/progress/${transaction.id}`}>Manage Transaction</Link>
+          </Button>
         </div>
       </div>
     </Card>

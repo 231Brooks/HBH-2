@@ -22,20 +22,33 @@ import {
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { useState, useEffect } from "react"
 import { useIsMobile } from "@/hooks/use-mobile"
+import { useSupabase } from "@/contexts/supabase-context"
+import { usePermissions } from "@/hooks/use-permissions"
+import { ClientOnly } from "@/components/client-only"
 
-const navItems = [
-  { name: "Home", href: "/", icon: <Home className="h-5 w-5" /> },
-  { name: "Progress", href: "/progress", icon: <FileText className="h-5 w-5" /> },
-  { name: "Services", href: "/services", icon: <Building2 className="h-5 w-5" /> },
-  { name: "Marketplace", href: "/marketplace", icon: <BarChart className="h-5 w-5" /> },
-  { name: "Calendar", href: "/calendar", icon: <Calendar className="h-5 w-5" /> },
-  { name: "Profile", href: "/profile", icon: <User className="h-5 w-5" /> },
+// Base navigation items - these will be filtered based on user permissions
+const baseNavItems = [
+  { name: "Home", href: "/", icon: <Home className="h-5 w-5" />, public: true },
+  { name: "Progress", href: "/progress", icon: <FileText className="h-5 w-5" />, requiresAuth: true },
+  { name: "Services", href: "/services", icon: <Building2 className="h-5 w-5" />, public: true },
+  { name: "Marketplace", href: "/marketplace", icon: <BarChart className="h-5 w-5" />, public: true },
+  { name: "Calendar", href: "/calendar", icon: <Calendar className="h-5 w-5" />, requiresAuth: true },
+  { name: "Profile", href: "/profile", icon: <User className="h-5 w-5" />, requiresAuth: true },
 ]
 
 export default function Navbar() {
   const pathname = usePathname()
   const isMobile = useIsMobile()
   const [isScrolled, setIsScrolled] = useState(false)
+  const { user, supabase, loading, isHydrated } = useSupabase()
+  const { permissions } = usePermissions()
+
+  // Filter navigation items based on authentication and permissions
+  const navItems = baseNavItems.filter(item => {
+    if (item.public) return true
+    if (item.requiresAuth && !user) return false
+    return true
+  })
 
   useEffect(() => {
     const handleScroll = () => {
@@ -44,6 +57,12 @@ export default function Navbar() {
     window.addEventListener("scroll", handleScroll)
     return () => window.removeEventListener("scroll", handleScroll)
   }, [])
+
+  const handleSignOut = async () => {
+    if (supabase) {
+      await supabase.auth.signOut()
+    }
+  }
 
   return (
     <header
@@ -79,48 +98,85 @@ export default function Navbar() {
         </div>
 
         <div className="flex items-center gap-4">
-          {!isMobile && (
-            <>
-              <Button variant="outline" size="icon" asChild>
-                <Link href="/messages">
-                  <MessageSquare className="h-4 w-4" />
-                  <span className="sr-only">Messages</span>
-                </Link>
-              </Button>
-              <Button variant="outline" size="icon" asChild>
-                <Link href="/notifications">
-                  <Bell className="h-4 w-4" />
-                  <span className="sr-only">Notifications</span>
-                </Link>
-              </Button>
-            </>
-          )}
+          <ClientOnly
+            fallback={
+              <div className="flex items-center gap-2">
+                <Button variant="outline" asChild>
+                  <Link href="/auth/login">Login</Link>
+                </Button>
+                <Button asChild>
+                  <Link href="/auth/signup">Sign Up</Link>
+                </Button>
+              </div>
+            }
+          >
+            {loading ? (
+              <div className="text-sm text-muted-foreground">Loading...</div>
+            ) : user ? (
+              <>
+                {!isMobile && (
+                  <>
+                    <Button variant="outline" size="icon" asChild>
+                      <Link href="/messages">
+                        <MessageSquare className="h-4 w-4" />
+                        <span className="sr-only">Messages</span>
+                      </Link>
+                    </Button>
+                    <Button variant="outline" size="icon" asChild>
+                      <Link href="/notifications">
+                        <Bell className="h-4 w-4" />
+                        <span className="sr-only">Notifications</span>
+                      </Link>
+                    </Button>
+                  </>
+                )}
 
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-                <Avatar className="h-8 w-8">
-                  <AvatarImage src="/placeholder.svg" alt="User" />
-                  <AvatarFallback>HB</AvatarFallback>
-                </Avatar>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem asChild>
-                <Link href="/profile">
-                  <User className="mr-2 h-4 w-4" /> Profile
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link href="/profile/settings">
-                  <Settings className="mr-2 h-4 w-4" /> Settings
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <LogOut className="mr-2 h-4 w-4" /> Logout
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                      <Avatar className="h-8 w-8">
+                        <AvatarImage src={user.user_metadata?.avatar_url || "/placeholder.svg"} alt="User" />
+                        <AvatarFallback>
+                          {user.email?.charAt(0).toUpperCase() || "U"}
+                        </AvatarFallback>
+                      </Avatar>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem asChild>
+                      <Link href="/profile">
+                        <User className="mr-2 h-4 w-4" /> Profile
+                      </Link>
+                    </DropdownMenuItem>
+                    {permissions.canAccessAdmin && (
+                      <DropdownMenuItem asChild>
+                        <Link href="/admin">
+                          <Settings className="mr-2 h-4 w-4" /> Admin Panel
+                        </Link>
+                      </DropdownMenuItem>
+                    )}
+                    <DropdownMenuItem asChild>
+                      <Link href="/settings">
+                        <Settings className="mr-2 h-4 w-4" /> Settings
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={handleSignOut}>
+                      <LogOut className="mr-2 h-4 w-4" /> Logout
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </>
+            ) : (
+              <div className="flex items-center gap-2">
+                <Button variant="outline" asChild>
+                  <Link href="/auth/login">Login</Link>
+                </Button>
+                <Button asChild>
+                  <Link href="/auth/signup">Sign Up</Link>
+                </Button>
+              </div>
+            )}
+          </ClientOnly>
 
           {isMobile && (
             <Sheet>

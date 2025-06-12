@@ -1,77 +1,272 @@
-import { createClient } from "@supabase/supabase-js"
-import { notFound } from "next/navigation"
+"use client"
+
+import { useState, useEffect } from "react"
+import { useParams, useRouter } from "next/navigation"
+import Link from "next/link"
+import Image from "next/image"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 import { BidForm } from "@/components/bidding/bid-form"
 import { BidHistory } from "@/components/bidding/bid-history"
+import { QuickContactButton } from "@/components/contact-dialog"
+import {
+  ArrowLeft,
+  Building2,
+  MapPin,
+  Heart,
+  Share2,
+  MessageSquare,
+  Phone,
+  Mail,
+  Calendar,
+  Home,
+  Ruler,
+  Car,
+  Droplets,
+  Zap,
+  Shield,
+  CheckCircle,
+  Star
+} from "lucide-react"
+import { ProtectedRoute } from "@/components/protected-route"
+import { getPropertyById } from "@/app/actions/property-actions"
 
-export const dynamic = "force-dynamic"
+function PropertyDetailContent() {
+  const params = useParams()
+  const router = useRouter()
+  const propertyId = params.id as string
 
-export default async function PropertyDetailPage({ params }: { params: { id: string } }) {
-  const supabaseUrl = process.env.SUPABASE_SUPABASE_URL!
-  const supabaseServiceKey = process.env.SUPABASE_SUPABASE_SERVICE_ROLE_KEY!
-  const supabase = createClient(supabaseUrl, supabaseServiceKey)
+  const [property, setProperty] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState("")
+  const [currentImageIndex, setCurrentImageIndex] = useState(0)
 
-  // Fetch property details
-  const { data: property, error } = await supabase.from("properties").select("*").eq("id", params.id).single()
+  useEffect(() => {
+    loadProperty()
+  }, [propertyId])
 
-  if (error || !property) {
-    notFound()
+  const loadProperty = async () => {
+    setLoading(true)
+    try {
+      const result = await getPropertyById(propertyId)
+      if (result.success && result.property) {
+        setProperty(result.property)
+      } else {
+        setError("Property not found")
+      }
+    } catch (err: any) {
+      console.error("Failed to load property:", err)
+      setError("Failed to load property details")
+    } finally {
+      setLoading(false)
+    }
   }
 
+  const formatPrice = (price: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(price)
+  }
+
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case "ACTIVE": return { label: "For Sale", color: "bg-primary" }
+      case "PENDING": return { label: "Pending", color: "bg-amber-500" }
+      case "SOLD": return { label: "Sold", color: "bg-green-500" }
+      case "AUCTION": return { label: "Auction", color: "bg-amber-500" }
+      default: return { label: status, color: "bg-gray-500" }
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="container py-8">
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+        </div>
+      </div>
+    )
+  }
+
+  if (error || !property) {
+    return (
+      <div className="container py-8">
+        <div className="max-w-2xl mx-auto text-center">
+          <h1 className="text-2xl font-bold mb-4">Property Not Found</h1>
+          <p className="text-muted-foreground mb-6">{error || "The requested property could not be found."}</p>
+          <Button asChild>
+            <Link href="/marketplace">
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back to Marketplace
+            </Link>
+          </Button>
+        </div>
+      </div>
+    )
+  }
+
+  const statusBadge = getStatusBadge(property.status)
+  const fullAddress = `${property.address}, ${property.city}, ${property.state} ${property.zipCode}`
+  const images = property.images || [{ url: "/placeholder.svg?height=600&width=800" }]
+
   return (
-    <div className="container mx-auto py-8">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-        <div className="md:col-span-2">
-          <h1 className="text-3xl font-bold mb-4">{property.title}</h1>
-          <div className="bg-white rounded-lg shadow-md overflow-hidden mb-6">
-            <img
-              src={property.image_url || "/placeholder.svg?height=400&width=800&query=property"}
+    <div className="container py-8">
+      <div className="mb-6">
+        <Button variant="ghost" asChild className="mb-4">
+          <Link href="/marketplace">
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back to Marketplace
+          </Link>
+        </Button>
+      </div>
+
+      {/* Property Images */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+        <div className="lg:col-span-2">
+          <div className="relative h-96 rounded-lg overflow-hidden">
+            <Image
+              src={images[currentImageIndex]?.url || "/placeholder.svg"}
               alt={property.title}
-              className="w-full h-[400px] object-cover"
+              fill
+              className="object-cover"
             />
-            <div className="p-6">
-              <div className="flex justify-between items-center mb-4">
-                <div>
-                  <p className="text-3xl font-bold">${property.price.toLocaleString()}</p>
-                  <p className="text-gray-500">{property.address}</p>
-                </div>
-                <div className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium">
-                  {property.status}
-                </div>
-              </div>
-
-              <div className="grid grid-cols-3 gap-4 mb-6">
-                <div>
-                  <p className="text-gray-500">Bedrooms</p>
-                  <p className="font-bold">{property.bedrooms}</p>
-                </div>
-                <div>
-                  <p className="text-gray-500">Bathrooms</p>
-                  <p className="font-bold">{property.bathrooms}</p>
-                </div>
-                <div>
-                  <p className="text-gray-500">Square Feet</p>
-                  <p className="font-bold">{property.square_feet.toLocaleString()}</p>
-                </div>
-              </div>
-
-              <div>
-                <h2 className="text-xl font-bold mb-2">Description</h2>
-                <p className="text-gray-700">{property.description}</p>
-              </div>
-            </div>
+            <Badge className={`absolute top-4 right-4 ${statusBadge.color} text-white`}>
+              {statusBadge.label}
+            </Badge>
           </div>
+          {images.length > 1 && (
+            <div className="flex gap-2 mt-4 overflow-x-auto">
+              {images.map((image: any, index: number) => (
+                <button
+                  key={index}
+                  onClick={() => setCurrentImageIndex(index)}
+                  className={`relative h-20 w-20 rounded-md overflow-hidden flex-shrink-0 ${
+                    index === currentImageIndex ? "ring-2 ring-primary" : ""
+                  }`}
+                >
+                  <Image
+                    src={image.url}
+                    alt={`Property image ${index + 1}`}
+                    fill
+                    className="object-cover"
+                  />
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
+        {/* Property Summary */}
         <div className="space-y-6">
-          <BidForm
-            propertyId={property.id}
-            currentBid={property.current_bid}
-            minimumBid={property.minimum_bid || 5000}
-          />
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-2xl">{formatPrice(property.price)}</CardTitle>
+                <div className="flex gap-2">
+                  <Button variant="outline" size="icon">
+                    <Heart className="h-4 w-4" />
+                  </Button>
+                  <Button variant="outline" size="icon">
+                    <Share2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+              <CardDescription className="flex items-center">
+                <MapPin className="h-4 w-4 mr-1" />
+                {fullAddress}
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-3 gap-4 text-center">
+                {property.bedrooms && (
+                  <div>
+                    <div className="font-semibold">{property.bedrooms}</div>
+                    <div className="text-sm text-muted-foreground">Beds</div>
+                  </div>
+                )}
+                {property.bathrooms && (
+                  <div>
+                    <div className="font-semibold">{property.bathrooms}</div>
+                    <div className="text-sm text-muted-foreground">Baths</div>
+                  </div>
+                )}
+                {property.squareFeet && (
+                  <div>
+                    <div className="font-semibold">{property.squareFeet.toLocaleString()}</div>
+                    <div className="text-sm text-muted-foreground">Sq Ft</div>
+                  </div>
+                )}
+              </div>
 
-          <BidHistory propertyId={property.id} />
+              <div className="space-y-2">
+                <QuickContactButton
+                  contactId={property.ownerId || "demo-seller-1"}
+                  contactName={property.ownerName || "Property Owner"}
+                  contactType="seller"
+                  contextType="property"
+                  contextId={property.id}
+                  contextTitle={property.title}
+                  size="lg"
+                />
+                <Button variant="outline" className="w-full">
+                  <Phone className="mr-2 h-4 w-4" />
+                  Call Now
+                </Button>
+                <Button variant="outline" className="w-full">
+                  <Calendar className="mr-2 h-4 w-4" />
+                  Schedule Tour
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Bidding Section for Auction Properties */}
+          {property.status === "AUCTION" && (
+            <div className="space-y-6">
+              <BidForm
+                propertyId={property.id}
+                currentBid={property.currentBid}
+                minimumBid={property.minimumBid || 5000}
+              />
+              <BidHistory propertyId={property.id} />
+            </div>
+          )}
+
+          {/* Seller Info */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Listed by</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
+                  <Home className="h-6 w-6 text-primary" />
+                </div>
+                <div>
+                  <div className="font-medium">{property.creator?.name || "Property Owner"}</div>
+                  <div className="text-sm text-muted-foreground">
+                    Listed {new Date(property.createdAt).toLocaleDateString()}
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>
+  )
+}
+
+export default function PropertyDetailPage() {
+  return (
+    <ProtectedRoute>
+      <PropertyDetailContent />
+    </ProtectedRoute>
   )
 }

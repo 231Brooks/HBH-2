@@ -1,10 +1,10 @@
 import { performance } from "perf_hooks"
 import { createClient } from "@supabase/supabase-js"
 
-// Initialize Supabase client for logging
-const supabaseUrl = process.env.SUPABASE_SUPABASE_URL!
-const supabaseKey = process.env.SUPABASE_SUPABASE_SERVICE_ROLE_KEY!
-const supabase = createClient(supabaseUrl, supabaseKey)
+// Initialize Supabase client for logging (optional)
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+const supabase = supabaseUrl && supabaseKey ? createClient(supabaseUrl, supabaseKey) : null
 
 // Interface for query metrics
 interface QueryMetrics {
@@ -18,8 +18,8 @@ interface QueryMetrics {
 // Function to log slow queries
 export async function logSlowQuery(metrics: QueryMetrics) {
   try {
-    // Only log queries that take more than 500ms
-    if (metrics.duration > 500) {
+    // Only log queries that take more than 500ms and if supabase is available
+    if (metrics.duration > 500 && supabase) {
       await supabase.from("query_performance_logs").insert([
         {
           query: metrics.query,
@@ -72,6 +72,10 @@ export function withQueryPerformance<T extends (...args: any[]) => Promise<any>>
 // Create the monitoring database tables
 export async function setupDatabaseMonitoring() {
   try {
+    if (!supabase) {
+      return { success: false, error: "Supabase client not available" }
+    }
+
     // Create table for query performance logs
     const { error: createError } = await supabase.rpc("exec_sql", {
       sql: `

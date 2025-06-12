@@ -8,24 +8,93 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
-import { ArrowLeft, Plus, Calendar, Upload, FileText, Clock, CheckCircle } from "lucide-react"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { ArrowLeft, Plus, Calendar, Upload, FileText, Clock, CheckCircle, AlertCircle } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { ProtectedRoute } from "@/components/protected-route"
+import { createTransaction } from "@/app/actions/transaction-actions"
 
-export default function CreateTransactionPage() {
+function CreateTransactionContent() {
   const router = useRouter()
   const [step, setStep] = useState(1)
-  const [transactionType, setTransactionType] = useState<"purchase" | "sale">("purchase")
-  const [titleCompany, setTitleCompany] = useState("")
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState("")
+  const [success, setSuccess] = useState(false)
 
-  const handleContinue = () => {
+  // Form data state
+  const [formData, setFormData] = useState({
+    transactionType: "PURCHASE" as "PURCHASE" | "SALE",
+    propertyAddress: "",
+    transactionPrice: "",
+    closingDate: "",
+    buyerName: "",
+    sellerName: "",
+    transactionDescription: "",
+    titleCompany: "",
+    inspectionDate: "",
+    financingDate: "",
+    appraisalDate: "",
+    titleCommitmentDate: "",
+    escrowOfficer: "",
+    titleNotes: "",
+    status: "IN_PROGRESS"
+  })
+
+  const updateFormData = (field: string, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }))
+  }
+
+  const handleContinue = async () => {
     if (step < 3) {
       setStep(step + 1)
       window.scrollTo(0, 0)
     } else {
-      // Submit the form - would integrate with API in real application
-      console.log("Transaction created")
-      router.push("/progress")
+      // Submit the form
+      await handleSubmit()
+    }
+  }
+
+  const handleSubmit = async () => {
+    setLoading(true)
+    setError("")
+    setSuccess(false)
+
+    try {
+      const result = await createTransaction({
+        type: formData.transactionType,
+        status: formData.status as any,
+        property: {
+          address: formData.propertyAddress,
+          price: formData.transactionPrice ? parseFloat(formData.transactionPrice) : undefined,
+        },
+        closingDate: formData.closingDate ? new Date(formData.closingDate) : undefined,
+        titleCompany: formData.titleCompany ? {
+          name: formData.titleCompany,
+          escrowOfficer: formData.escrowOfficer || undefined,
+        } : undefined,
+        notes: formData.transactionDescription || undefined,
+        milestones: {
+          inspectionDate: formData.inspectionDate ? new Date(formData.inspectionDate) : undefined,
+          financingDate: formData.financingDate ? new Date(formData.financingDate) : undefined,
+          appraisalDate: formData.appraisalDate ? new Date(formData.appraisalDate) : undefined,
+          titleCommitmentDate: formData.titleCommitmentDate ? new Date(formData.titleCommitmentDate) : undefined,
+        }
+      })
+
+      if (result.success && result.transaction) {
+        setSuccess(true)
+        setTimeout(() => {
+          router.push(`/progress/${result.transaction.id}`)
+        }, 2000)
+      } else {
+        throw new Error(result.error || "Failed to create transaction")
+      }
+    } catch (err: any) {
+      console.error("Transaction creation error:", err)
+      setError(err.message || "Failed to create transaction. Please try again.")
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -71,6 +140,22 @@ export default function CreateTransactionPage() {
           </div>
         </div>
 
+        {error && (
+          <Alert variant="destructive" className="mb-6">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        )}
+
+        {success && (
+          <Alert className="mb-6 bg-green-50 text-green-800 border-green-200">
+            <CheckCircle className="h-4 w-4" />
+            <AlertDescription>
+              Transaction created successfully! Redirecting to transaction details...
+            </AlertDescription>
+          </Alert>
+        )}
+
         <Card>
           {step === 1 && (
             <>
@@ -83,15 +168,15 @@ export default function CreateTransactionPage() {
                   <Label>Transaction Type</Label>
                   <div className="flex gap-4">
                     <div
-                      className={`flex-1 border rounded-md p-4 cursor-pointer ${transactionType === "purchase" ? "border-primary bg-primary/5" : "border-muted hover:border-muted-foreground"}`}
-                      onClick={() => setTransactionType("purchase")}
+                      className={`flex-1 border rounded-md p-4 cursor-pointer ${formData.transactionType === "PURCHASE" ? "border-primary bg-primary/5" : "border-muted hover:border-muted-foreground"}`}
+                      onClick={() => updateFormData("transactionType", "PURCHASE")}
                     >
                       <h3 className="font-medium mb-2">Purchase</h3>
                       <p className="text-sm text-muted-foreground">I am buying a property</p>
                     </div>
                     <div
-                      className={`flex-1 border rounded-md p-4 cursor-pointer ${transactionType === "sale" ? "border-primary bg-primary/5" : "border-muted hover:border-muted-foreground"}`}
-                      onClick={() => setTransactionType("sale")}
+                      className={`flex-1 border rounded-md p-4 cursor-pointer ${formData.transactionType === "SALE" ? "border-primary bg-primary/5" : "border-muted hover:border-muted-foreground"}`}
+                      onClick={() => updateFormData("transactionType", "SALE")}
                     >
                       <h3 className="font-medium mb-2">Sale</h3>
                       <p className="text-sm text-muted-foreground">I am selling a property</p>
@@ -101,18 +186,37 @@ export default function CreateTransactionPage() {
 
                 <div className="space-y-2">
                   <Label htmlFor="property-address">Property Address</Label>
-                  <Input id="property-address" placeholder="Enter the complete property address" required />
+                  <Input
+                    id="property-address"
+                    placeholder="Enter the complete property address"
+                    value={formData.propertyAddress}
+                    onChange={(e) => updateFormData("propertyAddress", e.target.value)}
+                    required
+                  />
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
                     <Label htmlFor="transaction-price">Transaction Price ($)</Label>
-                    <Input id="transaction-price" type="number" placeholder="e.g., 450000" required />
+                    <Input
+                      id="transaction-price"
+                      type="number"
+                      placeholder="e.g., 450000"
+                      value={formData.transactionPrice}
+                      onChange={(e) => updateFormData("transactionPrice", e.target.value)}
+                      required
+                    />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="closing-date">Expected Closing Date</Label>
                     <div className="relative">
-                      <Input id="closing-date" type="date" required />
+                      <Input
+                        id="closing-date"
+                        type="date"
+                        value={formData.closingDate}
+                        onChange={(e) => updateFormData("closingDate", e.target.value)}
+                        required
+                      />
                       <Calendar className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4 pointer-events-none" />
                     </div>
                   </div>
@@ -121,11 +225,23 @@ export default function CreateTransactionPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
                     <Label htmlFor="buyer-name">Buyer Name</Label>
-                    <Input id="buyer-name" placeholder="Full name of buyer" required />
+                    <Input
+                      id="buyer-name"
+                      placeholder="Full name of buyer"
+                      value={formData.buyerName}
+                      onChange={(e) => updateFormData("buyerName", e.target.value)}
+                      required
+                    />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="seller-name">Seller Name</Label>
-                    <Input id="seller-name" placeholder="Full name of seller" required />
+                    <Input
+                      id="seller-name"
+                      placeholder="Full name of seller"
+                      value={formData.sellerName}
+                      onChange={(e) => updateFormData("sellerName", e.target.value)}
+                      required
+                    />
                   </div>
                 </div>
 
@@ -135,6 +251,8 @@ export default function CreateTransactionPage() {
                     id="transaction-description"
                     placeholder="Any additional information about this transaction"
                     className="min-h-[100px]"
+                    value={formData.transactionDescription}
+                    onChange={(e) => updateFormData("transactionDescription", e.target.value)}
                   />
                 </div>
               </CardContent>
@@ -160,9 +278,9 @@ export default function CreateTransactionPage() {
                       <div
                         key={company.id}
                         className={`flex items-center gap-3 p-3 border rounded-md cursor-pointer hover:border-muted-foreground ${
-                          titleCompany === company.name ? "border-primary bg-primary/5" : ""
+                          formData.titleCompany === company.name ? "border-primary bg-primary/5" : ""
                         }`}
-                        onClick={() => company.id !== 4 && setTitleCompany(company.name)}
+                        onClick={() => company.id !== 4 && updateFormData("titleCompany", company.name)}
                       >
                         {company.id !== 4 ? (
                           <>
@@ -192,14 +310,24 @@ export default function CreateTransactionPage() {
                       <div className="space-y-2">
                         <Label htmlFor="inspection-date">Inspection Date</Label>
                         <div className="relative">
-                          <Input id="inspection-date" type="date" />
+                          <Input
+                            id="inspection-date"
+                            type="date"
+                            value={formData.inspectionDate}
+                            onChange={(e) => updateFormData("inspectionDate", e.target.value)}
+                          />
                           <Calendar className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4 pointer-events-none" />
                         </div>
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="financing-date">Financing Contingency</Label>
                         <div className="relative">
-                          <Input id="financing-date" type="date" />
+                          <Input
+                            id="financing-date"
+                            type="date"
+                            value={formData.financingDate}
+                            onChange={(e) => updateFormData("financingDate", e.target.value)}
+                          />
                           <Calendar className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4 pointer-events-none" />
                         </div>
                       </div>
@@ -209,14 +337,24 @@ export default function CreateTransactionPage() {
                       <div className="space-y-2">
                         <Label htmlFor="appraisal-date">Appraisal Date</Label>
                         <div className="relative">
-                          <Input id="appraisal-date" type="date" />
+                          <Input
+                            id="appraisal-date"
+                            type="date"
+                            value={formData.appraisalDate}
+                            onChange={(e) => updateFormData("appraisalDate", e.target.value)}
+                          />
                           <Calendar className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4 pointer-events-none" />
                         </div>
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="title-commitment">Title Commitment Due</Label>
                         <div className="relative">
-                          <Input id="title-commitment" type="date" />
+                          <Input
+                            id="title-commitment"
+                            type="date"
+                            value={formData.titleCommitmentDate}
+                            onChange={(e) => updateFormData("titleCommitmentDate", e.target.value)}
+                          />
                           <Calendar className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4 pointer-events-none" />
                         </div>
                       </div>
@@ -226,7 +364,12 @@ export default function CreateTransactionPage() {
 
                 <div className="space-y-2">
                   <Label htmlFor="escrow-officer">Escrow Officer (Optional)</Label>
-                  <Input id="escrow-officer" placeholder="Name of escrow officer" />
+                  <Input
+                    id="escrow-officer"
+                    placeholder="Name of escrow officer"
+                    value={formData.escrowOfficer}
+                    onChange={(e) => updateFormData("escrowOfficer", e.target.value)}
+                  />
                 </div>
 
                 <div className="space-y-2">
@@ -235,6 +378,8 @@ export default function CreateTransactionPage() {
                     id="title-notes"
                     placeholder="Any specific instructions for the title company"
                     className="min-h-[100px]"
+                    value={formData.titleNotes}
+                    onChange={(e) => updateFormData("titleNotes", e.target.value)}
                   />
                 </div>
               </CardContent>
@@ -299,14 +444,14 @@ export default function CreateTransactionPage() {
 
                 <div className="space-y-2">
                   <Label htmlFor="transaction-status">Initial Transaction Status</Label>
-                  <Select defaultValue="in-progress">
+                  <Select value={formData.status} onValueChange={(value) => updateFormData("status", value)}>
                     <SelectTrigger>
                       <SelectValue placeholder="Select status" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="in-progress">In Progress</SelectItem>
-                      <SelectItem value="pending-approval">Pending Approval</SelectItem>
-                      <SelectItem value="document-review">Document Review</SelectItem>
+                      <SelectItem value="IN_PROGRESS">In Progress</SelectItem>
+                      <SelectItem value="PENDING_APPROVAL">Pending Approval</SelectItem>
+                      <SelectItem value="DOCUMENT_REVIEW">Document Review</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -346,7 +491,9 @@ export default function CreateTransactionPage() {
                 <Link href="/progress">Cancel</Link>
               </Button>
             )}
-            <Button onClick={handleContinue}>{step < 3 ? "Continue" : "Create Transaction"}</Button>
+            <Button onClick={handleContinue} disabled={loading}>
+              {loading ? "Creating..." : (step < 3 ? "Continue" : "Create Transaction")}
+            </Button>
           </CardFooter>
         </Card>
 
@@ -378,5 +525,13 @@ export default function CreateTransactionPage() {
         )}
       </div>
     </div>
+  )
+}
+
+export default function CreateTransactionPage() {
+  return (
+    <ProtectedRoute>
+      <CreateTransactionContent />
+    </ProtectedRoute>
   )
 }
