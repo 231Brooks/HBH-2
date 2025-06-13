@@ -48,6 +48,7 @@ model User {
   fees              Fee[]
   serviceRequests   ServiceRequest[]    @relation("ServiceRequestClient")
   serviceResponses  ServiceRequest[]    @relation("ServiceRequestProvider")
+  responsesSent     ServiceResponse[]   @relation("ServiceResponseProvider")
   advertisements    Advertisement[]
   adPurchases       AdPurchase[]
 }
@@ -518,6 +519,7 @@ model ServiceResponse {
   serviceRequestId String
   serviceRequest  ServiceRequest @relation(fields: [serviceRequestId], references: [id])
   providerId      String
+  provider        User          @relation("ServiceResponseProvider", fields: [providerId], references: [id])
   message         String        @db.Text
   proposedPrice   Float?
   estimatedDuration String?

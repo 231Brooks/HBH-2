@@ -3,7 +3,7 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { getAdvertisements } from "@/app/actions/ad-actions"
+import { getMyAdvertisements } from "@/app/actions/advertising-actions"
 import { formatDate } from "@/lib/utils"
 import { PlusCircle } from "lucide-react"
 
@@ -94,7 +94,8 @@ export default function AdminAdsPage() {
 }
 
 async function AdsList({ isActive }: { isActive?: boolean }) {
-  const { ads, total } = await getAdvertisements({ isActive, limit: 50 })
+  const { advertisements, total } = await getMyAdvertisements({ limit: 50 })
+  const ads = advertisements || []
 
   if (ads.length === 0) {
     return <div className="text-center py-8 text-muted-foreground">No advertisements found</div>
@@ -116,23 +117,23 @@ async function AdsList({ isActive }: { isActive?: boolean }) {
           </tr>
         </thead>
         <tbody>
-          {ads.map((ad) => (
+          {ads.map((ad: any) => (
             <tr key={ad.id} className="border-b last:border-0">
-              <td className="py-2">{ad.name}</td>
-              <td className="py-2">{ad.slotId}</td>
-              <td className="py-2">{formatDate(ad.startDate)}</td>
-              <td className="py-2">{ad.endDate ? formatDate(ad.endDate) : "No end date"}</td>
+              <td className="py-2">{ad.title}</td>
+              <td className="py-2">-</td>
+              <td className="py-2">{formatDate(ad.createdAt)}</td>
+              <td className="py-2">-</td>
               <td className="py-2 text-center">
                 <span
                   className={`px-2 py-1 rounded text-xs ${
-                    ad.isActive ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
+                    ad.status === "ACTIVE" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
                   }`}
                 >
-                  {ad.isActive ? "Active" : "Inactive"}
+                  {ad.status}
                 </span>
               </td>
-              <td className="py-2 text-right">{ad.impressions.toLocaleString()}</td>
-              <td className="py-2 text-right">{ad.clicks.toLocaleString()}</td>
+              <td className="py-2 text-right">-</td>
+              <td className="py-2 text-right">-</td>
               <td className="py-2 text-right">
                 <div className="flex justify-end gap-2">
                   <Link href={`/admin/ads/${ad.id}`}>

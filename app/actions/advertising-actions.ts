@@ -318,3 +318,61 @@ export async function deleteAdvertisement(advertisementId: string) {
     return { success: false, error: "Failed to delete advertisement" }
   }
 }
+
+// Get advertisement by ID
+export async function getAdvertisementById(id: string) {
+  const session = await auth()
+  if (!session?.user?.id) {
+    return { ad: null }
+  }
+
+  try {
+    const ad = await prisma.advertisement.findUnique({
+      where: { id },
+      include: {
+        advertiser: {
+          select: {
+            id: true,
+            name: true,
+            image: true,
+          }
+        },
+        service: {
+          select: {
+            id: true,
+            name: true,
+            category: true,
+          }
+        },
+        analytics: {
+          orderBy: { date: "desc" },
+          take: 30,
+        },
+        purchases: {
+          include: {
+            adSlots: {
+              include: {
+                placement: true,
+              }
+            }
+          }
+        }
+      },
+    })
+
+    // Check permissions
+    if (!ad) {
+      return { ad: null }
+    }
+
+    // Non-admins can only see their own ads
+    if (session.user.role !== "ADMIN" && ad.advertiserId !== session.user.id) {
+      return { ad: null }
+    }
+
+    return { ad }
+  } catch (error) {
+    console.error("Failed to fetch advertisement:", error)
+    return { ad: null }
+  }
+}

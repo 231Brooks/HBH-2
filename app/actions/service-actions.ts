@@ -453,7 +453,7 @@ export async function getMyServices() {
             rating: true,
             comment: true,
             createdAt: true,
-            reviewer: {
+            author: {
               select: {
                 name: true,
                 image: true,

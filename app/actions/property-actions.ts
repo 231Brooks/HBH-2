@@ -32,7 +32,7 @@ export async function createProperty(formData: FormData) {
   }
 
   try {
-    const property = await withQueryPerformance(async () => {
+    const createPropertyQuery = withQueryPerformance(async () => {
       return prisma.property.create({
         data: {
           title,
@@ -52,6 +52,8 @@ export async function createProperty(formData: FormData) {
         },
       })
     }, "createProperty")
+
+    const property = await createPropertyQuery()
 
     revalidatePath("/marketplace")
     return { success: true, propertyId: property.id }
@@ -79,11 +81,11 @@ export async function getProperties(options: {
 
   try {
     // Use raw SQL query for better performance
-    const result = await withQueryPerformance(async () => {
+    const getPropertiesQuery = withQueryPerformance(async () => {
       const properties = await prisma.$queryRaw`
-        SELECT 
-          p.id, p.title, p.description, p.address, p.city, p.state, 
-          p."zipCode", p.price, p.beds, p.baths, p.sqft, p.type, p.status, 
+        SELECT
+          p.id, p.title, p.description, p.address, p.city, p.state,
+          p."zipCode", p.price, p.beds, p.baths, p.sqft, p.type, p.status,
           p."createdAt", p."updatedAt", p."ownerId",
           json_agg(DISTINCT pi.*) FILTER (WHERE pi.id IS NOT NULL) as images,
           json_build_object(
@@ -142,6 +144,8 @@ export async function getProperties(options: {
       return { properties, total }
     }, "getProperties")
 
+    const result = await getPropertiesQuery()
+
     return {
       properties: result.properties as any[],
       total: result.total,
@@ -157,7 +161,7 @@ export async function getProperties(options: {
 // Get property by ID - OPTIMIZED
 export async function getPropertyById(id: string) {
   try {
-    const property = await withQueryPerformance(async () => {
+    const getPropertyQuery = withQueryPerformance(async () => {
       return prisma.property.findUnique({
         where: { id },
         include: {
@@ -179,6 +183,8 @@ export async function getPropertyById(id: string) {
         },
       })
     }, "getPropertyById")
+
+    const property = await getPropertyQuery()
 
     return { success: true, property }
   } catch (error) {

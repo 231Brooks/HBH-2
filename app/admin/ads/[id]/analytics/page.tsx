@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { getAdvertisementById, getAdAnalytics } from "@/app/actions/ad-actions"
+import { getAdvertisementById } from "@/app/actions/advertising-actions"
 import { AdPerformanceChart } from "@/components/ad-management/ad-performance-chart"
 import { AdPerformanceMetrics } from "@/components/ad-management/ad-performance-metrics"
 import { AdEventsList } from "@/components/ad-management/ad-events-list"
@@ -15,21 +15,19 @@ interface AdminAdAnalyticsPageProps {
 }
 
 export default async function AdminAdAnalyticsPage({ params }: AdminAdAnalyticsPageProps) {
-  const [adResult, analyticsResult] = await Promise.all([
-    getAdvertisementById(params.id),
-    getAdAnalytics({ adId: params.id }),
-  ])
-
+  const adResult = await getAdvertisementById(params.id)
   const { ad } = adResult
-  const { analytics } = analyticsResult
 
   if (!ad) {
     notFound()
   }
 
+  // Use the analytics from the ad result
+  const analytics = ad.analytics || []
+
   return (
     <div className="container py-10">
-      <h1 className="text-3xl font-bold mb-2">{ad.name}</h1>
+      <h1 className="text-3xl font-bold mb-2">{ad.title}</h1>
       <p className="text-muted-foreground mb-6">Performance analytics and insights</p>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">

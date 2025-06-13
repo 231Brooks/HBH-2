@@ -19,14 +19,13 @@ export async function createTransaction(data: any) {
         data: {
           title: data.property.address,
           address: data.property.address,
+          city: "Unknown",
+          state: "Unknown",
+          zipCode: "00000",
           price: data.property.price,
-          creatorId: session.user.id,
-          type: "RESIDENTIAL", // Default type
-          bedrooms: 0,
-          bathrooms: 0,
-          squareFeet: 0,
-          description: "",
-          status: "ACTIVE",
+          ownerId: session.user.id,
+          type: "RESIDENTIAL",
+          status: "FOR_SALE",
         },
       })
     }
@@ -39,16 +38,16 @@ export async function createTransaction(data: any) {
           name: data.titleCompany.name,
           email: data.titleCompany.email,
           phone: data.titleCompany.phone,
-          escrowOfficer: data.titleCompany.escrowOfficer,
         },
       })
     }
 
     const transaction = await prisma.transaction.create({
       data: {
-        propertyId: property?.id,
+        propertyId: property?.id || "",
         creatorId: session.user.id,
         type: data.type as any,
+        price: property?.price || 0,
         closingDate: data.closingDate ? new Date(data.closingDate) : null,
         notes: data.notes,
         titleCompanyId: titleCompany?.id,

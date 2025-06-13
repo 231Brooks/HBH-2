@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation"
-import { getAdvertisementById } from "@/app/actions/ad-actions"
+import { getAdvertisementById } from "@/app/actions/advertising-actions"
 import { AdForm } from "@/components/ad-management/ad-form"
 
 export const dynamic = "force-dynamic"

@@ -69,11 +69,6 @@ export async function createTransactionFeePayment(transactionId: string, feeAmou
     // Get the transaction details
     const transaction = await prisma.transaction.findUnique({
       where: { id: transactionId },
-      include: {
-        fees: {
-          where: { type: "TRANSACTION_FEE" },
-        },
-      },
     })
 
     if (!transaction) {
@@ -94,13 +89,9 @@ export async function createTransactionFeePayment(transactionId: string, feeAmou
       return { success: false, error: "Unauthorized" }
     }
 
-    // Check if fee already exists
-    const feeId = transaction.fees[0]?.id
-
     // Create payment intent
     const { clientSecret } = await createTransactionFeePaymentIntent(feeAmount, {
       transactionId: transaction.id,
-      feeId,
       userId: session.user.id,
     })
 
@@ -198,11 +189,11 @@ export async function handleTransactionFeePaymentSuccess(paymentIntentId: string
         // Create new fee
         fee = await tx.fee.create({
           data: {
+            userId,
             amount: 100, // Fixed $100 fee
             type: "TRANSACTION_FEE",
             description: "Transaction processing fee",
             status: "PAID",
-            transactionId,
           },
         })
       }
