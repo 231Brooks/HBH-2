@@ -150,7 +150,7 @@ export default function TestAdsPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">${AD_PRICING_CONFIG.baseHourlyRate}/hour</div>
+                <div className="text-2xl font-bold">${AD_PRICING_CONFIG?.baseHourlyRate ?? 5}/hour</div>
                 <p className="text-sm text-muted-foreground">per ad slot</p>
               </CardContent>
             </Card>
@@ -164,7 +164,7 @@ export default function TestAdsPage() {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
-                  ${(AD_PRICING_CONFIG.baseHourlyRate * AD_PRICING_CONFIG.locationMultipliers.FRONTPAGE).toFixed(0)}/hour
+                  ${((AD_PRICING_CONFIG?.baseHourlyRate ?? 5) * (AD_PRICING_CONFIG?.locationMultipliers?.FRONTPAGE ?? 2)).toFixed(0)}/hour
                 </div>
                 <p className="text-sm text-muted-foreground">premium location</p>
               </CardContent>

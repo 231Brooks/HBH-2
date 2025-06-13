@@ -350,7 +350,7 @@ export default function PurchaseAdPage() {
                     <div className="space-y-2 text-sm">
                       <div className="flex justify-between">
                         <span>Base Rate:</span>
-                        <span>${AD_PRICING_CONFIG.baseHourlyRate}/hour</span>
+                        <span>${AD_PRICING_CONFIG?.baseHourlyRate ?? 5}/hour</span>
                       </div>
                       <div className="flex justify-between">
                         <span>Location Multiplier:</span>
@@ -358,7 +358,7 @@ export default function PurchaseAdPage() {
                       </div>
                       <div className="flex justify-between font-medium">
                         <span>Effective Rate:</span>
-                        <span>${(AD_PRICING_CONFIG.baseHourlyRate * selectedLocation.multiplier).toFixed(2)}/hour</span>
+                        <span>${((AD_PRICING_CONFIG?.baseHourlyRate ?? 5) * selectedLocation.multiplier).toFixed(2)}/hour</span>
                       </div>
                     </div>
                   </CardContent>
