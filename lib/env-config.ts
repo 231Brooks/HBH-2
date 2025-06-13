@@ -13,8 +13,8 @@ const envSchema = z.object({
   NEXT_PUBLIC_SUPABASE_ANON_KEY: z.string().min(1),
   SUPABASE_SERVICE_ROLE_KEY: z.string().min(1).optional(),
 
-  // Authentication
-  NEXTAUTH_SECRET: z.string().min(32),
+  // Authentication (NextAuth - optional since we use Supabase Auth)
+  NEXTAUTH_SECRET: z.string().min(32).optional(),
   NEXTAUTH_URL: z.string().url().optional(),
 
   // OAuth
@@ -98,7 +98,7 @@ export const features = {
 
 // Environment variable groups for easier management
 export const envGroups = {
-  required: ["DATABASE_URL", "NEXT_PUBLIC_SUPABASE_URL", "NEXT_PUBLIC_SUPABASE_ANON_KEY", "NEXTAUTH_SECRET"],
+  required: ["DATABASE_URL", "NEXT_PUBLIC_SUPABASE_URL", "NEXT_PUBLIC_SUPABASE_ANON_KEY"],
   optional: [
     "GITHUB_ID",
     "GITHUB_SECRET",

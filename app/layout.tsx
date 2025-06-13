@@ -4,6 +4,7 @@ import { Inter } from "next/font/google"
 import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
 import Navbar from "@/components/navbar"
+import BottomNavbar from "@/components/bottom-navbar"
 import { SupabaseProviderWrapper } from "@/components/supabase-provider-wrapper"
 
 const inter = Inter({ subsets: ["latin"] })
@@ -26,7 +27,8 @@ export default function RootLayout({
           <SupabaseProviderWrapper>
             <div className="flex flex-col min-h-screen bg-[#EBEBEB]">
               <Navbar />
-              <main className="flex-1">{children}</main>
+              <main className="flex-1 pb-safe">{children}</main>
+              <BottomNavbar />
             </div>
           </SupabaseProviderWrapper>
         </ThemeProvider>

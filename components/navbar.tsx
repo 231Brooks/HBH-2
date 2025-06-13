@@ -26,9 +26,8 @@ import { useSupabase } from "@/contexts/supabase-context"
 import { usePermissions } from "@/hooks/use-permissions"
 import { ClientOnly } from "@/components/client-only"
 
-// Base navigation items - these will be filtered based on user permissions
-const baseNavItems = [
-  { name: "Home", href: "/", icon: <Home className="h-5 w-5" />, public: true },
+// Desktop navigation items - these will be filtered based on user permissions
+const desktopNavItems = [
   { name: "Progress", href: "/progress", icon: <FileText className="h-5 w-5" />, requiresAuth: true },
   { name: "Services", href: "/services", icon: <Building2 className="h-5 w-5" />, public: true },
   { name: "Marketplace", href: "/marketplace", icon: <BarChart className="h-5 w-5" />, public: true },
@@ -44,7 +43,7 @@ export default function Navbar() {
   const { permissions } = usePermissions()
 
   // Filter navigation items based on authentication and permissions
-  const navItems = baseNavItems.filter(item => {
+  const navItems = desktopNavItems.filter(item => {
     if (item.public) return true
     if (item.requiresAuth && !user) return false
     return true
@@ -73,24 +72,25 @@ export default function Navbar() {
     >
       <div className="container flex h-16 items-center justify-between">
         <div className="flex items-center gap-6">
-          <Link href="/" className="font-bold text-xl">
-            HBH
+          <Link href="/" className="font-bold text-xl flex items-center gap-2">
+            <Home className="h-6 w-6" />
+            <span className="hidden sm:inline">HBH</span>
           </Link>
 
           {!isMobile && (
-            <nav className="flex items-center gap-6">
+            <nav className="flex items-center gap-1">
               {navItems.map((item) => (
                 <Link
                   key={item.href}
                   href={item.href}
                   className={cn(
-                    "flex flex-col items-center justify-center text-sm font-medium transition-colors hover:text-primary",
-                    pathname?.startsWith(item.href) ? "text-primary" : "text-muted-foreground",
+                    "flex items-center gap-2 px-3 py-2 text-sm font-medium transition-colors hover:text-primary hover:bg-muted/50 rounded-md",
+                    pathname?.startsWith(item.href) ? "text-primary bg-muted" : "text-muted-foreground",
                   )}
                   title={item.name}
                 >
                   {item.icon}
-                  <span className="text-xs mt-1">{item.name}</span>
+                  <span>{item.name}</span>
                 </Link>
               ))}
             </nav>
