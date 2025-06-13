@@ -42,6 +42,14 @@ model User {
   calendarIntegrations CalendarIntegration[]
   messages          Message[]           @relation("SentMessages")
   receivedMessages  Message[]           @relation("ReceivedMessages")
+  subscription      Subscription?
+  serviceOrders     ServiceOrder[]      @relation("ClientOrders")
+  providedOrders    ServiceOrder[]      @relation("ProviderOrders")
+  fees              Fee[]
+  serviceRequests   ServiceRequest[]    @relation("ServiceRequestClient")
+  serviceResponses  ServiceRequest[]    @relation("ServiceRequestProvider")
+  advertisements    Advertisement[]
+  adPurchases       AdPurchase[]
 }
 
 enum UserRole {
@@ -252,6 +260,8 @@ model Service {
   // Relations
   reviews         Review[]
   projects        Project[]
+  orders          ServiceOrder[]
+  advertisements  Advertisement[]
 }
 
 enum ServiceCategory {
@@ -371,6 +381,255 @@ model Conversation {
   messages        Message[]
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
+}
+
+// Subscription models
+model Subscription {
+  id              String              @id @default(cuid())
+  userId          String              @unique
+  user            User                @relation(fields: [userId], references: [id])
+  tier            SubscriptionTier
+  status          SubscriptionStatus  @default(ACTIVE)
+  stripeCustomerId String?
+  stripeSubscriptionId String?
+  currentPeriodStart DateTime
+  currentPeriodEnd DateTime
+  cancelAtPeriodEnd Boolean           @default(false)
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+
+  // Usage tracking
+  listingsUsed    Int                 @default(0)
+  listingsLimit   Int?                // null for unlimited
+  transactionFeesPaid Float           @default(0)
+}
+
+enum SubscriptionTier {
+  FREE
+  PROFESSIONAL_MONTHLY
+  PAY_PER_LISTING
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  PAST_DUE
+  CANCELED
+  INCOMPLETE
+  INCOMPLETE_EXPIRED
+  TRIALING
+  UNPAID
+}
+
+// Service Order model for tracking service purchases
+model ServiceOrder {
+  id              String              @id @default(cuid())
+  serviceId       String
+  service         Service             @relation(fields: [serviceId], references: [id])
+  clientId        String
+  client          User                @relation("ClientOrders", fields: [clientId], references: [id])
+  providerId      String
+  provider        User                @relation("ProviderOrders", fields: [providerId], references: [id])
+  amount          Float
+  status          ServiceOrderStatus  @default(PENDING)
+  description     String?             @db.Text
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+
+  // Relations
+  fees            Fee[]
+}
+
+enum ServiceOrderStatus {
+  PENDING
+  CONFIRMED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+// Fee model for tracking various fees
+model Fee {
+  id              String        @id @default(cuid())
+  userId          String
+  user            User          @relation(fields: [userId], references: [id])
+  type            FeeType
+  amount          Float
+  description     String?
+  status          FeeStatus     @default(PENDING)
+  serviceOrderId  String?
+  serviceOrder    ServiceOrder? @relation(fields: [serviceOrderId], references: [id])
+  stripePaymentIntentId String?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+}
+
+enum FeeType {
+  LISTING_FEE
+  TRANSACTION_FEE
+  SUBSCRIPTION_FEE
+  SERVICE_FEE
+}
+
+enum FeeStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+}
+
+// Service Request model for professionals to see service needs
+model ServiceRequest {
+  id              String              @id @default(cuid())
+  title           String
+  description     String              @db.Text
+  category        ServiceCategory
+  budget          String?
+  location        String
+  urgency         ServiceUrgency      @default(NORMAL)
+  status          ServiceRequestStatus @default(OPEN)
+  clientId        String
+  client          User                @relation("ServiceRequestClient", fields: [clientId], references: [id])
+  providerId      String?
+  provider        User?               @relation("ServiceRequestProvider", fields: [providerId], references: [id])
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+
+  // Relations
+  responses       ServiceResponse[]
+}
+
+enum ServiceUrgency {
+  LOW
+  NORMAL
+  HIGH
+  URGENT
+}
+
+enum ServiceRequestStatus {
+  OPEN
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+// Service Response model for professionals to respond to requests
+model ServiceResponse {
+  id              String        @id @default(cuid())
+  serviceRequestId String
+  serviceRequest  ServiceRequest @relation(fields: [serviceRequestId], references: [id])
+  providerId      String
+  message         String        @db.Text
+  proposedPrice   Float?
+  estimatedDuration String?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+}
+
+// Advertisement models
+model Advertisement {
+  id              String              @id @default(cuid())
+  title           String
+  description     String?             @db.Text
+  imageUrl        String?
+  linkUrl         String?
+  advertiserId    String
+  advertiser      User                @relation(fields: [advertiserId], references: [id])
+  serviceId       String?
+  service         Service?            @relation(fields: [serviceId], references: [id])
+  status          AdStatus            @default(PENDING)
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+
+  // Relations
+  purchases       AdPurchase[]
+  placements      AdPlacement[]
+  analytics       AdAnalytics[]
+}
+
+enum AdStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  ACTIVE
+  PAUSED
+  EXPIRED
+}
+
+model AdPurchase {
+  id              String              @id @default(cuid())
+  advertisementId String
+  advertisement   Advertisement       @relation(fields: [advertisementId], references: [id])
+  purchaserId     String
+  purchaser       User                @relation(fields: [purchaserId], references: [id])
+  adSlots         AdSlot[]
+  totalCost       Float
+  duration        Int                 // in hours
+  startDate       DateTime
+  endDate         DateTime
+  status          AdPurchaseStatus    @default(PENDING)
+  stripePaymentIntentId String?
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+}
+
+enum AdPurchaseStatus {
+  PENDING
+  PAID
+  ACTIVE
+  COMPLETED
+  CANCELLED
+}
+
+model AdSlot {
+  id              String              @id @default(cuid())
+  adPurchaseId    String
+  adPurchase      AdPurchase          @relation(fields: [adPurchaseId], references: [id])
+  placement       AdPlacement         @relation(fields: [placementId], references: [id])
+  placementId     String
+  startTime       DateTime
+  endTime         DateTime
+  isActive        Boolean             @default(false)
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+}
+
+model AdPlacement {
+  id              String              @id @default(cuid())
+  advertisementId String
+  advertisement   Advertisement       @relation(fields: [advertisementId], references: [id])
+  location        AdLocation
+  position        Int                 @default(0) // 0-4 for the 5 spots
+  priority        Int                 @default(0) // Higher priority shows first
+  isActive        Boolean             @default(true)
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+
+  // Relations
+  slots           AdSlot[]
+}
+
+enum AdLocation {
+  BOTTOM_GLOBAL   // Bottom of all pages
+  FRONTPAGE       // Front page specific
+  SERVICES        // Services section
+  MARKETPLACE     // Marketplace section
+  SIDEBAR         // Sidebar ads (future)
+}
+
+model AdAnalytics {
+  id              String              @id @default(cuid())
+  advertisementId String
+  advertisement   Advertisement       @relation(fields: [advertisementId], references: [id])
+  date            DateTime            @default(now())
+  impressions     Int                 @default(0)
+  clicks          Int                 @default(0)
+  conversions     Int                 @default(0)
+  cost            Float               @default(0)
+  location        AdLocation
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+
+  @@unique([advertisementId, date, location])
 }
 
 // Job Marketplace models

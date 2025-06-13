@@ -1,8 +1,9 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { createService } from "@/app/actions/service-actions"
+import { checkListingPermission } from "@/app/actions/subscription-actions"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -10,9 +11,10 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { AlertCircle, Plus } from "lucide-react"
+import { AlertCircle, Plus, Crown } from "lucide-react"
 import { ProtectedRoute } from "@/components/protected-route"
 import { RoleGuard } from "@/components/role-guard"
+import Link from "next/link"
 
 const serviceCategories = [
   { value: "TITLE_SERVICES", label: "Title Services" },
@@ -30,7 +32,10 @@ function CreateServiceContent() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
   const [success, setSuccess] = useState(false)
-  
+  const [canCreateListing, setCanCreateListing] = useState(true)
+  const [permissionReason, setPermissionReason] = useState("")
+  const [checkingPermission, setCheckingPermission] = useState(true)
+
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -39,6 +44,27 @@ function CreateServiceContent() {
     hourlyRate: "",
     location: "",
   })
+
+  useEffect(() => {
+    checkPermissions()
+  }, [])
+
+  const checkPermissions = async () => {
+    try {
+      const result = await checkListingPermission()
+      if (result.success) {
+        setCanCreateListing(result.allowed)
+        if (!result.allowed && result.reason) {
+          setPermissionReason(result.reason)
+        }
+      }
+    } catch (error) {
+      console.error("Failed to check permissions:", error)
+      setError("Failed to check subscription permissions")
+    } finally {
+      setCheckingPermission(false)
+    }
+  }
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }))
@@ -75,6 +101,68 @@ function CreateServiceContent() {
     } finally {
       setLoading(false)
     }
+  }
+
+  if (checkingPermission) {
+    return (
+      <div className="container py-8">
+        <div className="max-w-2xl mx-auto">
+          <div className="animate-pulse">
+            <div className="h-8 bg-gray-200 rounded w-1/3 mb-4"></div>
+            <div className="h-4 bg-gray-200 rounded w-2/3 mb-8"></div>
+            <div className="h-96 bg-gray-200 rounded-lg"></div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  if (!canCreateListing) {
+    return (
+      <div className="container py-8">
+        <div className="max-w-2xl mx-auto">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Crown className="h-5 w-5" />
+                Subscription Required
+              </CardTitle>
+              <CardDescription>
+                Upgrade your account to start offering services
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Alert className="mb-6">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>{permissionReason}</AlertDescription>
+              </Alert>
+
+              <div className="space-y-4">
+                <p className="text-sm text-muted-foreground">
+                  To create service listings, you need either:
+                </p>
+                <ul className="text-sm space-y-2 ml-4">
+                  <li>• Professional Monthly ($50/month) - Unlimited listings, no transaction fees</li>
+                  <li>• Pay Per Listing ($10/listing + 5% transaction fees)</li>
+                </ul>
+
+                <div className="flex gap-4">
+                  <Button asChild>
+                    <Link href="/settings/subscription">
+                      <Crown className="h-4 w-4 mr-2" />
+                      Upgrade Subscription
+                    </Link>
+                  </Button>
+                  <Button variant="outline" onClick={() => router.back()}>
+                    Go Back
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    )
   }
 
   return (

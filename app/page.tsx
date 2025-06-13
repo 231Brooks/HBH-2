@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Calendar, Building2, Briefcase, Gavel, FileText, Users, MapPin, ArrowRight } from "lucide-react"
+import { FrontPageAds } from "@/components/advertising/ad-banner"
 
 export default function Home() {
   return (
@@ -36,6 +37,11 @@ export default function Home() {
             </div>
           </div>
         </div>
+      </section>
+
+      {/* Front Page Ads */}
+      <section className="container py-8">
+        <FrontPageAds />
       </section>
 
       {/* Features Section */}

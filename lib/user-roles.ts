@@ -46,6 +46,12 @@ export interface UserPermissions {
   canPostJobs: boolean
   canApplyToJobs: boolean
   canManageJobs: boolean
+
+  // Subscription permissions
+  canCreateServiceListings: boolean
+  canViewServiceRequests: boolean
+  canRespondToServiceRequests: boolean
+  canAccessProfessionalDashboard: boolean
 }
 
 export const USER_PERMISSIONS: Record<UserRole, UserPermissions> = {
@@ -95,6 +101,12 @@ export const USER_PERMISSIONS: Record<UserRole, UserPermissions> = {
     canPostJobs: true,
     canApplyToJobs: false,
     canManageJobs: false,
+
+    // Subscription permissions
+    canCreateServiceListings: false,
+    canViewServiceRequests: false,
+    canRespondToServiceRequests: false,
+    canAccessProfessionalDashboard: false,
   },
   
   PROFESSIONAL: {
@@ -143,6 +155,12 @@ export const USER_PERMISSIONS: Record<UserRole, UserPermissions> = {
     canPostJobs: false,
     canApplyToJobs: true,
     canManageJobs: false,
+
+    // Subscription permissions
+    canCreateServiceListings: true,
+    canViewServiceRequests: true,
+    canRespondToServiceRequests: true,
+    canAccessProfessionalDashboard: true,
   },
   
   ADMIN: {
@@ -191,6 +209,12 @@ export const USER_PERMISSIONS: Record<UserRole, UserPermissions> = {
     canPostJobs: true,
     canApplyToJobs: true,
     canManageJobs: true,
+
+    // Subscription permissions
+    canCreateServiceListings: true,
+    canViewServiceRequests: true,
+    canRespondToServiceRequests: true,
+    canAccessProfessionalDashboard: true,
   },
 }
 

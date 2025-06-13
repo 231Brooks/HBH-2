@@ -76,12 +76,18 @@ function SettingsPageContent() {
       href: "/settings/preferences",
     },
     {
-      id: "billing",
-      title: "Billing & Payments",
-      description: "Payment methods, billing history, and subscription management",
+      id: "subscription",
+      title: "Subscription & Billing",
+      description: "Manage your subscription plan, billing, and payment methods",
       icon: <CreditCard className="h-6 w-6" />,
-      href: "/settings/billing",
-      comingSoon: true,
+      href: "/settings/subscription",
+    },
+    {
+      id: "advertising",
+      title: "Advertising",
+      description: "Create and manage your advertisements across the platform",
+      icon: <CreditCard className="h-6 w-6" />,
+      href: "/advertising",
     },
     {
       id: "data",

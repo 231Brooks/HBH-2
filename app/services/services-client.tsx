@@ -32,6 +32,7 @@ import Link from "next/link"
 import Image from "next/image"
 import { getServices } from "../actions/service-actions"
 import { QuickContactButton } from "@/components/contact-dialog"
+import { ServicesAds } from "@/components/advertising/ad-banner"
 
 interface Service {
   id: string
@@ -242,6 +243,11 @@ export default function ServicesClient() {
             </div>
           </div>
         )}
+      </div>
+
+      {/* Services Ads */}
+      <div className="mb-8">
+        <ServicesAds />
       </div>
 
       {/* Service Categories */}

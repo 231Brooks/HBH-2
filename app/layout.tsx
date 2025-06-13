@@ -5,6 +5,7 @@ import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
 import Navbar from "@/components/navbar"
 import BottomNavbar from "@/components/bottom-navbar"
+import { BottomGlobalAds } from "@/components/advertising/ad-banner"
 import { SupabaseProviderWrapper } from "@/components/supabase-provider-wrapper"
 
 const inter = Inter({ subsets: ["latin"] })
@@ -27,7 +28,8 @@ export default function RootLayout({
           <SupabaseProviderWrapper>
             <div className="flex flex-col min-h-screen bg-[#EBEBEB]">
               <Navbar />
-              <main className="flex-1 pb-safe">{children}</main>
+              <main className="flex-1 pb-safe pb-20">{children}</main>
+              <BottomGlobalAds />
               <BottomNavbar />
             </div>
           </SupabaseProviderWrapper>

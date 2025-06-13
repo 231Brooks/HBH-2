@@ -436,3 +436,40 @@ export async function createServiceReview(serviceId: string, formData: FormData)
     return { success: false, error: "Failed to create review" }
   }
 }
+
+export async function getMyServices() {
+  const session = await auth()
+  if (!session?.user?.id) {
+    return { success: false, error: "Authentication required" }
+  }
+
+  try {
+    const services = await prisma.service.findMany({
+      where: { providerId: session.user.id },
+      include: {
+        reviews: {
+          select: {
+            id: true,
+            rating: true,
+            comment: true,
+            createdAt: true,
+            reviewer: {
+              select: {
+                name: true,
+                image: true,
+              },
+            },
+          },
+          orderBy: { createdAt: "desc" },
+          take: 3,
+        },
+      },
+      orderBy: { createdAt: "desc" },
+    })
+
+    return { success: true, services }
+  } catch (error) {
+    console.error("Failed to get my services:", error)
+    return { success: false, error: "Failed to load services" }
+  }
+}

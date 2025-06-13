@@ -26,9 +26,14 @@ import { usePermissions } from "@/hooks/use-permissions"
 import { ClientOnly } from "@/components/client-only"
 
 // Desktop navigation items - these will be filtered based on user permissions
-const desktopNavItems = [
+const getDesktopNavItems = (isProfessional: boolean) => [
   { name: "Progress", href: "/progress", icon: <FileText className="h-5 w-5" />, requiresAuth: true },
-  { name: "Services", href: "/services", icon: <Building2 className="h-5 w-5" />, public: true },
+  {
+    name: isProfessional ? "Service Requests" : "Services",
+    href: "/services",
+    icon: isProfessional ? <MessageSquare className="h-5 w-5" /> : <Building2 className="h-5 w-5" />,
+    public: true
+  },
   { name: "Marketplace", href: "/marketplace", icon: <BarChart className="h-5 w-5" />, public: true },
   { name: "Calendar", href: "/calendar", icon: <Calendar className="h-5 w-5" />, requiresAuth: true },
   { name: "Profile", href: "/profile", icon: <User className="h-5 w-5" />, requiresAuth: true },
@@ -39,7 +44,10 @@ export default function Navbar() {
   const isMobile = useIsMobile()
   const [isScrolled, setIsScrolled] = useState(false)
   const { user, supabase, loading, isHydrated } = useSupabase()
-  const { permissions } = usePermissions()
+  const { permissions, isProfessional } = usePermissions()
+
+  // Get navigation items based on user type
+  const desktopNavItems = getDesktopNavItems(isProfessional)
 
   // Filter navigation items based on authentication and permissions
   const navItems = desktopNavItems.filter(item => {

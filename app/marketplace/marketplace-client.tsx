@@ -7,6 +7,8 @@ import { Input } from "@/components/ui/input"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Slider } from "@/components/ui/slider"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
 import {
   Search,
   Filter,
@@ -17,19 +19,44 @@ import {
   Heart,
   Building,
   Plus,
+  MessageSquare,
+  Clock,
+  DollarSign,
+  User,
+  Star,
+  AlertCircle,
 } from "lucide-react"
 import { PropertyMap } from "./property-map"
 import { CachedMarketplaceItems } from "./cached-items"
 import { getProperties } from "../actions/property-actions"
+import { getServiceRequests } from "../actions/service-request-actions"
 import { PerformanceTracker } from "./performance-tracker"
 import { PropertyCard } from "./page"
+import { formatDistanceToNow } from "date-fns"
+import { ServiceUrgency, ServiceRequestStatus } from "@prisma/client"
+import { MarketplaceAds } from "@/components/advertising/ad-banner"
+
+const urgencyColors = {
+  LOW: "bg-gray-100 text-gray-800",
+  NORMAL: "bg-blue-100 text-blue-800",
+  HIGH: "bg-orange-100 text-orange-800",
+  URGENT: "bg-red-100 text-red-800",
+}
+
+const urgencyIcons = {
+  LOW: Clock,
+  NORMAL: Clock,
+  HIGH: AlertCircle,
+  URGENT: AlertCircle,
+}
 
 export default function MarketplaceClient() {
   const [properties, setProperties] = useState<any[]>([])
+  const [serviceRequests, setServiceRequests] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [viewMode, setViewMode] = useState<"grid" | "list" | "map">("grid")
   const [searchTerm, setSearchTerm] = useState("")
-  const [activeTab, setActiveTab] = useState("all")
+  const [activeTab, setActiveTab] = useState("properties")
   const [sortBy, setSortBy] = useState("newest")
   const [filters, setFilters] = useState({
     status: "",
@@ -44,19 +71,29 @@ export default function MarketplaceClient() {
   const [total, setTotal] = useState(0)
   const [showFilters, setShowFilters] = useState(false)
 
-  // Load properties
+  // Load data
   useEffect(() => {
-    loadProperties()
+    loadData()
   }, [])
 
   // Reload when tab, sort, or search changes
   useEffect(() => {
     const timeoutId = setTimeout(() => {
-      loadProperties()
+      loadData()
     }, 500) // Debounce search
-    
+
     return () => clearTimeout(timeoutId)
   }, [activeTab, sortBy, searchTerm])
+
+  // Function to load data based on active tab
+  const loadData = async () => {
+    if (activeTab === "properties" || activeTab === "all") {
+      await loadProperties()
+    }
+    if (activeTab === "service-requests" || activeTab === "all") {
+      await loadServiceRequests()
+    }
+  }
 
   // Function to load properties with filters
   const loadProperties = async (newFilters?: any) => {
@@ -86,6 +123,29 @@ export default function MarketplaceClient() {
       setProperties([])
       setHasMore(false)
       setTotal(0)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // Function to load service requests
+  const loadServiceRequests = async () => {
+    setLoading(true)
+    try {
+      const result = await getServiceRequests({
+        location: searchTerm || undefined,
+        limit: 20,
+        offset: 0,
+      })
+
+      if (result.success) {
+        setServiceRequests(Array.isArray(result.serviceRequests) ? result.serviceRequests : [])
+      } else {
+        setServiceRequests([])
+      }
+    } catch (error) {
+      console.error("Failed to load service requests:", error)
+      setServiceRequests([])
     } finally {
       setLoading(false)
     }
@@ -126,8 +186,8 @@ export default function MarketplaceClient() {
     <div className="container mx-auto py-8 px-4">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
         <div>
-          <h1 className="text-3xl font-bold mb-1">Property Marketplace</h1>
-          <p className="text-muted-foreground">Discover your next property investment opportunity</p>
+          <h1 className="text-3xl font-bold mb-1">Marketplace</h1>
+          <p className="text-muted-foreground">Discover properties and connect with service professionals</p>
         </div>
         <div className="flex items-center gap-2">
           <Button asChild>
@@ -136,15 +196,30 @@ export default function MarketplaceClient() {
               List Property
             </Link>
           </Button>
-          <Button variant="outline" size="sm" onClick={() => setShowFilters(!showFilters)}>
-            <Filter className="mr-2 h-4 w-4" />
-            Filters
+          <Button asChild variant="outline">
+            <Link href="/marketplace/create-request">
+              <MessageSquare className="mr-2 h-4 w-4" />
+              Request Service
+            </Link>
           </Button>
-          <Button variant="outline" size="sm" onClick={() => setViewMode("map")}>
-            <MapPin className="mr-2 h-4 w-4" />
-            Map View
-          </Button>
+          {activeTab === "properties" && (
+            <>
+              <Button variant="outline" size="sm" onClick={() => setShowFilters(!showFilters)}>
+                <Filter className="mr-2 h-4 w-4" />
+                Filters
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => setViewMode("map")}>
+                <MapPin className="mr-2 h-4 w-4" />
+                Map View
+              </Button>
+            </>
+          )}
         </div>
+      </div>
+
+      {/* Marketplace Ads */}
+      <div className="mb-6">
+        <MarketplaceAds />
       </div>
 
       {/* Search and View Controls */}
@@ -152,8 +227,8 @@ export default function MarketplaceClient() {
         <div className="flex flex-col md:flex-row gap-4">
           <div className="relative flex-grow">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-            <Input 
-              placeholder="Search by location, address, or keyword" 
+            <Input
+              placeholder="Search by location, address, or keyword"
               className="pl-10"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -185,8 +260,8 @@ export default function MarketplaceClient() {
           </div>
         </div>
 
-        {/* Filters Panel */}
-        {showFilters && (
+        {/* Filters Panel - Only show for properties */}
+        {showFilters && activeTab === "properties" && (
           <div className="mt-4 p-4 border rounded-lg bg-muted/50">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div>
@@ -277,14 +352,12 @@ export default function MarketplaceClient() {
         )}
       </div>
 
-      {/* Property Listings */}
+      {/* Marketplace Listings */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <div className="flex justify-between items-center mb-6">
           <TabsList>
-            <TabsTrigger value="all">All Properties ({total})</TabsTrigger>
-            <TabsTrigger value="sale">For Sale</TabsTrigger>
-            <TabsTrigger value="auction">Auctions</TabsTrigger>
-            <TabsTrigger value="saved">Saved</TabsTrigger>
+            <TabsTrigger value="properties">Properties ({properties.length})</TabsTrigger>
+            <TabsTrigger value="service-requests">Service Requests ({serviceRequests.length})</TabsTrigger>
           </TabsList>
           <Select value={sortBy} onValueChange={setSortBy}>
             <SelectTrigger className="w-[180px]">
@@ -299,7 +372,7 @@ export default function MarketplaceClient() {
           </Select>
         </div>
 
-        <TabsContent value="all" className="mt-0">
+        <TabsContent value="properties" className="mt-0">
           {loading ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {Array(6).fill(0).map((_, i) => (
@@ -356,30 +429,32 @@ export default function MarketplaceClient() {
           )}
         </TabsContent>
 
-        <TabsContent value="sale" className="mt-0">
-          {/* Same structure as "all" but filtered for sale properties */}
-          <div className="text-center py-12">
-            <Building className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">For Sale properties will be shown here</h3>
-          </div>
-        </TabsContent>
-
-        <TabsContent value="auction" className="mt-0">
-          <div className="text-center py-12">
-            <Building className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">Auction properties will be shown here</h3>
-          </div>
-        </TabsContent>
-
-        <TabsContent value="saved" className="mt-0">
-          <div className="text-center py-12">
-            <Heart className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">No saved properties</h3>
-            <p className="text-gray-500 mb-4">Save properties you're interested in to view them here.</p>
-            <Button onClick={() => setActiveTab("all")} variant="outline">
-              Browse Properties
-            </Button>
-          </div>
+        <TabsContent value="service-requests" className="mt-0">
+          {loading ? (
+            <div className="grid grid-cols-1 gap-6">
+              {Array(3).fill(0).map((_, i) => (
+                <div key={i} className="h-48 bg-gray-200 animate-pulse rounded-lg"></div>
+              ))}
+            </div>
+          ) : serviceRequests.length > 0 ? (
+            <div className="grid grid-cols-1 gap-6">
+              {serviceRequests.map((request: any) => (
+                <ServiceRequestCard key={request.id} request={request} />
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-12">
+              <MessageSquare className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+              <h3 className="text-lg font-medium text-gray-900 mb-2">No service requests found</h3>
+              <p className="text-gray-500 mb-4">Be the first to post a service request.</p>
+              <Button asChild>
+                <Link href="/marketplace/create-request">
+                  <MessageSquare className="mr-2 h-4 w-4" />
+                  Request a Service
+                </Link>
+              </Button>
+            </div>
+          )}
         </TabsContent>
       </Tabs>
 
@@ -389,5 +464,78 @@ export default function MarketplaceClient() {
 
       <PerformanceTracker />
     </div>
+  )
+}
+
+interface ServiceRequestCardProps {
+  request: any
+}
+
+function ServiceRequestCard({ request }: ServiceRequestCardProps) {
+  const UrgencyIcon = urgencyIcons[request.urgency as ServiceUrgency]
+
+  return (
+    <Card className="hover:shadow-md transition-shadow">
+      <CardHeader>
+        <div className="flex justify-between items-start">
+          <div className="flex-1">
+            <CardTitle className="text-xl mb-2">{request.title}</CardTitle>
+            <CardDescription className="text-base">{request.description}</CardDescription>
+          </div>
+          <Badge className={urgencyColors[request.urgency as ServiceUrgency]}>
+            <UrgencyIcon className="h-3 w-3 mr-1" />
+            {request.urgency}
+          </Badge>
+        </div>
+      </CardHeader>
+      <CardContent>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+          <div className="flex items-center text-sm text-muted-foreground">
+            <MapPin className="h-4 w-4 mr-2" />
+            {request.location}
+          </div>
+          {request.budget && (
+            <div className="flex items-center text-sm text-muted-foreground">
+              <DollarSign className="h-4 w-4 mr-2" />
+              {request.budget}
+            </div>
+          )}
+          <div className="flex items-center text-sm text-muted-foreground">
+            <Clock className="h-4 w-4 mr-2" />
+            {formatDistanceToNow(new Date(request.createdAt), { addSuffix: true })}
+          </div>
+        </div>
+
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-2">
+            <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
+              {request.client?.image ? (
+                <img src={request.client.image} alt={request.client.name} className="w-8 h-8 rounded-full" />
+              ) : (
+                <User className="h-4 w-4" />
+              )}
+            </div>
+            <div>
+              <p className="text-sm font-medium">{request.client?.name || "Anonymous"}</p>
+              <div className="flex items-center text-xs text-muted-foreground">
+                <Star className="h-3 w-3 mr-1 fill-current text-yellow-400" />
+                {request.client?.rating?.toFixed(1) || "New"} ({request.client?.reviewCount || 0} reviews)
+              </div>
+            </div>
+          </div>
+
+          <div className="flex items-center space-x-2">
+            <span className="text-sm text-muted-foreground">
+              {request.responses?.length || 0} responses
+            </span>
+            <Button asChild>
+              <Link href={`/service-requests/${request.id}`}>
+                View Details
+              </Link>
+            </Button>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
   )
 }

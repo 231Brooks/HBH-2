@@ -9,12 +9,14 @@ import {
   Calendar,
   User,
   BarChart,
+  MessageSquare,
 } from "lucide-react"
 import { useSupabase } from "@/contexts/supabase-context"
+import { usePermissions } from "@/hooks/use-permissions"
 import { ClientOnly } from "@/components/client-only"
 
 // Navigation items for bottom navbar
-const bottomNavItems = [
+const getBottomNavItems = (isProfessional: boolean) => [
   {
     name: "Progress",
     href: "/progress",
@@ -22,9 +24,9 @@ const bottomNavItems = [
     requiresAuth: true,
   },
   {
-    name: "Services",
+    name: isProfessional ? "Service Requests" : "Services",
     href: "/services",
-    icon: Building2,
+    icon: isProfessional ? MessageSquare : Building2,
     public: true,
   },
   {
@@ -50,11 +52,15 @@ const bottomNavItems = [
 export default function BottomNavbar() {
   const pathname = usePathname()
   const { user } = useSupabase()
+  const { isProfessional } = usePermissions()
 
   // Don't show bottom navbar on auth pages
   if (pathname?.startsWith('/auth/')) {
     return null
   }
+
+  // Get navigation items based on user type
+  const bottomNavItems = getBottomNavItems(isProfessional)
 
   // Filter navigation items based on authentication
   const navItems = bottomNavItems.filter(item => {
