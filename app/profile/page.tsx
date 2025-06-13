@@ -239,7 +239,7 @@ function ProfilePageContent() {
   ].filter(activity => activity.show)
 
   return (
-    <div className="container py-8">
+    <div className="container mx-auto py-8 px-4">
       <div className="space-y-8">
         {/* Header */}
         <div className="flex items-center justify-between">

@@ -228,7 +228,7 @@ export default function CalendarClientPage() {
                   {calendarDays.map((day, index) => (
                     <div
                       key={index}
-                      className={`min-h-[100px] p-1 border rounded-md ${
+                      className={`aspect-square p-1 border rounded-md ${
                         day.isCurrentMonth ? "bg-white" : "bg-slate-50 text-muted-foreground"
                       } ${
                         day.date.getDate() === new Date().getDate() &&
