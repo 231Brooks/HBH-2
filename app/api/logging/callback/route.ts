@@ -12,8 +12,8 @@ export async function POST(request: Request) {
     const payload = await request.json()
     const { endpoint, statusCode, durationMs, method, request: requestData, response: responseData } = payload
 
-    const supabaseUrl = process.env.SUPABASE_SUPABASE_URL!
-    const supabaseServiceKey = process.env.SUPABASE_SUPABASE_SERVICE_ROLE_KEY!
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey)
 

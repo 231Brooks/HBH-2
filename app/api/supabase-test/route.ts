@@ -4,7 +4,7 @@ import { NextResponse } from "next/server"
 export async function POST() {
   try {
     // Create a Supabase client with the service role key for admin operations
-    const supabase = createClient(process.env.SUPABASE_SUPABASE_URL!, process.env.SUPABASE_SUPABASE_SERVICE_ROLE_KEY!)
+    const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
 
     // Create the test table if it doesn't exist
     const { error } = await supabase.rpc("create_test_table_if_not_exists", {

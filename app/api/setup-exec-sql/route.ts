@@ -6,7 +6,7 @@ import path from "path"
 export async function POST() {
   try {
     // Create a Supabase client with the service role key for admin operations
-    const supabase = createClient(process.env.SUPABASE_SUPABASE_URL!, process.env.SUPABASE_SUPABASE_SERVICE_ROLE_KEY!)
+    const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
 
     // Read the SQL file
     const sqlFilePath = path.join(process.cwd(), "app/api/setup-realtime-tables/create-exec-sql-function.sql")

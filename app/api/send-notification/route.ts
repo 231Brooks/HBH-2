@@ -10,7 +10,7 @@ export async function POST(request: Request) {
     }
 
     // Create a Supabase client with the service role key for admin operations
-    const supabase = createClient(process.env.SUPABASE_SUPABASE_URL!, process.env.SUPABASE_SUPABASE_SERVICE_ROLE_KEY!)
+    const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
 
     // Insert the notification
     const { data, error } = await supabase
