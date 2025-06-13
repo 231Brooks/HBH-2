@@ -4,8 +4,7 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+
 import {
   Bell,
   Menu,
@@ -117,54 +116,31 @@ export default function Navbar() {
                 {!isMobile && (
                   <>
                     <Button variant="outline" size="icon" asChild>
+                      <Link href="/notifications">
+                        <div className="relative">
+                          <Bell className="h-4 w-4" />
+                          <span className="absolute -top-1 -right-1 h-2 w-2 bg-red-500 rounded-full"></span>
+                        </div>
+                        <span className="sr-only">Notifications</span>
+                      </Link>
+                    </Button>
+                    <Button variant="outline" size="icon" asChild>
                       <Link href="/messages">
-                        <MessageSquare className="h-4 w-4" />
+                        <div className="relative">
+                          <MessageSquare className="h-4 w-4" />
+                          <span className="absolute -top-1 -right-1 h-2 w-2 bg-red-500 rounded-full"></span>
+                        </div>
                         <span className="sr-only">Messages</span>
                       </Link>
                     </Button>
                     <Button variant="outline" size="icon" asChild>
-                      <Link href="/notifications">
-                        <Bell className="h-4 w-4" />
-                        <span className="sr-only">Notifications</span>
+                      <Link href="/profile">
+                        <User className="h-4 w-4" />
+                        <span className="sr-only">Profile</span>
                       </Link>
                     </Button>
                   </>
                 )}
-
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-                      <Avatar className="h-8 w-8">
-                        <AvatarImage src={user.user_metadata?.avatar_url || "/placeholder.svg"} alt="User" />
-                        <AvatarFallback>
-                          {user.email?.charAt(0).toUpperCase() || "U"}
-                        </AvatarFallback>
-                      </Avatar>
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem asChild>
-                      <Link href="/profile">
-                        <User className="mr-2 h-4 w-4" /> Profile
-                      </Link>
-                    </DropdownMenuItem>
-                    {permissions.canAccessAdmin && (
-                      <DropdownMenuItem asChild>
-                        <Link href="/admin">
-                          <Settings className="mr-2 h-4 w-4" /> Admin Panel
-                        </Link>
-                      </DropdownMenuItem>
-                    )}
-                    <DropdownMenuItem asChild>
-                      <Link href="/settings">
-                        <Settings className="mr-2 h-4 w-4" /> Settings
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={handleSignOut}>
-                      <LogOut className="mr-2 h-4 w-4" /> Logout
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
               </>
             ) : (
               <div className="flex items-center gap-2">
@@ -178,7 +154,7 @@ export default function Navbar() {
             )}
           </ClientOnly>
 
-          {isMobile && (
+          {isMobile && user && (
             <Sheet>
               <SheetTrigger asChild>
                 <Button variant="outline" size="icon">
@@ -187,33 +163,49 @@ export default function Navbar() {
                 </Button>
               </SheetTrigger>
               <SheetContent side="right">
-                <nav className="flex flex-col gap-4 mt-8">
-                  {navItems.map((item) => (
-                    <Link
-                      key={item.href}
-                      href={item.href}
-                      className={cn(
-                        "flex items-center gap-2 text-sm font-medium transition-colors hover:text-primary p-2 rounded-md",
-                        pathname?.startsWith(item.href) ? "text-primary bg-muted" : "text-muted-foreground",
-                      )}
-                    >
-                      {item.icon}
-                      <span>{item.name}</span>
-                    </Link>
-                  ))}
-                  <div className="flex gap-4 mt-4">
-                    <Button variant="outline" size="icon" asChild>
-                      <Link href="/messages">
-                        <MessageSquare className="h-4 w-4" />
+                <div className="flex flex-col gap-4 mt-8">
+                  <div className="text-sm font-medium text-muted-foreground mb-4">
+                    Quick Actions
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    <Button variant="outline" className="justify-start" asChild>
+                      <Link href="/notifications">
+                        <Bell className="h-4 w-4 mr-2" />
+                        Notifications
                       </Link>
                     </Button>
-                    <Button variant="outline" size="icon" asChild>
-                      <Link href="/notifications">
-                        <Bell className="h-4 w-4" />
+                    <Button variant="outline" className="justify-start" asChild>
+                      <Link href="/messages">
+                        <MessageSquare className="h-4 w-4 mr-2" />
+                        Messages
                       </Link>
+                    </Button>
+                    <Button variant="outline" className="justify-start" asChild>
+                      <Link href="/profile">
+                        <User className="h-4 w-4 mr-2" />
+                        Profile
+                      </Link>
+                    </Button>
+                    <Button variant="outline" className="justify-start" asChild>
+                      <Link href="/settings">
+                        <Settings className="h-4 w-4 mr-2" />
+                        Settings
+                      </Link>
+                    </Button>
+                    {permissions.canAccessAdmin && (
+                      <Button variant="outline" className="justify-start" asChild>
+                        <Link href="/admin">
+                          <Settings className="h-4 w-4 mr-2" />
+                          Admin Panel
+                        </Link>
+                      </Button>
+                    )}
+                    <Button variant="outline" className="justify-start" onClick={handleSignOut}>
+                      <LogOut className="h-4 w-4 mr-2" />
+                      Logout
                     </Button>
                   </div>
-                </nav>
+                </div>
               </SheetContent>
             </Sheet>
           )}
