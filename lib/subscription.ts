@@ -1,5 +1,3 @@
-"use server"
-
 import prisma from "@/lib/prisma"
 import { stripe } from "@/lib/stripe"
 import { SubscriptionTier, SubscriptionStatus } from "@prisma/client"
@@ -101,6 +99,19 @@ export async function calculateServiceFee(amount: number, providerId: string): P
   }
 
   return 0
+}
+
+export function getSubscriptionDisplayName(tier: SubscriptionTier): string {
+  switch (tier) {
+    case SubscriptionTier.FREE:
+      return "Free"
+    case SubscriptionTier.PROFESSIONAL_MONTHLY:
+      return "Professional ($50/month)"
+    case SubscriptionTier.PAY_PER_LISTING:
+      return "Pay Per Listing ($10/listing + 5% fees)"
+    default:
+      return "Unknown"
+  }
 }
 
 export async function createStripeSubscription(
@@ -218,19 +229,6 @@ export async function reactivateSubscription(userId: string) {
       cancelAtPeriodEnd: false,
     },
   })
-}
-
-export function getSubscriptionDisplayName(tier: SubscriptionTier): string {
-  switch (tier) {
-    case SubscriptionTier.FREE:
-      return "Free"
-    case SubscriptionTier.PROFESSIONAL_MONTHLY:
-      return "Professional ($50/month)"
-    case SubscriptionTier.PAY_PER_LISTING:
-      return "Pay Per Listing ($10/listing + 5% fees)"
-    default:
-      return "Unknown"
-  }
 }
 
 export function getSubscriptionFeatures(tier: SubscriptionTier): string[] {

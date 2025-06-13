@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Switch } from "@/components/ui/switch"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { saveAdvertisement, deleteAdvertisement } from "@/app/actions/ad-actions"
+import { createAd, deleteAdvertisement } from "@/app/actions/advertising-actions"
 import { useToast } from "@/hooks/use-toast"
 import { Loader2 } from "lucide-react"
 import { AdPreview } from "./ad-preview"
@@ -67,7 +67,12 @@ export function AdForm({ ad }: AdFormProps) {
         }
       })
 
-      const result = await saveAdvertisement(submitData)
+      const result = await createAd({
+        title: formData.name,
+        description: formData.description,
+        imageUrl: formData.imageUrl,
+        linkUrl: formData.linkUrl,
+      })
 
       if (result.success) {
         toast({

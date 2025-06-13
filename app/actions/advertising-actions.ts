@@ -4,15 +4,14 @@ import { revalidatePath } from "next/cache"
 import { auth } from "@/lib/auth"
 import prisma from "@/lib/prisma"
 import { AdLocation } from "@prisma/client"
+import { calculateAdPricing, type AdPricingOptions } from "@/lib/ad-pricing"
 import {
-  calculateAdPricing,
   getAvailableAdSlots,
   createAdvertisement,
   purchaseAdSlots,
   getActiveAds,
   trackAdImpression,
   trackAdClick,
-  type AdPricingOptions,
 } from "@/lib/advertising"
 
 export interface CreateAdData {
