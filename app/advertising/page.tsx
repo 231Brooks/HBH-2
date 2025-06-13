@@ -19,7 +19,7 @@ import Link from "next/link"
 import { getMyAdvertisements } from "@/app/actions/advertising-actions"
 import { ProtectedRoute } from "@/components/protected-route"
 import { formatDistanceToNow } from "date-fns"
-import { AD_PRICING_CONFIG } from "@/lib/advertising"
+import { AD_PRICING_CONFIG } from "@/lib/ad-pricing"
 
 interface Advertisement {
   id: string
@@ -181,13 +181,13 @@ export default function AdvertisingPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               <div className="text-center p-4 border rounded-lg">
                 <h4 className="font-semibold mb-2">Base Rate</h4>
-                <p className="text-2xl font-bold text-primary">${AD_PRICING_CONFIG.baseHourlyRate}/hour</p>
+                <p className="text-2xl font-bold text-primary">${AD_PRICING_CONFIG?.baseHourlyRate ?? 5}/hour</p>
                 <p className="text-sm text-muted-foreground">per ad slot</p>
               </div>
               <div className="text-center p-4 border rounded-lg">
                 <h4 className="font-semibold mb-2">Front Page</h4>
                 <p className="text-2xl font-bold text-primary">
-                  ${(AD_PRICING_CONFIG.baseHourlyRate * AD_PRICING_CONFIG.locationMultipliers.FRONTPAGE).toFixed(0)}/hour
+                  ${((AD_PRICING_CONFIG?.baseHourlyRate ?? 5) * (AD_PRICING_CONFIG?.locationMultipliers?.FRONTPAGE ?? 2)).toFixed(0)}/hour
                 </p>
                 <p className="text-sm text-muted-foreground">premium location</p>
               </div>

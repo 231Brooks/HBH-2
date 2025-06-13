@@ -17,7 +17,7 @@ import {
 } from "lucide-react"
 import { createAd, getAdPricing, getAdsByLocation } from "@/app/actions/advertising-actions"
 import { AdLocation } from "@prisma/client"
-import { AD_PRICING_CONFIG } from "@/lib/advertising"
+import { AD_PRICING_CONFIG } from "@/lib/ad-pricing"
 import { ProtectedRoute } from "@/components/protected-route"
 
 export default function TestAdsPage() {
