@@ -4,10 +4,16 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 
 import {
   Bell,
-  Menu,
   MessageSquare,
   FileText,
   Building2,
@@ -18,7 +24,6 @@ import {
   LogOut,
   BarChart,
 } from "lucide-react"
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { useState, useEffect } from "react"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { useSupabase } from "@/contexts/supabase-context"
@@ -124,34 +129,64 @@ export default function Navbar() {
               <div className="text-sm text-muted-foreground">Loading...</div>
             ) : user ? (
               <>
-                {!isMobile && (
-                  <>
-                    <Button variant="outline" size="icon" asChild>
-                      <Link href="/notifications">
-                        <div className="relative">
-                          <Bell className="h-4 w-4" />
-                          <span className="absolute -top-1 -right-1 h-2 w-2 bg-red-500 rounded-full"></span>
-                        </div>
-                        <span className="sr-only">Notifications</span>
-                      </Link>
+                {/* Notifications button */}
+                <Button variant="outline" size="icon" asChild>
+                  <Link href="/notifications">
+                    <div className="relative">
+                      <Bell className="h-4 w-4" />
+                      <span className="absolute -top-1 -right-1 h-2 w-2 bg-red-500 rounded-full"></span>
+                    </div>
+                    <span className="sr-only">Notifications</span>
+                  </Link>
+                </Button>
+
+                {/* Messages button */}
+                <Button variant="outline" size="icon" asChild>
+                  <Link href="/messages">
+                    <div className="relative">
+                      <MessageSquare className="h-4 w-4" />
+                      <span className="absolute -top-1 -right-1 h-2 w-2 bg-red-500 rounded-full"></span>
+                    </div>
+                    <span className="sr-only">Messages</span>
+                  </Link>
+                </Button>
+
+                {/* Profile dropdown */}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="icon">
+                      <User className="h-4 w-4" />
+                      <span className="sr-only">Profile menu</span>
                     </Button>
-                    <Button variant="outline" size="icon" asChild>
-                      <Link href="/messages">
-                        <div className="relative">
-                          <MessageSquare className="h-4 w-4" />
-                          <span className="absolute -top-1 -right-1 h-2 w-2 bg-red-500 rounded-full"></span>
-                        </div>
-                        <span className="sr-only">Messages</span>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-56">
+                    <DropdownMenuItem asChild>
+                      <Link href="/profile" className="flex items-center">
+                        <User className="h-4 w-4 mr-2" />
+                        Profile
                       </Link>
-                    </Button>
-                    <Button variant="outline" size="icon" asChild>
-                      <Link href="/profile">
-                        <User className="h-4 w-4" />
-                        <span className="sr-only">Profile</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link href="/settings" className="flex items-center">
+                        <Settings className="h-4 w-4 mr-2" />
+                        Settings
                       </Link>
-                    </Button>
-                  </>
-                )}
+                    </DropdownMenuItem>
+                    {permissions.canAccessAdmin && (
+                      <DropdownMenuItem asChild>
+                        <Link href="/admin" className="flex items-center">
+                          <Settings className="h-4 w-4 mr-2" />
+                          Admin Panel
+                        </Link>
+                      </DropdownMenuItem>
+                    )}
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={handleSignOut} className="flex items-center">
+                      <LogOut className="h-4 w-4 mr-2" />
+                      Logout
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </>
             ) : (
               <div className="flex items-center gap-1 sm:gap-2">
@@ -164,62 +199,6 @@ export default function Navbar() {
               </div>
             )}
           </ClientOnly>
-
-          {isMobile && user && (
-            <Sheet>
-              <SheetTrigger asChild>
-                <Button variant="outline" size="icon">
-                  <Menu className="h-4 w-4" />
-                  <span className="sr-only">Menu</span>
-                </Button>
-              </SheetTrigger>
-              <SheetContent side="right">
-                <div className="flex flex-col gap-4 mt-8">
-                  <div className="text-sm font-medium text-muted-foreground mb-4">
-                    Quick Actions
-                  </div>
-                  <div className="flex flex-col gap-2">
-                    <Button variant="outline" className="justify-start" asChild>
-                      <Link href="/notifications">
-                        <Bell className="h-4 w-4 mr-2" />
-                        Notifications
-                      </Link>
-                    </Button>
-                    <Button variant="outline" className="justify-start" asChild>
-                      <Link href="/messages">
-                        <MessageSquare className="h-4 w-4 mr-2" />
-                        Messages
-                      </Link>
-                    </Button>
-                    <Button variant="outline" className="justify-start" asChild>
-                      <Link href="/profile">
-                        <User className="h-4 w-4 mr-2" />
-                        Profile
-                      </Link>
-                    </Button>
-                    <Button variant="outline" className="justify-start" asChild>
-                      <Link href="/settings">
-                        <Settings className="h-4 w-4 mr-2" />
-                        Settings
-                      </Link>
-                    </Button>
-                    {permissions.canAccessAdmin && (
-                      <Button variant="outline" className="justify-start" asChild>
-                        <Link href="/admin">
-                          <Settings className="h-4 w-4 mr-2" />
-                          Admin Panel
-                        </Link>
-                      </Button>
-                    )}
-                    <Button variant="outline" className="justify-start" onClick={handleSignOut}>
-                      <LogOut className="h-4 w-4 mr-2" />
-                      Logout
-                    </Button>
-                  </div>
-                </div>
-              </SheetContent>
-            </Sheet>
-          )}
         </div>
       </div>
     </header>

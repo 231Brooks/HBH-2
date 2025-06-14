@@ -268,8 +268,8 @@ function ProfilePageContent() {
     role: userRole,
     location: user?.user_metadata?.location || '',
     bio: user?.user_metadata?.bio || '',
-    rating: 4.8, // This would come from your database
-    reviewCount: 12 // This would come from your database
+    rating: undefined, // TODO: Get from database when reviews are implemented
+    reviewCount: 0 // TODO: Get from database when reviews are implemented
   }
 
   return (
@@ -292,20 +292,36 @@ function ProfilePageContent() {
         {/* Stats Grid with responsive design */}
         {stats.length > 0 && (
           <div className="grid gap-3 sm:gap-4 grid-cols-2 lg:grid-cols-4">
-            {stats.map((stat, index) => (
-              <Card key={index}>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-xs sm:text-sm font-medium">{stat.title}</CardTitle>
-                  <div className="w-4 h-4 sm:w-5 sm:h-5">
-                    {stat.icon}
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-lg sm:text-2xl font-bold">{stat.value}</div>
-                  <p className="text-xs text-muted-foreground">{stat.description}</p>
-                </CardContent>
-              </Card>
-            ))}
+            {stats.map((stat, index) => {
+              // Determine the link URL based on stat title
+              let linkUrl = "#"
+              if (stat.title === "Active Transactions") {
+                linkUrl = "/progress"
+              } else if (stat.title === "Properties Listed") {
+                linkUrl = "/profile/my-properties"
+              } else if (stat.title === "Services Offered") {
+                linkUrl = "/profile/my-services"
+              }
+
+              const CardComponent = linkUrl !== "#" ? Link : "div"
+
+              return (
+                <CardComponent key={index} href={linkUrl !== "#" ? linkUrl : undefined}>
+                  <Card className={linkUrl !== "#" ? "cursor-pointer hover:shadow-md transition-shadow" : ""}>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle className="text-xs sm:text-sm font-medium">{stat.title}</CardTitle>
+                      <div className="w-4 h-4 sm:w-5 sm:h-5">
+                        {stat.icon}
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-lg sm:text-2xl font-bold">{stat.value}</div>
+                      <p className="text-xs text-muted-foreground">{stat.description}</p>
+                    </CardContent>
+                  </Card>
+                </CardComponent>
+              )
+            })}
           </div>
         )}
 

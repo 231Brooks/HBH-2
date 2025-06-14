@@ -19,59 +19,8 @@ import {
 } from "lucide-react"
 import { ProtectedRoute } from "@/components/protected-route"
 
-// Mock timeline data - replace with actual API call
-const mockTimelineEvents = [
-  {
-    id: "1",
-    title: "Transaction Created",
-    description: "Initial transaction setup completed",
-    date: "2023-07-01",
-    time: "10:00 AM",
-    type: "milestone",
-    status: "completed",
-    user: "John Doe"
-  },
-  {
-    id: "2",
-    title: "Purchase Agreement Signed",
-    description: "All parties have signed the purchase agreement",
-    date: "2023-07-03",
-    time: "2:30 PM",
-    type: "document",
-    status: "completed",
-    user: "Jane Smith"
-  },
-  {
-    id: "3",
-    title: "Home Inspection Scheduled",
-    description: "Professional home inspection appointment set",
-    date: "2023-07-08",
-    time: "9:00 AM",
-    type: "appointment",
-    status: "upcoming",
-    user: "Mike Johnson"
-  },
-  {
-    id: "4",
-    title: "Financing Application",
-    description: "Mortgage application submitted to lender",
-    date: "2023-07-10",
-    time: "11:00 AM",
-    type: "milestone",
-    status: "pending",
-    user: "Sarah Wilson"
-  },
-  {
-    id: "5",
-    title: "Title Search",
-    description: "Title company to begin property title search",
-    date: "2023-07-15",
-    time: "1:00 PM",
-    type: "milestone",
-    status: "upcoming",
-    user: "Title Company"
-  }
-]
+// TODO: Replace with actual API call to get transaction timeline events
+const mockTimelineEvents: any[] = []
 
 export default function TransactionTimelinePage() {
   const params = useParams()
