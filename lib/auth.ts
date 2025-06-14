@@ -1,82 +1,72 @@
-import type { NextAuthOptions } from "next-auth"
-import { PrismaAdapter } from "@auth/prisma-adapter"
-import CredentialsProvider from "next-auth/providers/credentials"
-import GithubProvider from "next-auth/providers/github"
-import bcrypt from "bcryptjs"
+import { createServerClient } from "@supabase/ssr"
+import { cookies } from "next/headers"
 import prisma from "./prisma"
-import { getServerSession } from "next-auth/next"
 
-export const authOptions: NextAuthOptions = {
-  adapter: PrismaAdapter(prisma),
-  session: {
-    strategy: "jwt",
-  },
-  pages: {
-    signIn: "/auth/login",
-    signOut: "/auth/logout",
-    error: "/auth/error",
-    verifyRequest: "/auth/verify",
-    newUser: "/auth/signup",
-  },
-  providers: [
-    GithubProvider({
-      clientId: process.env.GITHUB_ID as string,
-      clientSecret: process.env.GITHUB_SECRET as string,
-    }),
-    CredentialsProvider({
-      name: "credentials",
-      credentials: {
-        email: { label: "Email", type: "email" },
-        password: { label: "Password", type: "password" },
+// Server-side Supabase client for authentication
+export async function createSupabaseServerClient() {
+  const cookieStore = cookies()
+
+  return createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        get(name: string) {
+          return cookieStore.get(name)?.value
+        },
       },
-      async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) {
-          return null
-        }
-
-        const user = await prisma.user.findUnique({
-          where: { email: credentials.email },
-        })
-
-        if (!user || !user.password) {
-          return null
-        }
-
-        const passwordMatch = await bcrypt.compare(credentials.password, user.password)
-
-        if (!passwordMatch) {
-          return null
-        }
-
-        return {
-          id: user.id,
-          email: user.email,
-          name: user.name,
-          image: user.image,
-          role: user.role,
-        }
-      },
-    }),
-  ],
-  callbacks: {
-    async session({ session, token }) {
-      if (token) {
-        session.user.id = token.id as string
-        session.user.name = token.name
-        session.user.email = token.email
-        session.user.image = token.picture
-        session.user.role = token.role as string
-      }
-      return session
-    },
-    async jwt({ token, user }) {
-      if (user) {
-        token.id = user.id
-        token.role = user.role
-      }
-      return token
-    },
-  },
+    }
+  )
 }
 
-export const auth = () => getServerSession(authOptions)
+// Get current user session from Supabase
+export async function getSupabaseSession() {
+  try {
+    const supabase = await createSupabaseServerClient()
+    const { data: { session }, error } = await supabase.auth.getSession()
+
+    if (error) {
+      console.error("Error getting Supabase session:", error)
+      return null
+    }
+
+    return session
+  } catch (error) {
+    console.error("Error creating Supabase client:", error)
+    return null
+  }
+}
+
+// Get current user from database using Supabase session
+export async function getCurrentUser() {
+  try {
+    const session = await getSupabaseSession()
+
+    if (!session?.user?.email) {
+      return null
+    }
+
+    // Find user in our database by email
+    const user = await prisma.user.findUnique({
+      where: { email: session.user.email },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        image: true,
+        role: true,
+        emailVerified: true,
+        phoneVerified: true,
+        identityVerified: true,
+      },
+    })
+
+    return user
+  } catch (error) {
+    console.error("Error getting current user:", error)
+    return null
+  }
+}
+
+// Legacy auth function for backward compatibility (deprecated)
+export const auth = getCurrentUser

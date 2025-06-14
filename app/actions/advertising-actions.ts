@@ -1,7 +1,7 @@
 "use server"
 
 import { revalidatePath } from "next/cache"
-import { auth } from "@/lib/auth"
+import { getCurrentUser } from "@/lib/auth"
 import prisma from "@/lib/prisma"
 import { AdLocation } from "@prisma/client"
 import { calculateAdPricing, type AdPricingOptions } from "@/lib/ad-pricing"

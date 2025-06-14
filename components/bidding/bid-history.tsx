@@ -1,18 +1,20 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { useSupabase } from "@/contexts/supabase-context"
 import { formatDistanceToNow } from "date-fns"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 
 interface Bid {
-  bid_id: string
-  user_id: string
+  id: string
   amount: number
   status: string
-  created_at: string
-  user_name: string
+  createdAt: string
+  bidder: {
+    id: string
+    name: string | null
+    image: string | null
+  }
 }
 
 interface BidHistoryProps {
@@ -20,7 +22,6 @@ interface BidHistoryProps {
 }
 
 export function BidHistory({ propertyId }: BidHistoryProps) {
-  const { supabase } = useSupabase()
   const [bids, setBids] = useState<Bid[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -30,11 +31,14 @@ export function BidHistory({ propertyId }: BidHistoryProps) {
       try {
         setLoading(true)
 
-        const { data, error } = await supabase.rpc("get_property_bid_history", { p_property_id: propertyId })
+        const response = await fetch(`/api/bidding/history?propertyId=${propertyId}`)
+        const data = await response.json()
 
-        if (error) throw error
+        if (!response.ok) {
+          throw new Error(data.error || "Failed to fetch bid history")
+        }
 
-        setBids(data || [])
+        setBids(data.bids || [])
       } catch (err: any) {
         console.error("Error fetching bid history:", err)
         setError(err.message || "Failed to load bid history")
@@ -45,28 +49,13 @@ export function BidHistory({ propertyId }: BidHistoryProps) {
 
     fetchBidHistory()
 
-    // Set up real-time subscription for new bids
-    const channel = supabase
-      .channel(`property-bids-${propertyId}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "bids",
-          filter: `property_id=eq.${propertyId}`,
-        },
-        (payload) => {
-          // Refresh the bid history when there's a change
-          fetchBidHistory()
-        },
-      )
-      .subscribe()
+    // Refresh bid history every 30 seconds for real-time updates
+    const interval = setInterval(fetchBidHistory, 30000)
 
     return () => {
-      supabase.removeChannel(channel)
+      clearInterval(interval)
     }
-  }, [propertyId, supabase])
+  }, [propertyId])
 
   if (loading) {
     return (
@@ -107,11 +96,11 @@ export function BidHistory({ propertyId }: BidHistoryProps) {
         ) : (
           <div className="space-y-4">
             {bids.map((bid) => (
-              <div key={bid.bid_id} className="flex justify-between items-center border-b pb-3">
+              <div key={bid.id} className="flex justify-between items-center border-b pb-3">
                 <div>
-                  <p className="font-medium">{bid.user_name || "Anonymous"}</p>
+                  <p className="font-medium">{bid.bidder.name || "Anonymous"}</p>
                   <p className="text-sm text-gray-500">
-                    {formatDistanceToNow(new Date(bid.created_at), { addSuffix: true })}
+                    {formatDistanceToNow(new Date(bid.createdAt), { addSuffix: true })}
                   </p>
                 </div>
                 <div className="text-right">

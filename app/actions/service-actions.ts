@@ -2,12 +2,12 @@
 
 import { revalidatePath } from "next/cache"
 import prisma from "@/lib/prisma"
-import { auth } from "@/lib/auth"
+import { getCurrentUser } from "@/lib/auth"
 
 // Create a new service listing
 export async function createService(formData: FormData) {
-  const session = await auth()
-  if (!session?.user?.id) {
+  const user = await getCurrentUser()
+  if (!user?.id) {
     throw new Error("You must be logged in to create a service")
   }
 
@@ -34,14 +34,14 @@ export async function createService(formData: FormData) {
         hourlyRate,
         location,
         image,
-        providerId: session.user.id,
+        providerId: user.id,
         verified: false,
       },
     })
 
     // Update user role to PROFESSIONAL if not already
     await prisma.user.update({
-      where: { id: session.user.id },
+      where: { id: user.id },
       data: { role: "PROFESSIONAL" },
     })
 
@@ -150,8 +150,8 @@ export async function getServiceById(id: string) {
 
 // Get admin fee report
 export async function getAdminFeeReport(startDate?: Date, endDate?: Date) {
-  const session = await auth()
-  if (!session?.user?.id || session.user.role !== 'ADMIN') {
+  const user = await getCurrentUser()
+  if (!user?.id || user.role !== 'ADMIN') {
     throw new Error("Admin access required")
   }
 
@@ -179,8 +179,8 @@ export async function getAdminFeeReport(startDate?: Date, endDate?: Date) {
 
 // Create a review for a service
 export async function createServiceReview(serviceId: string, formData: FormData) {
-  const session = await auth()
-  if (!session?.user?.id) {
+  const user = await getCurrentUser()
+  if (!user?.id) {
     throw new Error("You must be logged in to leave a review")
   }
 
@@ -202,7 +202,7 @@ export async function createServiceReview(serviceId: string, formData: FormData)
     }
 
     // Prevent reviewing your own service
-    if (service.providerId === session.user.id) {
+    if (service.providerId === user.id) {
       throw new Error("You cannot review your own service")
     }
 
@@ -210,7 +210,7 @@ export async function createServiceReview(serviceId: string, formData: FormData)
     const existingReview = await prisma.review.findFirst({
       where: {
         serviceId,
-        authorId: session.user.id,
+        authorId: user.id,
       },
     })
 
@@ -230,7 +230,7 @@ export async function createServiceReview(serviceId: string, formData: FormData)
           rating,
           comment,
           serviceId,
-          authorId: session.user.id,
+          authorId: user.id,
           receiverId: service.providerId,
         },
       })
@@ -261,14 +261,14 @@ export async function createServiceReview(serviceId: string, formData: FormData)
 }
 
 export async function getMyServices() {
-  const session = await auth()
-  if (!session?.user?.id) {
+  const user = await getCurrentUser()
+  if (!user?.id) {
     return { success: false, error: "Authentication required" }
   }
 
   try {
     const services = await prisma.service.findMany({
-      where: { providerId: session.user.id },
+      where: { providerId: user.id },
       include: {
         reviews: {
           select: {

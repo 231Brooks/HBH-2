@@ -40,6 +40,16 @@ export type Property = {
   latitude?: number
   longitude?: number
   ownerId: string
+
+  // Auction-specific fields
+  auctionEndDate?: Date
+  minimumBid?: number
+  currentBid?: number
+  bidIncrement?: number
+  reservePrice?: number
+  auctionWinnerId?: string
+  auctionWinner?: User
+  bids?: Bid[]
 }
 
 export type PropertyImage = {
@@ -55,6 +65,20 @@ export type SavedProperty = {
   userId: string
   propertyId: string
   createdAt: Date
+}
+
+// Bid types
+export type Bid = {
+  id: string
+  amount: number
+  propertyId: string
+  property?: Property
+  bidderId: string
+  bidder?: User
+  status: "ACTIVE" | "OUTBID" | "WITHDRAWN" | "WINNING" | "EXPIRED"
+  isWinning: boolean
+  createdAt: Date
+  updatedAt: Date
 }
 
 // Transaction types

@@ -2,18 +2,18 @@
 
 import { revalidatePath } from "next/cache"
 import prisma from "@/lib/prisma"
-import { auth } from "@/lib/auth"
+import { getCurrentUser } from "@/lib/auth"
 
 // Get the current user's profile
 export async function getCurrentUserProfile() {
-  const session = await auth()
-  if (!session?.user?.id) {
+  const user = await getCurrentUser()
+  if (!user?.id) {
     return { user: null }
   }
 
   try {
-    const user = await prisma.user.findUnique({
-      where: { id: session.user.id },
+    const userProfile = await prisma.user.findUnique({
+      where: { id: user.id },
       include: {
         properties: {
           take: 3,
@@ -52,7 +52,7 @@ export async function getCurrentUserProfile() {
       },
     })
 
-    return { user }
+    return { user: userProfile }
   } catch (error) {
     console.error("Failed to fetch user profile:", error)
     return { user: null }
@@ -61,8 +61,8 @@ export async function getCurrentUserProfile() {
 
 // Update the current user's profile
 export async function updateUserProfile(formData: FormData) {
-  const session = await auth()
-  if (!session?.user?.id) {
+  const user = await getCurrentUser()
+  if (!user?.id) {
     throw new Error("You must be logged in to update your profile")
   }
 
@@ -75,7 +75,7 @@ export async function updateUserProfile(formData: FormData) {
 
   try {
     await prisma.user.update({
-      where: { id: session.user.id },
+      where: { id: user.id },
       data: {
         name,
         bio,
@@ -96,8 +96,8 @@ export async function updateUserProfile(formData: FormData) {
 
 // Update user profile image
 export async function updateUserImage(imageUrl: string, type: 'profile' | 'cover') {
-  const session = await auth()
-  if (!session?.user?.id) {
+  const user = await getCurrentUser()
+  if (!user?.id) {
     throw new Error("You must be logged in to update your profile")
   }
 
@@ -107,7 +107,7 @@ export async function updateUserImage(imageUrl: string, type: 'profile' | 'cover
       : { coverPhoto: imageUrl }
 
     await prisma.user.update({
-      where: { id: session.user.id },
+      where: { id: user.id },
       data: updateData,
     })
 

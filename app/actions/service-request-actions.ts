@@ -1,7 +1,7 @@
 "use server"
 
 import { revalidatePath } from "next/cache"
-import { auth } from "@/lib/auth"
+import { getCurrentUser } from "@/lib/auth"
 import prisma from "@/lib/prisma"
 import { ServiceCategory, ServiceUrgency, ServiceRequestStatus } from "@prisma/client"
 
@@ -24,8 +24,8 @@ export interface ServiceRequestFilters {
 }
 
 export async function createServiceRequest(data: CreateServiceRequestData) {
-  const session = await auth()
-  if (!session?.user?.id) {
+  const user = await getCurrentUser()
+  if (!user?.id) {
     return { success: false, error: "Authentication required" }
   }
 
@@ -33,7 +33,7 @@ export async function createServiceRequest(data: CreateServiceRequestData) {
     const serviceRequest = await prisma.serviceRequest.create({
       data: {
         ...data,
-        clientId: session.user.id,
+        clientId: user.id,
         status: ServiceRequestStatus.OPEN,
       },
       include: {
@@ -209,18 +209,14 @@ export async function respondToServiceRequest(
   proposedPrice?: number,
   estimatedDuration?: string
 ) {
-  const session = await auth()
-  if (!session?.user?.id) {
+  const currentUser = await getCurrentUser()
+  if (!currentUser?.id) {
     return { success: false, error: "Authentication required" }
   }
 
   try {
     // Check if user is a professional
-    const user = await prisma.user.findUnique({
-      where: { id: session.user.id },
-    })
-
-    if (user?.role !== "PROFESSIONAL") {
+    if (currentUser.role !== "PROFESSIONAL") {
       return { success: false, error: "Only professionals can respond to service requests" }
     }
 
@@ -228,7 +224,7 @@ export async function respondToServiceRequest(
     const existingResponse = await prisma.serviceResponse.findFirst({
       where: {
         serviceRequestId,
-        providerId: session.user.id,
+        providerId: currentUser.id,
       },
     })
 
@@ -239,7 +235,7 @@ export async function respondToServiceRequest(
     const response = await prisma.serviceResponse.create({
       data: {
         serviceRequestId,
-        providerId: session.user.id,
+        providerId: currentUser.id,
         message,
         proposedPrice,
         estimatedDuration,
@@ -266,8 +262,8 @@ export async function respondToServiceRequest(
 }
 
 export async function acceptServiceResponse(serviceRequestId: string, responseId: string) {
-  const session = await auth()
-  if (!session?.user?.id) {
+  const user = await getCurrentUser()
+  if (!user?.id) {
     return { success: false, error: "Authentication required" }
   }
 
@@ -315,8 +311,8 @@ export async function acceptServiceResponse(serviceRequestId: string, responseId
 }
 
 export async function completeServiceRequest(serviceRequestId: string) {
-  const session = await auth()
-  if (!session?.user?.id) {
+  const user = await getCurrentUser()
+  if (!user?.id) {
     return { success: false, error: "Authentication required" }
   }
 
