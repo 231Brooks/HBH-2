@@ -162,44 +162,47 @@ export default function CalendarClientPage() {
   const calendarDays = generateCalendarDays()
 
   return (
-    <div className="container py-8">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
-        <div>
-          <h1 className="text-3xl font-bold mb-1">Calendar</h1>
-          <p className="text-muted-foreground">Manage all your appointments and deadlines in one place</p>
+    <div className="container mx-auto py-6 sm:py-8 px-4 sm:px-6 lg:px-8 max-w-7xl overflow-x-hidden">
+      {/* Header section with responsive design */}
+      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-6 sm:mb-8 gap-4">
+        <div className="w-full lg:w-auto">
+          <h1 className="text-2xl sm:text-3xl font-bold mb-1">Calendar</h1>
+          <p className="text-sm sm:text-base text-muted-foreground">Manage all your appointments and deadlines in one place</p>
         </div>
-        <div className="flex gap-2">
-          <Button onClick={() => console.log('Add Event clicked')}>
+        <div className="flex flex-col sm:flex-row gap-2 w-full lg:w-auto">
+          <Button className="w-full sm:w-auto" onClick={() => console.log('Add Event clicked')}>
             <Plus className="mr-2 h-4 w-4" /> Add Event
           </Button>
-          <Button variant="outline" onClick={() => console.log('Sync Calendar clicked')}>
+          <Button className="w-full sm:w-auto" variant="outline" onClick={() => console.log('Sync Calendar clicked')}>
             <CalendarIcon className="mr-2 h-4 w-4" /> Sync Calendar
           </Button>
         </div>
       </div>
 
-      <div className="flex flex-col md:flex-row gap-6">
-        <div className="md:w-3/4">
+      {/* Main content area with responsive layout */}
+      <div className="flex flex-col xl:flex-row gap-4 sm:gap-6">
+        <div className="xl:w-3/4">
           <Card>
             <CardHeader className="pb-3">
-              <div className="flex justify-between items-center">
+              {/* Calendar header with responsive design */}
+              <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-3 lg:gap-4">
                 <div className="flex items-center gap-2">
                   <Button variant="outline" size="icon" onClick={goToPreviousMonth}>
                     <ChevronLeft className="h-4 w-4" />
                   </Button>
-                  <h2 className="text-xl font-semibold">
+                  <h2 className="text-lg sm:text-xl font-semibold whitespace-nowrap">
                     {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
                   </h2>
                   <Button variant="outline" size="icon" onClick={goToNextMonth}>
                     <ChevronRight className="h-4 w-4" />
                   </Button>
                 </div>
-                <div className="flex items-center gap-2">
-                  <Button variant="outline" size="sm" onClick={goToToday}>
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full lg:w-auto">
+                  <Button variant="outline" size="sm" className="w-full sm:w-auto" onClick={goToToday}>
                     Today
                   </Button>
-                  <Tabs defaultValue="month" className="w-[300px]">
-                    <TabsList>
+                  <Tabs defaultValue="month" className="w-full sm:w-[300px]">
+                    <TabsList className="grid grid-cols-3 w-full">
                       <TabsTrigger value="month" onClick={() => setCurrentView("month")}>
                         Month
                       </TabsTrigger>
@@ -214,21 +217,22 @@ export default function CalendarClientPage() {
                 </div>
               </div>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-3 sm:p-6">
               {currentView === "month" && (
-                <div className="grid grid-cols-7 gap-1">
-                  {/* Day names */}
+                <div className="grid grid-cols-7 gap-1 sm:gap-2">
+                  {/* Day names with responsive text */}
                   {dayNames.map((day) => (
-                    <div key={day} className="p-2 text-center font-medium text-sm text-muted-foreground">
-                      {day}
+                    <div key={day} className="p-1 sm:p-2 text-center font-medium text-xs sm:text-sm text-muted-foreground">
+                      <span className="hidden sm:inline">{day}</span>
+                      <span className="sm:hidden">{day.slice(0, 1)}</span>
                     </div>
                   ))}
 
-                  {/* Calendar days */}
+                  {/* Calendar days with responsive design */}
                   {calendarDays.map((day, index) => (
                     <div
                       key={index}
-                      className={`aspect-square p-1 border rounded-md ${
+                      className={`aspect-square p-0.5 sm:p-1 border rounded-md transition-colors ${
                         day.isCurrentMonth ? "bg-white" : "bg-slate-50 text-muted-foreground"
                       } ${
                         day.date.getDate() === new Date().getDate() &&
@@ -238,20 +242,20 @@ export default function CalendarClientPage() {
                           : "border-transparent hover:border-slate-200"
                       }`}
                     >
-                      <div className="flex justify-between items-start p-1">
+                      <div className="flex justify-between items-start p-0.5 sm:p-1">
                         <span
-                          className={`text-sm font-medium ${
+                          className={`text-xs sm:text-sm font-medium ${
                             day.date.getDay() === 0 || day.date.getDay() === 6 ? "text-red-500" : ""
                           }`}
                         >
                           {day.date.getDate()}
                         </span>
                       </div>
-                      <div className="space-y-1 mt-1">
-                        {day.events.map((event, eventIndex) => (
+                      <div className="space-y-0.5 sm:space-y-1 mt-0.5 sm:mt-1 overflow-hidden">
+                        {day.events.slice(0, 2).map((event, eventIndex) => (
                           <div
                             key={eventIndex}
-                            className={`text-xs p-1 rounded truncate ${
+                            className={`text-[10px] sm:text-xs p-0.5 sm:p-1 rounded truncate ${
                               event.type === "closing"
                                 ? "bg-blue-100 text-blue-800"
                                 : event.type === "inspection"
@@ -262,10 +266,17 @@ export default function CalendarClientPage() {
                                       ? "bg-green-100 text-green-800"
                                       : "bg-red-100 text-red-800"
                             }`}
+                            title={`${event.time} - ${event.title}`}
                           >
-                            {event.time} - {event.title}
+                            <span className="hidden sm:inline">{event.time} - </span>
+                            {event.title}
                           </div>
                         ))}
+                        {day.events.length > 2 && (
+                          <div className="text-[10px] sm:text-xs text-muted-foreground text-center">
+                            +{day.events.length - 2} more
+                          </div>
+                        )}
                       </div>
                     </div>
                   ))}
@@ -273,17 +284,18 @@ export default function CalendarClientPage() {
               )}
 
               {currentView === "week" && (
-                <div className="text-center p-10 text-muted-foreground">Week view would be implemented here</div>
+                <div className="text-center p-6 sm:p-10 text-muted-foreground">Week view would be implemented here</div>
               )}
 
               {currentView === "day" && (
-                <div className="text-center p-10 text-muted-foreground">Day view would be implemented here</div>
+                <div className="text-center p-6 sm:p-10 text-muted-foreground">Day view would be implemented here</div>
               )}
             </CardContent>
           </Card>
         </div>
 
-        <div className="md:w-1/4 space-y-6">
+        {/* Sidebar with responsive design */}
+        <div className="xl:w-1/4 space-y-4 sm:space-y-6">
           <Card>
             <CardHeader className="pb-3">
               <CardTitle>Upcoming Events</CardTitle>

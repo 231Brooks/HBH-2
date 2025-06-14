@@ -38,55 +38,62 @@ export function PropertyCard({ property, viewMode }: PropertyCardProps) {
   
   if (viewMode === "grid") {
     return (
-      <Card className="overflow-hidden transition-all hover:shadow-md">
+      <Card className="overflow-hidden transition-all hover:shadow-md h-full flex flex-col">
         <div className="relative">
           <Image
             src={primaryImage}
             alt={property.title}
             width={600}
             height={400}
-            className="h-48 w-full object-cover"
+            className="h-40 sm:h-48 w-full object-cover"
           />
-          <Badge className={`absolute top-2 right-2 ${statusBadge.color} text-white`}>
+          <Badge className={`absolute top-2 right-2 ${statusBadge.color} text-white text-xs`}>
             {property.status === "AUCTION" ? (
               <>
-                <Gavel className="mr-1 h-3 w-3" /> {statusBadge.label}
+                <Gavel className="mr-1 h-3 w-3" />
+                <span className="hidden sm:inline">{statusBadge.label}</span>
+                <span className="sm:hidden">Auction</span>
               </>
             ) : (
-              statusBadge.label
+              <span className="hidden sm:inline">{statusBadge.label}</span>
             )}
           </Badge>
           <Button
             variant="ghost"
             size="icon"
-            className="absolute top-2 left-2 bg-white/80 hover:bg-white text-slate-700 rounded-full h-8 w-8"
+            className="absolute top-2 left-2 bg-white/80 hover:bg-white text-slate-700 rounded-full h-6 w-6 sm:h-8 sm:w-8"
           >
-            <Heart className="h-4 w-4" />
+            <Heart className="h-3 w-3 sm:h-4 sm:w-4" />
           </Button>
         </div>
-        <CardContent className="p-4">
-          <div className="flex justify-between items-start mb-2">
-            <h3 className="text-lg font-semibold">{property.title}</h3>
-            <p className="font-bold text-primary">{formatPrice(property.price)}</p>
+        <CardContent className="p-3 sm:p-4 flex-1 flex flex-col">
+          <div className="flex flex-col sm:flex-row justify-between items-start mb-2 gap-1">
+            <h3 className="text-sm sm:text-lg font-semibold line-clamp-2 flex-1">{property.title}</h3>
+            <p className="font-bold text-primary text-sm sm:text-base flex-shrink-0">{formatPrice(property.price)}</p>
           </div>
-          <div className="flex items-center text-muted-foreground text-sm mb-3">
-            <MapPin className="h-4 w-4 mr-1" />
-            <span>{fullAddress}</span>
+          <div className="flex items-center text-muted-foreground text-xs sm:text-sm mb-3">
+            <MapPin className="h-3 w-3 sm:h-4 sm:w-4 mr-1 flex-shrink-0" />
+            <span className="truncate">{fullAddress}</span>
           </div>
-          <div className="flex justify-between mb-4">
-            <div className="flex gap-2">
-              {property.beds && <Badge variant="outline">{property.beds} Beds</Badge>}
-              {property.baths && <Badge variant="outline">{property.baths} Baths</Badge>}
-              {property.sqft && <Badge variant="outline">{property.sqft.toLocaleString()} sqft</Badge>}
+          <div className="flex justify-between mb-4 flex-grow">
+            <div className="flex flex-wrap gap-1 sm:gap-2">
+              {property.beds && <Badge variant="outline" className="text-xs">{property.beds} Beds</Badge>}
+              {property.baths && <Badge variant="outline" className="text-xs">{property.baths} Baths</Badge>}
+              {property.sqft && <Badge variant="outline" className="text-xs hidden sm:inline-flex">{property.sqft.toLocaleString()} sqft</Badge>}
             </div>
           </div>
-          <div className="flex gap-2">
-            <Button variant="outline" size="sm" className="flex-1" asChild>
-              <Link href={`/marketplace/property/${property.id}`}>Details</Link>
+          <div className="flex flex-col sm:flex-row gap-2 mt-auto">
+            <Button variant="outline" size="sm" className="flex-1 text-xs sm:text-sm" asChild>
+              <Link href={`/marketplace/property/${property.id}`}>
+                <span className="hidden sm:inline">Details</span>
+                <span className="sm:hidden">View</span>
+              </Link>
             </Button>
             <PropertyViewingDialog property={property}>
-              <Button size="sm" className="flex-1">
-                <Calendar className="mr-1 h-4 w-4" /> Tour
+              <Button size="sm" className="flex-1 text-xs sm:text-sm">
+                <Calendar className="mr-1 h-3 w-3 sm:h-4 sm:w-4" />
+                <span className="hidden sm:inline">Tour</span>
+                <span className="sm:hidden">Tour</span>
               </Button>
             </PropertyViewingDialog>
           </div>
@@ -100,85 +107,91 @@ export function PropertyCard({ property, viewMode }: PropertyCardProps) {
               contextTitle={property.title}
               size="sm"
               variant="outline"
-              className="w-full"
+              className="w-full text-xs sm:text-sm"
             >
-              <MessageSquare className="mr-1 h-4 w-4" /> Message
+              <MessageSquare className="mr-1 h-3 w-3 sm:h-4 sm:w-4" /> Message
             </QuickContactButton>
           </div>
         </CardContent>
       </Card>
     )
   } else {
-    // List view
+    // List view with responsive design
     return (
       <Card className="overflow-hidden transition-all hover:shadow-md">
-        <div className="flex flex-col md:flex-row">
-          <div className="relative md:w-1/3">
+        <div className="flex flex-col sm:flex-row">
+          <div className="relative sm:w-1/3 lg:w-1/4">
             <Image
               src={primaryImage}
               alt={property.title}
               width={600}
               height={400}
-              className="h-48 md:h-full w-full object-cover"
+              className="h-48 sm:h-full w-full object-cover"
             />
             <Badge
-              className={`absolute top-2 right-2 ${statusBadge.color} text-white`}
+              className={`absolute top-2 right-2 ${statusBadge.color} text-white text-xs`}
             >
               {property.status === "AUCTION" ? (
                 <>
-                  <Gavel className="mr-1 h-3 w-3" /> {statusBadge.label}
+                  <Gavel className="mr-1 h-3 w-3" />
+                  <span className="hidden sm:inline">{statusBadge.label}</span>
+                  <span className="sm:hidden">Auction</span>
                 </>
               ) : (
-                statusBadge.label
+                <span className="hidden sm:inline">{statusBadge.label}</span>
               )}
             </Badge>
             <Button
               variant="ghost"
               size="icon"
-              className="absolute top-2 left-2 bg-white/80 hover:bg-white text-slate-700 rounded-full h-8 w-8"
+              className="absolute top-2 left-2 bg-white/80 hover:bg-white text-slate-700 rounded-full h-6 w-6 sm:h-8 sm:w-8"
             >
-              <Heart className="h-4 w-4" />
+              <Heart className="h-3 w-3 sm:h-4 sm:w-4" />
             </Button>
           </div>
-          <div className="p-6 md:w-2/3">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-2 gap-2">
-              <h3 className="text-lg font-semibold">{property.title}</h3>
-              <p className="font-bold text-primary">{formatPrice(property.price)}</p>
+          <div className="p-4 sm:p-6 sm:w-2/3 lg:w-3/4 flex flex-col">
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between mb-2 gap-2">
+              <h3 className="text-base sm:text-lg font-semibold line-clamp-2">{property.title}</h3>
+              <p className="font-bold text-primary text-sm sm:text-base flex-shrink-0">{formatPrice(property.price)}</p>
             </div>
-            <div className="flex items-center text-muted-foreground text-sm mb-3">
-              <MapPin className="h-4 w-4 mr-1" />
-              <span>{fullAddress}</span>
+            <div className="flex items-center text-muted-foreground text-xs sm:text-sm mb-3">
+              <MapPin className="h-3 w-3 sm:h-4 sm:w-4 mr-1 flex-shrink-0" />
+              <span className="truncate">{fullAddress}</span>
             </div>
-            <p className="text-sm text-muted-foreground mb-4">{property.description}</p>
-            <div className="flex gap-4 mb-4">
+            <p className="text-xs sm:text-sm text-muted-foreground mb-4 line-clamp-2 flex-grow">{property.description}</p>
+            <div className="flex flex-wrap gap-2 sm:gap-4 mb-4">
               {property.beds && (
                 <div className="flex items-center">
-                  <Home className="h-4 w-4 text-muted-foreground mr-1" />
-                  <span className="text-sm">{property.beds} Beds</span>
+                  <Home className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground mr-1" />
+                  <span className="text-xs sm:text-sm">{property.beds} Beds</span>
                 </div>
               )}
               {property.baths && (
                 <div className="flex items-center">
-                  <Building className="h-4 w-4 text-muted-foreground mr-1" />
-                  <span className="text-sm">{property.baths} Baths</span>
+                  <Building className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground mr-1" />
+                  <span className="text-xs sm:text-sm">{property.baths} Baths</span>
                 </div>
               )}
               {property.sqft && (
                 <div className="flex items-center">
-                  <MapPin className="h-4 w-4 text-muted-foreground mr-1" />
-                  <span className="text-sm">{property.sqft.toLocaleString()} sqft</span>
+                  <MapPin className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground mr-1" />
+                  <span className="text-xs sm:text-sm">{property.sqft.toLocaleString()} sqft</span>
                 </div>
               )}
             </div>
-            <div className="flex gap-2">
-              <Button variant="outline" asChild>
+            <div className="flex flex-col sm:flex-row gap-2 mt-auto">
+              <Button variant="outline" size="sm" className="w-full sm:w-auto text-xs sm:text-sm" asChild>
                 <Link href={`/marketplace/property/${property.id}`}>
-                  <ArrowUpRight className="mr-1 h-4 w-4" /> View Details
+                  <ArrowUpRight className="mr-1 h-3 w-3 sm:h-4 sm:w-4" />
+                  <span className="hidden sm:inline">View Details</span>
+                  <span className="sm:hidden">Details</span>
                 </Link>
               </Button>
               <PropertyViewingDialog property={property}>
-                <Button>
-                  <Calendar className="mr-1 h-4 w-4" /> Schedule Tour
+                <Button size="sm" className="w-full sm:w-auto text-xs sm:text-sm">
+                  <Calendar className="mr-1 h-3 w-3 sm:h-4 sm:w-4" />
+                  <span className="hidden sm:inline">Schedule Tour</span>
+                  <span className="sm:hidden">Tour</span>
                 </Button>
               </PropertyViewingDialog>
               <QuickContactButton
@@ -189,8 +202,10 @@ export function PropertyCard({ property, viewMode }: PropertyCardProps) {
                 contextId={property.id}
                 contextTitle={property.title}
                 variant="outline"
+                size="sm"
+                className="w-full sm:w-auto text-xs sm:text-sm"
               >
-                <MessageSquare className="mr-1 h-4 w-4" /> Message
+                <MessageSquare className="mr-1 h-3 w-3 sm:h-4 sm:w-4" /> Message
               </QuickContactButton>
             </div>
           </div>
