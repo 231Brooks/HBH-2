@@ -41,8 +41,8 @@ function ProgressPageContent() {
 
       // Load service projects for professionals
       if (isProfessional) {
-        // For now, using sample data - in real implementation, this would call a service projects API
-        setServiceProjects(getSampleServiceProjects())
+        // TODO: Replace with actual API call to get user's service projects
+        setServiceProjects([])
       }
     } catch (error) {
       console.error("Failed to load data:", error)
@@ -51,46 +51,7 @@ function ProgressPageContent() {
     }
   }
 
-  const getSampleServiceProjects = () => {
-    return [
-      {
-        id: "sp1",
-        title: "Home Inspection - 123 Main St",
-        client: { name: "John Smith", image: null, rating: 4.8 },
-        status: "IN_PROGRESS",
-        progress: 75,
-        amount: 450,
-        dueDate: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
-        createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
-        type: "HOME_INSPECTION",
-        location: "Phoenix, AZ"
-      },
-      {
-        id: "sp2",
-        title: "Property Photography - 456 Oak Ave",
-        client: { name: "Sarah Johnson", image: null, rating: 5.0 },
-        status: "COMPLETED",
-        progress: 100,
-        amount: 300,
-        dueDate: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
-        createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
-        type: "PHOTOGRAPHY",
-        location: "Scottsdale, AZ"
-      },
-      {
-        id: "sp3",
-        title: "Title Services - 789 Pine St",
-        client: { name: "Mike Davis", image: null, rating: 4.9 },
-        status: "PENDING",
-        progress: 25,
-        amount: 850,
-        dueDate: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000),
-        createdAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
-        type: "TITLE_SERVICES",
-        location: "Tempe, AZ"
-      }
-    ]
-  }
+
 
   const filteredTransactions = transactions.filter(transaction => {
     const matchesSearch = searchTerm === "" ||

@@ -268,13 +268,19 @@ function CreateTransactionContent() {
               <CardContent className="space-y-6">
                 <div className="space-y-2">
                   <Label>Select Title Company</Label>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    {[
-                      { id: 1, name: "Desert Title Company", image: "/placeholder.svg?height=50&width=50" },
-                      { id: 2, name: "First American Title", image: "/placeholder.svg?height=50&width=50" },
-                      { id: 3, name: "Fidelity National Title", image: "/placeholder.svg?height=50&width=50" },
-                      { id: 4, name: "+ Add New Title Company", image: "" },
-                    ].map((company) => (
+                  <div className="space-y-3">
+                    <Input
+                      placeholder="Enter title company name"
+                      value={formData.titleCompany}
+                      onChange={(e) => updateFormData("titleCompany", e.target.value)}
+                    />
+                    <p className="text-sm text-muted-foreground">
+                      Enter the name of your title company or leave blank to add later
+                    </p>
+                  </div>
+                  {/* Removed demo title companies - users can enter their own */}
+                  <div className="hidden">
+                    {[].map((company) => (
                       <div
                         key={company.id}
                         className={`flex items-center gap-3 p-3 border rounded-md cursor-pointer hover:border-muted-foreground ${
