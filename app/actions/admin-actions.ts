@@ -3,10 +3,10 @@
 import { createClient } from "@supabase/supabase-js"
 import { revalidatePath } from "next/cache"
 
-// Initialize Supabase client for admin operations
-const supabaseUrl = process.env.SUPABASE_SUPABASE_URL!
-const supabaseKey = process.env.SUPABASE_SUPABASE_SERVICE_ROLE_KEY!
-const supabase = createClient(supabaseUrl, supabaseKey)
+// Initialize Supabase client for admin operations (only if env vars are available)
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+const supabase = supabaseUrl && supabaseKey ? createClient(supabaseUrl, supabaseKey) : null
 
 // Apply database optimizations
 export async function applyDatabaseOptimizations(formData: FormData) {
@@ -39,6 +39,11 @@ export async function applyDatabaseOptimizations(formData: FormData) {
 // Get query performance logs
 export async function getQueryPerformanceLogs(limit = 10, minDuration = 0) {
   try {
+    if (!supabase) {
+      console.warn("Supabase not configured, returning empty performance logs")
+      return []
+    }
+
     const { data, error } = await supabase
       .from("query_performance_logs")
       .select("*")
@@ -48,7 +53,7 @@ export async function getQueryPerformanceLogs(limit = 10, minDuration = 0) {
 
     if (error) throw error
 
-    return data
+    return data || []
   } catch (error) {
     console.error("Failed to fetch query performance logs:", error)
     return []

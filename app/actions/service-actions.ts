@@ -148,6 +148,35 @@ export async function getServiceById(id: string) {
   }
 }
 
+// Get admin fee report
+export async function getAdminFeeReport(startDate?: Date, endDate?: Date) {
+  const session = await auth()
+  if (!session?.user?.id || session.user.role !== 'ADMIN') {
+    throw new Error("Admin access required")
+  }
+
+  try {
+    // This would calculate fees from actual transactions
+    // For now, return empty data structure
+    return {
+      totalFees: 0,
+      transactionCount: 0,
+      averageFee: 0,
+      feesByCategory: [],
+      recentTransactions: [],
+    }
+  } catch (error) {
+    console.error("Failed to fetch admin fee report:", error)
+    return {
+      totalFees: 0,
+      transactionCount: 0,
+      averageFee: 0,
+      feesByCategory: [],
+      recentTransactions: [],
+    }
+  }
+}
+
 // Create a review for a service
 export async function createServiceReview(serviceId: string, formData: FormData) {
   const session = await auth()

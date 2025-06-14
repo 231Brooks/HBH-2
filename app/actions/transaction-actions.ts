@@ -178,6 +178,32 @@ export async function getUserTransactions(options: {
   }
 }
 
+// Process transaction fee
+export async function processTransactionFee(transactionId: string, amount: number) {
+  const session = await auth()
+  if (!session?.user?.id) {
+    throw new Error("You must be logged in to process transaction fees")
+  }
+
+  try {
+    // This would integrate with your payment processor (Stripe, etc.)
+    // For now, just update the transaction status
+    const transaction = await prisma.transaction.update({
+      where: { id: transactionId },
+      data: {
+        // Add fee processing logic here
+        updatedAt: new Date(),
+      },
+    })
+
+    revalidatePath("/progress")
+    return { success: true, transaction }
+  } catch (error) {
+    console.error("Failed to process transaction fee:", error)
+    return { success: false, error: "Failed to process transaction fee" }
+  }
+}
+
 // Get a single transaction by ID
 export async function getTransactionById(id: string) {
   const session = await auth()

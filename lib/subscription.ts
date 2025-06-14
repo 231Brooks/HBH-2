@@ -119,6 +119,10 @@ export async function createStripeSubscription(
   tier: SubscriptionTier,
   paymentMethodId: string
 ) {
+  if (!stripe) {
+    throw new Error("Stripe not configured")
+  }
+
   const user = await prisma.user.findUnique({ where: { id: userId } })
   if (!user?.email) throw new Error("User not found")
 
@@ -200,7 +204,7 @@ export async function createStripeSubscription(
 export async function cancelSubscription(userId: string) {
   const subscription = await getUserSubscription(userId)
 
-  if (subscription.stripeSubscriptionId) {
+  if (subscription.stripeSubscriptionId && stripe) {
     await stripe.subscriptions.update(subscription.stripeSubscriptionId, {
       cancel_at_period_end: true,
     })
@@ -217,7 +221,7 @@ export async function cancelSubscription(userId: string) {
 export async function reactivateSubscription(userId: string) {
   const subscription = await getUserSubscription(userId)
 
-  if (subscription.stripeSubscriptionId) {
+  if (subscription.stripeSubscriptionId && stripe) {
     await stripe.subscriptions.update(subscription.stripeSubscriptionId, {
       cancel_at_period_end: false,
     })

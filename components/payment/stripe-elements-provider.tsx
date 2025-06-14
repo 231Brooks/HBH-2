@@ -5,7 +5,9 @@ import { loadStripe } from "@stripe/stripe-js"
 import type { ReactNode } from "react"
 
 // Load Stripe outside of component render to avoid recreating Stripe object on every render
-const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!)
+const stripePromise = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
+  ? loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY)
+  : null
 
 interface StripeElementsProviderProps {
   children: ReactNode
@@ -13,6 +15,10 @@ interface StripeElementsProviderProps {
 }
 
 export function StripeElementsProvider({ children, clientSecret }: StripeElementsProviderProps) {
+  if (!stripePromise) {
+    return <div>Payment processing not available</div>
+  }
+
   const options = {
     clientSecret,
     appearance: {

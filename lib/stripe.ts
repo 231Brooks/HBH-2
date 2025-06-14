@@ -1,9 +1,11 @@
 import Stripe from "stripe"
 
-// Initialize Stripe with the API key
-export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: "2023-10-16", // Use the latest API version
-})
+// Initialize Stripe only if the API key is available
+export const stripe = process.env.STRIPE_SECRET_KEY
+  ? new Stripe(process.env.STRIPE_SECRET_KEY, {
+      apiVersion: "2023-10-16", // Use the latest API version
+    })
+  : null
 
 // Create a payment intent for service orders
 export async function createServiceOrderPaymentIntent(
@@ -16,6 +18,10 @@ export async function createServiceOrderPaymentIntent(
   },
 ) {
   try {
+    if (!stripe) {
+      throw new Error("Stripe not configured")
+    }
+
     const paymentIntent = await stripe.paymentIntents.create({
       amount: Math.round(amount * 100), // Convert to cents
       currency: "usd",
@@ -42,6 +48,10 @@ export async function createTransactionFeePaymentIntent(
   },
 ) {
   try {
+    if (!stripe) {
+      throw new Error("Stripe not configured")
+    }
+
     const paymentIntent = await stripe.paymentIntents.create({
       amount: Math.round(amount * 100), // Convert to cents
       currency: "usd",
@@ -61,6 +71,10 @@ export async function createTransactionFeePaymentIntent(
 // Verify a payment intent's status
 export async function verifyPaymentIntent(paymentIntentId: string) {
   try {
+    if (!stripe) {
+      throw new Error("Stripe not configured")
+    }
+
     const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId)
     return {
       status: paymentIntent.status,
