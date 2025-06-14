@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache"
 import prisma from "@/lib/prisma"
 import { auth } from "@/lib/auth"
+import { createTransactionAppointment } from "./calendar-actions"
 
 // Create a new transaction
 export async function createTransaction(data: any) {
@@ -74,7 +75,28 @@ export async function createTransaction(data: any) {
       },
     })
 
+    // Automatically create closing appointment if closing date is provided
+    if (transaction.closingDate) {
+      try {
+        const propertyAddress = property ? `${property.address}, ${property.city}, ${property.state}` : "Property Location TBD"
+
+        await createTransactionAppointment({
+          transactionId: transaction.id,
+          title: `Property Closing - ${property?.title || property?.address || "Property"}`,
+          description: `Closing appointment for ${data.type.toLowerCase()} transaction`,
+          startTime: new Date(transaction.closingDate.getTime() - 2 * 60 * 60 * 1000), // 2 hours before closing date
+          endTime: new Date(transaction.closingDate.getTime() + 2 * 60 * 60 * 1000), // 2 hours after closing date
+          location: propertyAddress,
+          type: "CLOSING",
+        })
+      } catch (appointmentError) {
+        console.error("Failed to create closing appointment:", appointmentError)
+        // Don't fail the transaction creation if appointment creation fails
+      }
+    }
+
     revalidatePath("/progress")
+    revalidatePath("/calendar")
     return { success: true, transaction, transactionId: transaction.id }
   } catch (error) {
     console.error("Failed to create transaction:", error)

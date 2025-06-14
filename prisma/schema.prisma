@@ -16,7 +16,8 @@ model User {
   email             String              @unique
   name              String?
   password          String?
-  image             String?
+  image             String?             // Profile picture
+  coverPhoto        String?             // Cover photo
   role              UserRole            @default(USER)
   createdAt         DateTime            @default(now())
   updatedAt         DateTime            @updatedAt
@@ -39,6 +40,7 @@ model User {
   services          Service[]
   projects          Project[]
   appointments      Appointment[]
+  appointmentParticipants AppointmentParticipant[]
   calendarIntegrations CalendarIntegration[]
   messages          Message[]           @relation("SentMessages")
   receivedMessages  Message[]           @relation("ReceivedMessages")
@@ -86,6 +88,7 @@ model Property {
   owner           User              @relation("UserProperties", fields: [ownerId], references: [id])
   savedBy         SavedProperty[]
   transactions    Transaction[]
+  appointments    Appointment[]
 }
 
 enum PropertyType {
@@ -144,6 +147,7 @@ model Transaction {
   titleCompanyId    String?
   titleCompany      TitleCompany?       @relation(fields: [titleCompanyId], references: [id])
   milestones        Milestone[]
+  appointments      Appointment[]
 }
 
 enum TransactionType {
@@ -263,6 +267,7 @@ model Service {
   projects        Project[]
   orders          ServiceOrder[]
   advertisements  Advertisement[]
+  appointments    Appointment[]
 }
 
 enum ServiceCategory {
@@ -326,9 +331,32 @@ model Appointment {
   type            AppointmentType
   userId          String
   user            User          @relation(fields: [userId], references: [id])
+
+  // Source tracking
+  source          AppointmentSource @default(MANUAL)
+  sourceId        String?       // ID of the related entity (service, property, transaction, etc.)
+
+  // Related entities
+  serviceId       String?
+  service         Service?      @relation(fields: [serviceId], references: [id])
+  propertyId      String?
+  property        Property?     @relation(fields: [propertyId], references: [id])
+  transactionId   String?
+  transaction     Transaction?  @relation(fields: [transactionId], references: [id])
+
+  // Participants (for multi-party appointments)
+  participants    AppointmentParticipant[]
+
+  // External calendar sync
   externalId      String?       // For calendar sync
   externalData    String?       // JSON data from external calendar
   synced          Boolean       @default(false)
+
+  // Status and metadata
+  status          AppointmentStatus @default(SCHEDULED)
+  isRecurring     Boolean       @default(false)
+  recurringData   String?       // JSON data for recurring appointments
+
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
 }
@@ -339,7 +367,57 @@ enum AppointmentType {
   PHOTOGRAPHY
   LEGAL
   RENOVATION
+  SERVICE_CONSULTATION
+  PROPERTY_VIEWING
+  PROPERTY_TOUR
+  MEETING
+  CALL
   OTHER
+}
+
+enum AppointmentSource {
+  MANUAL          // Created manually in calendar
+  SERVICE_BOOKING // Created from service booking
+  PROPERTY_VIEWING // Created from property viewing request
+  PROGRESS_MILESTONE // Created from transaction milestone
+  MESSAGE_SCHEDULING // Created from message conversation
+}
+
+enum AppointmentStatus {
+  SCHEDULED
+  CONFIRMED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+  RESCHEDULED
+}
+
+// Appointment participants for multi-party meetings
+model AppointmentParticipant {
+  id            String      @id @default(cuid())
+  appointmentId String
+  appointment   Appointment @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
+  userId        String
+  user          User        @relation(fields: [userId], references: [id])
+  role          ParticipantRole @default(ATTENDEE)
+  status        ParticipantStatus @default(PENDING)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  @@unique([appointmentId, userId])
+}
+
+enum ParticipantRole {
+  ORGANIZER
+  ATTENDEE
+  OPTIONAL
+}
+
+enum ParticipantStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+  TENTATIVE
 }
 
 // Calendar Integration model

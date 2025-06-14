@@ -33,6 +33,7 @@ export async function createAppointment(formData: FormData) {
         location,
         type: type as any,
         userId: session.user.id,
+        source: "MANUAL",
       },
     })
 
@@ -41,6 +42,163 @@ export async function createAppointment(formData: FormData) {
   } catch (error) {
     console.error("Failed to create appointment:", error)
     return { success: false, error: "Failed to create appointment" }
+  }
+}
+
+// Create appointment from service booking
+export async function createServiceAppointment(data: {
+  serviceId: string
+  providerId: string
+  title: string
+  description?: string
+  startTime: Date
+  endTime: Date
+  location?: string
+}) {
+  const session = await auth()
+  if (!session?.user?.id) {
+    throw new Error("You must be logged in to create an appointment")
+  }
+
+  try {
+    const appointment = await prisma.appointment.create({
+      data: {
+        title: data.title,
+        description: data.description,
+        startTime: data.startTime,
+        endTime: data.endTime,
+        location: data.location,
+        type: "SERVICE_CONSULTATION",
+        userId: session.user.id,
+        source: "SERVICE_BOOKING",
+        serviceId: data.serviceId,
+        sourceId: data.serviceId,
+      },
+    })
+
+    // Add provider as participant
+    await prisma.appointmentParticipant.create({
+      data: {
+        appointmentId: appointment.id,
+        userId: data.providerId,
+        role: "ATTENDEE",
+        status: "PENDING",
+      },
+    })
+
+    revalidatePath("/calendar")
+    revalidatePath("/services")
+    return { success: true, appointmentId: appointment.id }
+  } catch (error) {
+    console.error("Failed to create service appointment:", error)
+    return { success: false, error: "Failed to create service appointment" }
+  }
+}
+
+// Create appointment from property viewing
+export async function createPropertyViewingAppointment(data: {
+  propertyId: string
+  ownerId: string
+  title: string
+  description?: string
+  startTime: Date
+  endTime: Date
+  location?: string
+}) {
+  const session = await auth()
+  if (!session?.user?.id) {
+    throw new Error("You must be logged in to create an appointment")
+  }
+
+  try {
+    const appointment = await prisma.appointment.create({
+      data: {
+        title: data.title,
+        description: data.description,
+        startTime: data.startTime,
+        endTime: data.endTime,
+        location: data.location,
+        type: "PROPERTY_VIEWING",
+        userId: session.user.id,
+        source: "PROPERTY_VIEWING",
+        propertyId: data.propertyId,
+        sourceId: data.propertyId,
+      },
+    })
+
+    // Add property owner as participant
+    await prisma.appointmentParticipant.create({
+      data: {
+        appointmentId: appointment.id,
+        userId: data.ownerId,
+        role: "ATTENDEE",
+        status: "PENDING",
+      },
+    })
+
+    revalidatePath("/calendar")
+    revalidatePath("/marketplace")
+    return { success: true, appointmentId: appointment.id }
+  } catch (error) {
+    console.error("Failed to create property viewing appointment:", error)
+    return { success: false, error: "Failed to create property viewing appointment" }
+  }
+}
+
+// Create appointment from transaction milestone
+export async function createTransactionAppointment(data: {
+  transactionId: string
+  title: string
+  description?: string
+  startTime: Date
+  endTime: Date
+  location?: string
+  type: "CLOSING" | "INSPECTION" | "OTHER"
+  participantIds?: string[]
+}) {
+  const session = await auth()
+  if (!session?.user?.id) {
+    throw new Error("You must be logged in to create an appointment")
+  }
+
+  try {
+    const appointment = await prisma.appointment.create({
+      data: {
+        title: data.title,
+        description: data.description,
+        startTime: data.startTime,
+        endTime: data.endTime,
+        location: data.location,
+        type: data.type,
+        userId: session.user.id,
+        source: "PROGRESS_MILESTONE",
+        transactionId: data.transactionId,
+        sourceId: data.transactionId,
+      },
+    })
+
+    // Add participants if provided
+    if (data.participantIds && data.participantIds.length > 0) {
+      await Promise.all(
+        data.participantIds.map(participantId =>
+          prisma.appointmentParticipant.create({
+            data: {
+              appointmentId: appointment.id,
+              userId: participantId,
+              role: "ATTENDEE",
+              status: "PENDING",
+            },
+          })
+        )
+      )
+    }
+
+    revalidatePath("/calendar")
+    revalidatePath("/progress")
+    return { success: true, appointmentId: appointment.id }
+  } catch (error) {
+    console.error("Failed to create transaction appointment:", error)
+    return { success: false, error: "Failed to create transaction appointment" }
   }
 }
 
@@ -57,14 +215,25 @@ export async function getUserAppointments(options: {
 
   const { startDate, endDate, type } = options
 
-  const where: any = {
-    userId: session.user.id,
+  const timeFilter: any = {}
+  if (startDate || endDate) {
+    if (startDate) timeFilter.gte = startDate
+    if (endDate) timeFilter.lte = endDate
   }
 
-  if (startDate || endDate) {
-    where.startTime = {}
-    if (startDate) where.startTime.gte = startDate
-    if (endDate) where.startTime.lte = endDate
+  const where: any = {
+    OR: [
+      { userId: session.user.id }, // Appointments created by user
+      {
+        participants: {
+          some: { userId: session.user.id }
+        }
+      } // Appointments where user is a participant
+    ]
+  }
+
+  if (Object.keys(timeFilter).length > 0) {
+    where.startTime = timeFilter
   }
 
   if (type) where.type = type
@@ -72,6 +241,61 @@ export async function getUserAppointments(options: {
   try {
     const appointments = await prisma.appointment.findMany({
       where,
+      include: {
+        participants: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+                image: true,
+                email: true,
+              }
+            }
+          }
+        },
+        service: {
+          select: {
+            id: true,
+            name: true,
+            provider: {
+              select: {
+                id: true,
+                name: true,
+                image: true,
+              }
+            }
+          }
+        },
+        property: {
+          select: {
+            id: true,
+            title: true,
+            address: true,
+            city: true,
+            state: true,
+            owner: {
+              select: {
+                id: true,
+                name: true,
+                image: true,
+              }
+            }
+          }
+        },
+        transaction: {
+          select: {
+            id: true,
+            type: true,
+            property: {
+              select: {
+                title: true,
+                address: true,
+              }
+            }
+          }
+        }
+      },
       orderBy: { startTime: "asc" },
     })
 

@@ -282,7 +282,7 @@ export default function AdminDashboard() {
                 You need Administrator privileges to access this area.
               </p>
               <Button asChild>
-                <Link href="/dashboard">Return to Dashboard</Link>
+                <Link href="/profile">Return to Profile</Link>
               </Button>
             </div>
           </div>

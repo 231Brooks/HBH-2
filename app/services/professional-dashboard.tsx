@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 import {
   Clock,
   DollarSign,
@@ -20,10 +21,19 @@ import {
   AlertCircle,
   CheckCircle,
   Calendar,
+  Filter,
+  Briefcase,
+  FileText,
+  Eye,
+  Send,
+  Loader2,
 } from "lucide-react"
 import Link from "next/link"
-import { getServiceRequests } from "../actions/service-request-actions"
+import Image from "next/image"
+import { getServiceRequests, respondToServiceRequest } from "../actions/service-request-actions"
 import { ServiceCategory, ServiceUrgency, ServiceRequestStatus } from "@prisma/client"
+import { useSupabase } from "@/contexts/supabase-context"
+import { toast } from "sonner"
 import { formatDistanceToNow } from "date-fns"
 
 interface ServiceRequest {
@@ -61,12 +71,13 @@ const urgencyIcons = {
 }
 
 export default function ProfessionalDashboard() {
+  const { user } = useSupabase()
   const [serviceRequests, setServiceRequests] = useState<ServiceRequest[]>([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedCategory, setSelectedCategory] = useState<ServiceCategory | "ALL">("ALL")
   const [selectedUrgency, setSelectedUrgency] = useState<ServiceUrgency | "ALL">("ALL")
-  const [activeTab, setActiveTab] = useState("available")
+  const [activeTab, setActiveTab] = useState("find-jobs")
 
   useEffect(() => {
     loadServiceRequests()
@@ -75,21 +86,27 @@ export default function ProfessionalDashboard() {
   const loadServiceRequests = async () => {
     setLoading(true)
     try {
-      const filters = {
-        category: selectedCategory !== "ALL" ? selectedCategory : undefined,
-        urgency: selectedUrgency !== "ALL" ? selectedUrgency : undefined,
-        status: activeTab === "available" ? ServiceRequestStatus.OPEN : undefined,
-        location: searchTerm || undefined,
-        limit: 20,
-        offset: 0,
-      }
+      if (activeTab === "find-jobs") {
+        const filters = {
+          category: selectedCategory !== "ALL" ? selectedCategory : undefined,
+          urgency: selectedUrgency !== "ALL" ? selectedUrgency : undefined,
+          status: ServiceRequestStatus.OPEN,
+          location: searchTerm || undefined,
+          limit: 20,
+          offset: 0,
+        }
 
-      const result = await getServiceRequests(filters)
-      if (result.success) {
-        setServiceRequests(result.serviceRequests || [])
+        const result = await getServiceRequests(filters)
+        if (result.success) {
+          setServiceRequests(result.serviceRequests || [])
+        }
+      } else {
+        // For other tabs, we'll implement specific loading logic later
+        setServiceRequests([])
       }
     } catch (error) {
       console.error("Failed to load service requests:", error)
+      setServiceRequests([])
     } finally {
       setLoading(false)
     }
@@ -104,13 +121,18 @@ export default function ProfessionalDashboard() {
     <div className="container mx-auto py-8 px-4">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
         <div>
-          <h1 className="text-3xl font-bold mb-1">Professional Dashboard</h1>
-          <p className="text-muted-foreground">Manage your services and respond to client requests</p>
+          <h1 className="text-3xl font-bold mb-1">Service Requests</h1>
+          <p className="text-muted-foreground">Find jobs, track completed work, and manage your service business</p>
         </div>
         <div className="flex items-center gap-2">
-          <Button asChild>
+          <Button asChild variant="outline">
             <Link href="/services/create">
               <Plus className="mr-2 h-4 w-4" /> Create Service Listing
+            </Link>
+          </Button>
+          <Button asChild>
+            <Link href="/job-marketplace">
+              <Briefcase className="mr-2 h-4 w-4" /> Browse All Jobs
             </Link>
           </Button>
         </div>
@@ -208,13 +230,13 @@ export default function ProfessionalDashboard() {
       {/* Service Requests Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="mb-6">
-          <TabsTrigger value="available">Available Requests</TabsTrigger>
+          <TabsTrigger value="find-jobs">Find Jobs</TabsTrigger>
+          <TabsTrigger value="completed-jobs">Completed Jobs</TabsTrigger>
           <TabsTrigger value="my-responses">My Responses</TabsTrigger>
-          <TabsTrigger value="active">Active Projects</TabsTrigger>
-          <TabsTrigger value="completed">Completed</TabsTrigger>
+          <TabsTrigger value="active-projects">Active Projects</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="available">
+        <TabsContent value="find-jobs">
           {loading ? (
             <div className="grid grid-cols-1 gap-6">
               {Array(3).fill(0).map((_, i) => (
@@ -236,27 +258,27 @@ export default function ProfessionalDashboard() {
           )}
         </TabsContent>
 
-        <TabsContent value="my-responses">
+        <TabsContent value="completed-jobs">
           <div className="text-center py-12">
             <CheckCircle className="mx-auto h-12 w-12 text-green-500 mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">Your responses will appear here</h3>
-            <p className="text-gray-500">Respond to service requests to track them here.</p>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">Completed jobs will appear here</h3>
+            <p className="text-gray-500">Jobs that were paid through the platform will be tracked here.</p>
           </div>
         </TabsContent>
 
-        <TabsContent value="active">
+        <TabsContent value="my-responses">
+          <div className="text-center py-12">
+            <Send className="mx-auto h-12 w-12 text-blue-500 mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">Your responses will appear here</h3>
+            <p className="text-gray-500">Service requests you've responded to will be tracked here.</p>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="active-projects">
           <div className="text-center py-12">
             <Calendar className="mx-auto h-12 w-12 text-blue-500 mb-4" />
             <h3 className="text-lg font-medium text-gray-900 mb-2">Active projects will appear here</h3>
             <p className="text-gray-500">Accepted service requests will show up as active projects.</p>
-          </div>
-        </TabsContent>
-
-        <TabsContent value="completed">
-          <div className="text-center py-12">
-            <CheckCircle className="mx-auto h-12 w-12 text-green-500 mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">Completed projects will appear here</h3>
-            <p className="text-gray-500">Your finished work will be tracked here.</p>
           </div>
         </TabsContent>
       </Tabs>

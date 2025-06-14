@@ -27,11 +27,14 @@ import {
   Grid3X3,
   List,
   Loader2,
+  Calendar,
+  MessageSquare,
 } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
 import { getServices } from "../actions/service-actions"
 import { QuickContactButton } from "@/components/contact-dialog"
+import { ServiceBookingDialog } from "@/components/service-booking-dialog"
 import { ServicesAds } from "@/components/advertising/ad-banner"
 
 interface Service {
@@ -368,7 +371,7 @@ export default function ServicesClient() {
               <Link href="/services/create">List Your Service</Link>
             </Button>
             <Button variant="outline" asChild>
-              <Link href="/services/how-it-works">Learn More</Link>
+              <Link href="/profile">Learn More</Link>
             </Button>
           </div>
         </div>
@@ -442,6 +445,14 @@ function ServiceCard({ service, viewMode }: ServiceCardProps) {
               <ArrowUpRight className="mr-1 h-4 w-4" /> Details
             </Link>
           </Button>
+          <ServiceBookingDialog service={service}>
+            <Button className="flex-1">
+              <Calendar className="mr-1 h-4 w-4" /> Book
+            </Button>
+          </ServiceBookingDialog>
+        </div>
+
+        <div className="mt-2">
           <QuickContactButton
             contactId={service.provider.id}
             contactName={service.provider.name || "Service Provider"}
@@ -450,9 +461,11 @@ function ServiceCard({ service, viewMode }: ServiceCardProps) {
             contextType="service"
             contextId={service.id}
             contextTitle={service.name}
-            className="flex-1"
+            variant="outline"
+            size="sm"
+            className="w-full"
           >
-            Contact
+            <MessageSquare className="mr-1 h-4 w-4" /> Message
           </QuickContactButton>
         </div>
       </CardContent>

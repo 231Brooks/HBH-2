@@ -3,8 +3,9 @@ import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { MapPin, Gavel, Building, Home, ArrowUpRight, MessageSquare, Heart } from "lucide-react"
+import { MapPin, Gavel, Building, Home, ArrowUpRight, MessageSquare, Heart, Calendar } from "lucide-react"
 import { QuickContactButton } from "@/components/contact-dialog"
+import { PropertyViewingDialog } from "@/components/property-viewing-dialog"
 
 interface PropertyCardProps {
   property: any
@@ -83,6 +84,13 @@ export function PropertyCard({ property, viewMode }: PropertyCardProps) {
             <Button variant="outline" size="sm" className="flex-1" asChild>
               <Link href={`/marketplace/property/${property.id}`}>Details</Link>
             </Button>
+            <PropertyViewingDialog property={property}>
+              <Button size="sm" className="flex-1">
+                <Calendar className="mr-1 h-4 w-4" /> Tour
+              </Button>
+            </PropertyViewingDialog>
+          </div>
+          <div className="mt-2">
             <QuickContactButton
               contactId={property.ownerId || "demo-seller-1"}
               contactName={property.ownerName || "Property Owner"}
@@ -91,9 +99,10 @@ export function PropertyCard({ property, viewMode }: PropertyCardProps) {
               contextId={property.id}
               contextTitle={property.title}
               size="sm"
-              className="flex-1"
+              variant="outline"
+              className="w-full"
             >
-              <MessageSquare className="mr-1 h-4 w-4" /> Contact
+              <MessageSquare className="mr-1 h-4 w-4" /> Message
             </QuickContactButton>
           </div>
         </CardContent>
@@ -167,6 +176,11 @@ export function PropertyCard({ property, viewMode }: PropertyCardProps) {
                   <ArrowUpRight className="mr-1 h-4 w-4" /> View Details
                 </Link>
               </Button>
+              <PropertyViewingDialog property={property}>
+                <Button>
+                  <Calendar className="mr-1 h-4 w-4" /> Schedule Tour
+                </Button>
+              </PropertyViewingDialog>
               <QuickContactButton
                 contactId={property.ownerId || "demo-seller-1"}
                 contactName={property.ownerName || "Property Owner"}
@@ -174,8 +188,9 @@ export function PropertyCard({ property, viewMode }: PropertyCardProps) {
                 contextType="property"
                 contextId={property.id}
                 contextTitle={property.title}
+                variant="outline"
               >
-                <MessageSquare className="mr-1 h-4 w-4" /> Contact Seller
+                <MessageSquare className="mr-1 h-4 w-4" /> Message
               </QuickContactButton>
             </div>
           </div>

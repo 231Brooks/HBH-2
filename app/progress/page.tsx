@@ -9,36 +9,87 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { FileText, Clock, CheckCircle, AlertCircle, Users, Search, Plus, Filter, ArrowUpRight, Building2 } from "lucide-react"
+import { FileText, Clock, CheckCircle, AlertCircle, Users, Search, Plus, Filter, ArrowUpRight, Building2, Briefcase, Star, DollarSign, MapPin, TrendingUp } from "lucide-react"
 import { ProtectedRoute } from "@/components/protected-route"
 import { getUserTransactions } from "@/app/actions/transaction-actions"
 import { useSupabase } from "@/contexts/supabase-context"
+import { usePermissions } from "@/hooks/use-permissions"
 
 function ProgressPageContent() {
   const { user } = useSupabase()
+  const { isProfessional } = usePermissions()
   const [transactions, setTransactions] = useState<any[]>([])
+  const [serviceProjects, setServiceProjects] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState("all")
-  const [activeTab, setActiveTab] = useState("active")
+  const [activeTab, setActiveTab] = useState(isProfessional ? "service-projects" : "active")
 
   useEffect(() => {
-    loadTransactions()
-  }, [statusFilter])
+    loadData()
+  }, [statusFilter, isProfessional])
 
-  const loadTransactions = async () => {
+  const loadData = async () => {
     setLoading(true)
     try {
+      // Load transactions for all users
       const result = await getUserTransactions({
         status: statusFilter === "all" ? undefined : statusFilter,
         limit: 50
       })
       setTransactions(result.transactions || [])
+
+      // Load service projects for professionals
+      if (isProfessional) {
+        // For now, using sample data - in real implementation, this would call a service projects API
+        setServiceProjects(getSampleServiceProjects())
+      }
     } catch (error) {
-      console.error("Failed to load transactions:", error)
+      console.error("Failed to load data:", error)
     } finally {
       setLoading(false)
     }
+  }
+
+  const getSampleServiceProjects = () => {
+    return [
+      {
+        id: "sp1",
+        title: "Home Inspection - 123 Main St",
+        client: { name: "John Smith", image: null, rating: 4.8 },
+        status: "IN_PROGRESS",
+        progress: 75,
+        amount: 450,
+        dueDate: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+        createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
+        type: "HOME_INSPECTION",
+        location: "Phoenix, AZ"
+      },
+      {
+        id: "sp2",
+        title: "Property Photography - 456 Oak Ave",
+        client: { name: "Sarah Johnson", image: null, rating: 5.0 },
+        status: "COMPLETED",
+        progress: 100,
+        amount: 300,
+        dueDate: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
+        createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
+        type: "PHOTOGRAPHY",
+        location: "Scottsdale, AZ"
+      },
+      {
+        id: "sp3",
+        title: "Title Services - 789 Pine St",
+        client: { name: "Mike Davis", image: null, rating: 4.9 },
+        status: "PENDING",
+        progress: 25,
+        amount: 850,
+        dueDate: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000),
+        createdAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
+        type: "TITLE_SERVICES",
+        location: "Tempe, AZ"
+      }
+    ]
   }
 
   const filteredTransactions = transactions.filter(transaction => {
@@ -65,14 +116,30 @@ function ProgressPageContent() {
     <div className="container mx-auto py-8 px-4">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
         <div>
-          <h1 className="text-3xl font-bold mb-1">Transaction Progress</h1>
-          <p className="text-muted-foreground">Track and manage your real estate transactions with title companies</p>
+          <h1 className="text-3xl font-bold mb-1">
+            {isProfessional ? "Progress & Projects" : "Transaction Progress"}
+          </h1>
+          <p className="text-muted-foreground">
+            {isProfessional
+              ? "Track your service projects and real estate transactions"
+              : "Track and manage your real estate transactions with title companies"
+            }
+          </p>
         </div>
-        <Button asChild>
-          <Link href="/progress/create">
-            <Plus className="mr-2 h-4 w-4" /> New Transaction
-          </Link>
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button asChild>
+            <Link href="/progress/create">
+              <Plus className="mr-2 h-4 w-4" /> New Transaction
+            </Link>
+          </Button>
+          {isProfessional && (
+            <Button asChild variant="outline">
+              <Link href="/services">
+                <Briefcase className="mr-2 h-4 w-4" /> Manage Services
+              </Link>
+            </Button>
+          )}
+        </div>
       </div>
 
       <div className="flex flex-col md:flex-row gap-6">
@@ -111,10 +178,43 @@ function ProgressPageContent() {
 
           <Tabs value={activeTab} onValueChange={setActiveTab}>
             <TabsList className="mb-6">
-              <TabsTrigger value="active">Active ({activeTransactions.length})</TabsTrigger>
+              {isProfessional && (
+                <TabsTrigger value="service-projects">
+                  Service Projects ({serviceProjects.length})
+                </TabsTrigger>
+              )}
+              <TabsTrigger value="active">Active Transactions ({activeTransactions.length})</TabsTrigger>
               <TabsTrigger value="completed">Completed ({completedTransactions.length})</TabsTrigger>
               <TabsTrigger value="all">All Transactions ({filteredTransactions.length})</TabsTrigger>
             </TabsList>
+
+            {isProfessional && (
+              <TabsContent value="service-projects" className="space-y-4">
+                {loading ? (
+                  <div className="flex items-center justify-center py-8">
+                    <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+                  </div>
+                ) : serviceProjects.length > 0 ? (
+                  serviceProjects.map((project) => (
+                    <ServiceProjectCard
+                      key={project.id}
+                      project={project}
+                    />
+                  ))
+                ) : (
+                  <div className="text-center py-8">
+                    <Briefcase className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">No service projects found</h3>
+                    <p className="text-gray-500 mb-4">Start accepting service requests to see your projects here.</p>
+                    <Button asChild>
+                      <Link href="/services">
+                        <Briefcase className="mr-2 h-4 w-4" /> Browse Service Requests
+                      </Link>
+                    </Button>
+                  </div>
+                )}
+              </TabsContent>
+            )}
 
             <TabsContent value="active" className="space-y-4">
               {loading ? (
@@ -186,92 +286,176 @@ function ProgressPageContent() {
         </div>
 
         <div className="md:w-1/4 space-y-6">
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle>Title Companies</CardTitle>
-              <CardDescription>Your connected title partners</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center">
-                    <Building className="h-5 w-5 text-slate-600" />
+          {isProfessional ? (
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle>Service Stats</CardTitle>
+                <CardDescription>Your professional performance</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-muted-foreground">Active Projects</span>
+                    <span className="font-semibold">{serviceProjects.filter(p => p.status === 'IN_PROGRESS').length}</span>
                   </div>
-                  <div>
-                    <p className="font-medium">Desert Title Company</p>
-                    <p className="text-sm text-muted-foreground">3 active transactions</p>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-muted-foreground">Completed This Month</span>
+                    <span className="font-semibold">{serviceProjects.filter(p => p.status === 'COMPLETED').length}</span>
                   </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-muted-foreground">Total Earnings</span>
+                    <span className="font-semibold">
+                      ${serviceProjects.reduce((sum, p) => p.status === 'COMPLETED' ? sum + p.amount : sum, 0).toLocaleString()}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-muted-foreground">Average Rating</span>
+                    <div className="flex items-center gap-1">
+                      <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
+                      <span className="font-semibold">4.9</span>
+                    </div>
+                  </div>
+                  <Button variant="outline" className="w-full" asChild>
+                    <Link href="/services">
+                      <TrendingUp className="mr-2 h-4 w-4" /> View Analytics
+                    </Link>
+                  </Button>
                 </div>
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center">
-                    <Building className="h-5 w-5 text-slate-600" />
+              </CardContent>
+            </Card>
+          ) : (
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle>Title Companies</CardTitle>
+                <CardDescription>Your connected title partners</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center">
+                      <Building className="h-5 w-5 text-slate-600" />
+                    </div>
+                    <div>
+                      <p className="font-medium">Desert Title Company</p>
+                      <p className="text-sm text-muted-foreground">3 active transactions</p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="font-medium">First American Title</p>
-                    <p className="text-sm text-muted-foreground">1 active transaction</p>
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center">
+                      <Building className="h-5 w-5 text-slate-600" />
+                    </div>
+                    <div>
+                      <p className="font-medium">First American Title</p>
+                      <p className="text-sm text-muted-foreground">1 active transaction</p>
+                    </div>
                   </div>
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center">
+                      <Building className="h-5 w-5 text-slate-600" />
+                    </div>
+                    <div>
+                      <p className="font-medium">Fidelity National Title</p>
+                      <p className="text-sm text-muted-foreground">2 completed transactions</p>
+                    </div>
+                  </div>
+                  <Button variant="outline" className="w-full">
+                    <Plus className="mr-2 h-4 w-4" /> Add Title Company
+                  </Button>
                 </div>
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center">
-                    <Building className="h-5 w-5 text-slate-600" />
-                  </div>
-                  <div>
-                    <p className="font-medium">Fidelity National Title</p>
-                    <p className="text-sm text-muted-foreground">2 completed transactions</p>
-                  </div>
-                </div>
-                <Button variant="outline" className="w-full">
-                  <Plus className="mr-2 h-4 w-4" /> Add Title Company
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          )}
 
           <Card>
             <CardHeader className="pb-3">
-              <CardTitle>Recent Documents</CardTitle>
-              <CardDescription>Latest transaction documents</CardDescription>
+              <CardTitle>{isProfessional ? "Recent Work" : "Recent Documents"}</CardTitle>
+              <CardDescription>
+                {isProfessional ? "Latest project deliverables" : "Latest transaction documents"}
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center">
-                    <FileText className="h-5 w-5 text-slate-600" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium truncate">Purchase_Agreement_123Main.pdf</p>
-                    <p className="text-sm text-muted-foreground">Uploaded 2 hours ago</p>
-                  </div>
-                  <Button variant="ghost" size="icon">
-                    <ArrowUpRight className="h-4 w-4" />
-                  </Button>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center">
-                    <FileText className="h-5 w-5 text-slate-600" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium truncate">Inspection_Report_456Oak.pdf</p>
-                    <p className="text-sm text-muted-foreground">Uploaded 1 day ago</p>
-                  </div>
-                  <Button variant="ghost" size="icon">
-                    <ArrowUpRight className="h-4 w-4" />
-                  </Button>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center">
-                    <FileText className="h-5 w-5 text-slate-600" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium truncate">Disclosure_Form_789Pine.pdf</p>
-                    <p className="text-sm text-muted-foreground">Uploaded 3 days ago</p>
-                  </div>
-                  <Button variant="ghost" size="icon">
-                    <ArrowUpRight className="h-4 w-4" />
-                  </Button>
-                </div>
+                {isProfessional ? (
+                  <>
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center">
+                        <FileText className="h-5 w-5 text-slate-600" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium truncate">Inspection_Report_123Main.pdf</p>
+                        <p className="text-sm text-muted-foreground">Delivered 2 hours ago</p>
+                      </div>
+                      <Button variant="ghost" size="icon">
+                        <ArrowUpRight className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center">
+                        <FileText className="h-5 w-5 text-slate-600" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium truncate">Property_Photos_456Oak.zip</p>
+                        <p className="text-sm text-muted-foreground">Delivered 1 day ago</p>
+                      </div>
+                      <Button variant="ghost" size="icon">
+                        <ArrowUpRight className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center">
+                        <FileText className="h-5 w-5 text-slate-600" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium truncate">Title_Search_789Pine.pdf</p>
+                        <p className="text-sm text-muted-foreground">Delivered 3 days ago</p>
+                      </div>
+                      <Button variant="ghost" size="icon">
+                        <ArrowUpRight className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center">
+                        <FileText className="h-5 w-5 text-slate-600" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium truncate">Purchase_Agreement_123Main.pdf</p>
+                        <p className="text-sm text-muted-foreground">Uploaded 2 hours ago</p>
+                      </div>
+                      <Button variant="ghost" size="icon">
+                        <ArrowUpRight className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center">
+                        <FileText className="h-5 w-5 text-slate-600" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium truncate">Inspection_Report_456Oak.pdf</p>
+                        <p className="text-sm text-muted-foreground">Uploaded 1 day ago</p>
+                      </div>
+                      <Button variant="ghost" size="icon">
+                        <ArrowUpRight className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center">
+                        <FileText className="h-5 w-5 text-slate-600" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium truncate">Disclosure_Form_789Pine.pdf</p>
+                        <p className="text-sm text-muted-foreground">Uploaded 3 days ago</p>
+                      </div>
+                      <Button variant="ghost" size="icon">
+                        <ArrowUpRight className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </>
+                )}
                 <Button variant="outline" className="w-full">
-                  View All Documents
+                  {isProfessional ? "View All Deliverables" : "View All Documents"}
                 </Button>
               </div>
             </CardContent>
@@ -311,8 +495,8 @@ function ProgressPageContent() {
                     <p className="text-sm text-muted-foreground">Jul 20, 2023 (18 days left)</p>
                   </div>
                 </div>
-                <Button variant="outline" className="w-full">
-                  View Calendar
+                <Button variant="outline" className="w-full" asChild>
+                  <Link href="/calendar">View Calendar</Link>
                 </Button>
               </div>
             </CardContent>
@@ -497,6 +681,137 @@ function TransactionCard({ transaction }: TransactionCardProps) {
           </div>
           <Button className="mt-4 w-full" asChild>
             <Link href={`/progress/${transaction.id}`}>Manage Transaction</Link>
+          </Button>
+        </div>
+      </div>
+    </Card>
+  )
+}
+
+interface ServiceProjectCardProps {
+  project: any
+}
+
+function ServiceProjectCard({ project }: ServiceProjectCardProps) {
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "IN_PROGRESS": return "bg-amber-500"
+      case "PENDING": return "bg-blue-500"
+      case "COMPLETED": return "bg-green-600"
+      case "CANCELLED": return "bg-red-500"
+      default: return "bg-gray-500"
+    }
+  }
+
+  const getStatusLabel = (status: string) => {
+    switch (status) {
+      case "IN_PROGRESS": return "In Progress"
+      case "PENDING": return "Pending"
+      case "COMPLETED": return "Completed"
+      case "CANCELLED": return "Cancelled"
+      default: return status
+    }
+  }
+
+  const formatDate = (date: string | Date) => {
+    if (!date) return "Not set"
+    return new Date(date).toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric'
+    })
+  }
+
+  const formatPrice = (price: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(price)
+  }
+
+  const progress = project.progress || 0
+  const status = getStatusLabel(project.status)
+  const statusColor = getStatusColor(project.status)
+  const dueDate = formatDate(project.dueDate)
+  const amount = formatPrice(project.amount)
+
+  return (
+    <Card className="overflow-hidden">
+      <div className="flex flex-col md:flex-row">
+        <div className="p-6 flex-1">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-2">
+            <h3 className="font-semibold text-lg">{project.title}</h3>
+            <div className="flex items-center gap-2">
+              <Badge className={`${statusColor} text-white`}>{status}</Badge>
+              <span className="font-bold">{amount}</span>
+            </div>
+          </div>
+
+          <div className="mb-4">
+            <div className="flex justify-between text-sm mb-1">
+              <span>Progress</span>
+              <span>{progress}%</span>
+            </div>
+            <div className="w-full bg-slate-200 rounded-full h-2">
+              <div className="bg-primary rounded-full h-2" style={{ width: `${progress}%` }}></div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+            <div className="flex items-center gap-2">
+              <Clock className="h-4 w-4 text-muted-foreground" />
+              <span className="text-sm">Due: {dueDate}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <MapPin className="h-4 w-4 text-muted-foreground" />
+              <span className="text-sm">{project.location}</span>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 mb-4">
+            <Users className="h-4 w-4 text-muted-foreground" />
+            <span className="text-sm">Client: {project.client.name}</span>
+            <div className="flex items-center gap-1">
+              <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
+              <span className="text-xs text-muted-foreground">{project.client.rating}</span>
+            </div>
+          </div>
+
+          <div className="flex items-start gap-2 text-sm">
+            {progress < 100 ? (
+              <AlertCircle className="h-4 w-4 text-amber-500 mt-0.5" />
+            ) : (
+              <CheckCircle className="h-4 w-4 text-green-500 mt-0.5" />
+            )}
+            <div>
+              <p>{progress < 100 ? "Project in progress" : "Project completed"}</p>
+              <p className="text-muted-foreground">Last updated {formatDate(project.createdAt)}</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-slate-50 p-6 border-t md:border-t-0 md:border-l flex flex-col justify-between">
+          <div className="space-y-3">
+            <Button variant="outline" className="w-full justify-start" asChild>
+              <Link href="/progress">
+                <FileText className="mr-2 h-4 w-4" /> View Details
+              </Link>
+            </Button>
+            <Button variant="outline" className="w-full justify-start" asChild>
+              <Link href="/messages">
+                <Users className="mr-2 h-4 w-4" /> Contact Client
+              </Link>
+            </Button>
+            <Button variant="outline" className="w-full justify-start" asChild>
+              <Link href="/progress">
+                <Clock className="mr-2 h-4 w-4" /> Update Progress
+              </Link>
+            </Button>
+          </div>
+          <Button className="mt-4 w-full" asChild>
+            <Link href="/progress">Manage Project</Link>
           </Button>
         </div>
       </div>

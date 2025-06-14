@@ -15,6 +15,7 @@ import { ArrowLeft, AlertCircle, Plus, Building2, MapPin, DollarSign, Upload, Ho
 import { ProtectedRoute } from "@/components/protected-route"
 import { createProperty } from "@/app/actions/property-actions"
 import { useSupabase } from "@/contexts/supabase-context"
+import { PropertyImageUpload } from "@/components/property-image-upload"
 
 const propertyTypes = [
   { value: "RESIDENTIAL", label: "Residential" },
@@ -58,6 +59,8 @@ function CreatePropertyContent() {
     features: [] as string[],
   })
 
+  const [imageUrls, setImageUrls] = useState<string[]>([])
+
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }))
   }
@@ -69,6 +72,10 @@ function CreatePropertyContent() {
         ? prev.features.filter(f => f !== feature)
         : [...prev.features, feature]
     }))
+  }
+
+  const handleImagesChange = (urls: string[]) => {
+    setImageUrls(urls)
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -86,6 +93,9 @@ function CreatePropertyContent() {
           formDataToSend.append(key, value as string)
         }
       })
+
+      // Add image URLs to form data
+      imageUrls.forEach(url => formDataToSend.append('imageUrls', url))
 
       const result = await createProperty(formDataToSend)
 
@@ -361,6 +371,13 @@ function CreatePropertyContent() {
             </CardContent>
           </Card>
 
+          {/* Property Photos */}
+          <PropertyImageUpload
+            onImagesChange={handleImagesChange}
+            maxImages={10}
+            maxSizePerImage={5}
+          />
+
           <div className="flex gap-4">
             <Button type="submit" disabled={loading || !formData.title || !formData.address || !formData.city || !formData.state || !formData.zipCode || !formData.price || !formData.type}>
               {loading ? "Creating Listing..." : "Create Listing"}
@@ -377,7 +394,7 @@ function CreatePropertyContent() {
             <li>• Your property will be listed on the marketplace</li>
             <li>• Potential buyers can view details and contact you</li>
             <li>• You can manage your listing and track interest</li>
-            <li>• Upload photos and additional documents later</li>
+            <li>• Add more photos or documents anytime after creation</li>
           </ul>
         </div>
       </div>

@@ -71,6 +71,7 @@ export async function updateUserProfile(formData: FormData) {
   const location = formData.get("location") as string
   const phone = formData.get("phone") as string
   const image = formData.get("image") as string
+  const coverPhoto = formData.get("coverPhoto") as string
 
   try {
     await prisma.user.update({
@@ -81,6 +82,7 @@ export async function updateUserProfile(formData: FormData) {
         location,
         phone,
         image,
+        coverPhoto,
       },
     })
 
@@ -89,6 +91,31 @@ export async function updateUserProfile(formData: FormData) {
   } catch (error) {
     console.error("Failed to update user profile:", error)
     return { success: false, error: "Failed to update user profile" }
+  }
+}
+
+// Update user profile image
+export async function updateUserImage(imageUrl: string, type: 'profile' | 'cover') {
+  const session = await auth()
+  if (!session?.user?.id) {
+    throw new Error("You must be logged in to update your profile")
+  }
+
+  try {
+    const updateData = type === 'profile'
+      ? { image: imageUrl }
+      : { coverPhoto: imageUrl }
+
+    await prisma.user.update({
+      where: { id: session.user.id },
+      data: updateData,
+    })
+
+    revalidatePath("/profile")
+    return { success: true }
+  } catch (error) {
+    console.error("Failed to update user image:", error)
+    return { success: false, error: "Failed to update user image" }
   }
 }
 

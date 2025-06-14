@@ -318,7 +318,7 @@ export default function CreateServicePage() {
                 You need a Professional account to create services.
               </p>
               <Button asChild>
-                <a href="/profile">Update Account Type</a>
+                <Link href="/profile">Update Account Type</Link>
               </Button>
             </div>
           </div>

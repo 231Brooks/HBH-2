@@ -38,6 +38,49 @@ interface Appointment {
   location?: string
   type: string
   userId: string
+  source?: string
+  sourceId?: string
+  status?: string
+  participants?: Array<{
+    id: string
+    user: {
+      id: string
+      name: string
+      image?: string
+      email?: string
+    }
+    role: string
+    status: string
+  }>
+  service?: {
+    id: string
+    name: string
+    provider: {
+      id: string
+      name: string
+      image?: string
+    }
+  }
+  property?: {
+    id: string
+    title: string
+    address: string
+    city: string
+    state: string
+    owner: {
+      id: string
+      name: string
+      image?: string
+    }
+  }
+  transaction?: {
+    id: string
+    type: string
+    property: {
+      title: string
+      address: string
+    }
+  }
   createdAt: Date
   updatedAt: Date
 }
@@ -99,6 +142,11 @@ export default function CalendarClient() {
     { value: "PHOTOGRAPHY", label: "Photography", icon: <Camera className="h-4 w-4" />, color: "bg-purple-100 text-purple-800" },
     { value: "LEGAL", label: "Legal", icon: <Briefcase className="h-4 w-4" />, color: "bg-green-100 text-green-800" },
     { value: "RENOVATION", label: "Renovation", icon: <Tool className="h-4 w-4" />, color: "bg-red-100 text-red-800" },
+    { value: "SERVICE_CONSULTATION", label: "Service Consultation", icon: <Briefcase className="h-4 w-4" />, color: "bg-indigo-100 text-indigo-800" },
+    { value: "PROPERTY_VIEWING", label: "Property Viewing", icon: <Home className="h-4 w-4" />, color: "bg-teal-100 text-teal-800" },
+    { value: "PROPERTY_TOUR", label: "Property Tour", icon: <Home className="h-4 w-4" />, color: "bg-cyan-100 text-cyan-800" },
+    { value: "MEETING", label: "Meeting", icon: <CalendarIcon className="h-4 w-4" />, color: "bg-slate-100 text-slate-800" },
+    { value: "CALL", label: "Call", icon: <CalendarIcon className="h-4 w-4" />, color: "bg-emerald-100 text-emerald-800" },
     { value: "OTHER", label: "Other", icon: <CalendarIcon className="h-4 w-4" />, color: "bg-gray-100 text-gray-800" },
   ]
 
@@ -128,15 +176,30 @@ export default function CalendarClient() {
 
       // Add appointments
       appointmentsResult.appointments?.forEach((appointment) => {
+        let enhancedTitle = appointment.title
+        let enhancedDescription = appointment.description || ""
+
+        // Add source context to title and description
+        if (appointment.source === "SERVICE_BOOKING" && appointment.service) {
+          enhancedTitle = `${appointment.service.name} - ${appointment.service.provider.name}`
+          enhancedDescription = `Service consultation: ${appointment.description || appointment.service.name}`
+        } else if (appointment.source === "PROPERTY_VIEWING" && appointment.property) {
+          enhancedTitle = `Property Tour - ${appointment.property.title}`
+          enhancedDescription = `Property viewing at ${appointment.property.address}, ${appointment.property.city}, ${appointment.property.state}`
+        } else if (appointment.source === "PROGRESS_MILESTONE" && appointment.transaction) {
+          enhancedTitle = `${appointment.title} - ${appointment.transaction.property.title}`
+          enhancedDescription = `${appointment.transaction.type} transaction milestone`
+        }
+
         calendarEvents.push({
           id: `appointment-${appointment.id}`,
-          title: appointment.title,
+          title: enhancedTitle,
           time: new Date(appointment.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
           type: appointment.type.toLowerCase(),
           location: appointment.location,
-          description: appointment.description,
+          description: enhancedDescription,
           date: new Date(appointment.startTime),
-          source: 'appointment',
+          source: appointment.source || 'appointment',
           originalData: appointment,
         })
       })

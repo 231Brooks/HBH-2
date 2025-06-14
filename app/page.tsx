@@ -265,7 +265,7 @@ export default function Home() {
                 <Link href="/marketplace">Browse Properties</Link>
               </Button>
               <Button size="lg" variant="outline" asChild>
-                <Link href="/profile/create">Create Account</Link>
+                <Link href="/auth/signup">Create Account</Link>
               </Button>
             </div>
           </div>

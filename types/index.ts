@@ -4,6 +4,7 @@ export type User = {
   email: string
   name?: string
   image?: string
+  coverPhoto?: string
   role: "USER" | "PROFESSIONAL" | "ADMIN"
   createdAt: Date
   updatedAt: Date

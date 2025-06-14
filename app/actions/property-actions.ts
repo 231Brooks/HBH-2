@@ -5,7 +5,7 @@ import prisma from "@/lib/prisma-pool" // Updated import
 import { auth } from "@/lib/auth"
 import { withQueryPerformance } from "@/lib/db-monitoring"
 
-// Create a new property listing
+// Create a new property listing with images
 export async function createProperty(formData: FormData) {
   const session = await auth()
   if (!session?.user?.id) {
@@ -25,6 +25,7 @@ export async function createProperty(formData: FormData) {
   const type = formData.get("type") as string
   const status = formData.get("status") as string
   const features = formData.getAll("features") as string[]
+  const imageUrls = formData.getAll("imageUrls") as string[]
 
   // Validate required fields
   if (!title || !address || !city || !state || !zipCode || !price || !type || !status) {
@@ -33,23 +34,40 @@ export async function createProperty(formData: FormData) {
 
   try {
     const createPropertyQuery = withQueryPerformance(async () => {
-      return prisma.property.create({
-        data: {
-          title,
-          description,
-          address,
-          city,
-          state,
-          zipCode,
-          price,
-          beds: beds || null,
-          baths: baths || null,
-          sqft: sqft || null,
-          type: type as any,
-          status: status as any,
-          features,
-          ownerId: session.user.id,
-        },
+      // Create property and images in a transaction
+      return prisma.$transaction(async (tx) => {
+        // Create the property
+        const property = await tx.property.create({
+          data: {
+            title,
+            description,
+            address,
+            city,
+            state,
+            zipCode,
+            price,
+            beds: beds || null,
+            baths: baths || null,
+            sqft: sqft || null,
+            type: type as any,
+            status: status as any,
+            features,
+            ownerId: session.user.id,
+          },
+        })
+
+        // Create property images if any were uploaded
+        if (imageUrls.length > 0) {
+          await tx.propertyImage.createMany({
+            data: imageUrls.map((url, index) => ({
+              url,
+              propertyId: property.id,
+              isPrimary: index === 0, // First image is primary
+            })),
+          })
+        }
+
+        return property
       })
     }, "createProperty")
 
@@ -60,6 +78,86 @@ export async function createProperty(formData: FormData) {
   } catch (error) {
     console.error("Failed to create property:", error)
     return { success: false, error: "Failed to create property" }
+  }
+}
+
+// Add images to an existing property
+export async function addPropertyImages(propertyId: string, imageUrls: string[]) {
+  const session = await auth()
+  if (!session?.user?.id) {
+    throw new Error("You must be logged in to add images")
+  }
+
+  try {
+    // Verify property ownership
+    const property = await prisma.property.findUnique({
+      where: { id: propertyId },
+      select: { ownerId: true },
+    })
+
+    if (!property || property.ownerId !== session.user.id) {
+      throw new Error("Property not found or you don't have permission")
+    }
+
+    // Check if property has any existing images
+    const existingImages = await prisma.propertyImage.findMany({
+      where: { propertyId },
+      select: { isPrimary: true },
+    })
+
+    const hasPrimaryImage = existingImages.some(img => img.isPrimary)
+
+    // Create new images
+    await prisma.propertyImage.createMany({
+      data: imageUrls.map((url, index) => ({
+        url,
+        propertyId,
+        isPrimary: !hasPrimaryImage && index === 0, // First image is primary if no primary exists
+      })),
+    })
+
+    revalidatePath("/marketplace")
+    revalidatePath(`/marketplace/property/${propertyId}`)
+    return { success: true }
+  } catch (error) {
+    console.error("Failed to add property images:", error)
+    return { success: false, error: "Failed to add property images" }
+  }
+}
+
+// Remove a property image
+export async function removePropertyImage(imageId: string) {
+  const session = await auth()
+  if (!session?.user?.id) {
+    throw new Error("You must be logged in to remove images")
+  }
+
+  try {
+    // Get image and verify ownership
+    const image = await prisma.propertyImage.findUnique({
+      where: { id: imageId },
+      include: {
+        property: {
+          select: { ownerId: true, id: true },
+        },
+      },
+    })
+
+    if (!image || image.property.ownerId !== session.user.id) {
+      throw new Error("Image not found or you don't have permission")
+    }
+
+    // Delete the image
+    await prisma.propertyImage.delete({
+      where: { id: imageId },
+    })
+
+    revalidatePath("/marketplace")
+    revalidatePath(`/marketplace/property/${image.property.id}`)
+    return { success: true }
+  } catch (error) {
+    console.error("Failed to remove property image:", error)
+    return { success: false, error: "Failed to remove property image" }
   }
 }
 

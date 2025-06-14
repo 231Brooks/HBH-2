@@ -169,10 +169,10 @@ export default function CalendarClientPage() {
           <p className="text-muted-foreground">Manage all your appointments and deadlines in one place</p>
         </div>
         <div className="flex gap-2">
-          <Button>
+          <Button onClick={() => console.log('Add Event clicked')}>
             <Plus className="mr-2 h-4 w-4" /> Add Event
           </Button>
-          <Button variant="outline">
+          <Button variant="outline" onClick={() => console.log('Sync Calendar clicked')}>
             <CalendarIcon className="mr-2 h-4 w-4" /> Sync Calendar
           </Button>
         </div>
@@ -339,7 +339,7 @@ export default function CalendarClientPage() {
                     </div>
                   </div>
                 </div>
-                <Button variant="outline" className="w-full">
+                <Button variant="outline" className="w-full" onClick={() => console.log('View All Events clicked')}>
                   View All Events
                 </Button>
               </div>

@@ -25,7 +25,11 @@ import {
   Plus,
   TrendingUp,
   Clock,
-  CheckCircle
+  CheckCircle,
+  Edit3,
+  MapPin,
+  Phone,
+  Mail
 } from "lucide-react"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
@@ -35,12 +39,16 @@ import { usePermissions } from "@/hooks/use-permissions"
 import { AccountTypeSelector } from "@/components/account-type-selector"
 import { RoleGuard } from "@/components/role-guard"
 import { ROLE_DESCRIPTIONS, type UserRole } from "@/lib/user-roles"
+import { ProfileHeader } from "@/components/profile-header"
 
 function ProfilePageContent() {
   const router = useRouter()
   const { supabase, user } = useSupabase()
   const { userRole, permissions } = usePermissions()
   const [name, setName] = useState("")
+  const [bio, setBio] = useState("")
+  const [location, setLocation] = useState("")
+  const [phone, setPhone] = useState("")
   const [selectedRole, setSelectedRole] = useState<UserRole>(userRole)
   const [loading, setLoading] = useState(false)
   const [roleLoading, setRoleLoading] = useState(false)
@@ -48,10 +56,13 @@ function ProfilePageContent() {
   const [success, setSuccess] = useState(false)
   const [showRoleSelector, setShowRoleSelector] = useState(false)
 
-  // Set initial name and role from user metadata when user is available
+  // Set initial values from user metadata when user is available
   useEffect(() => {
     if (user) {
       setName(user.user_metadata?.name || "")
+      setBio(user.user_metadata?.bio || "")
+      setLocation(user.user_metadata?.location || "")
+      setPhone(user.user_metadata?.phone || "")
       setSelectedRole((user.user_metadata?.role || 'USER') as UserRole)
     }
   }, [user])
@@ -70,7 +81,12 @@ function ProfilePageContent() {
 
     try {
       const { error: updateError } = await supabase.auth.updateUser({
-        data: { name },
+        data: {
+          name,
+          bio,
+          location,
+          phone
+        },
       })
 
       if (updateError) {
@@ -238,23 +254,40 @@ function ProfilePageContent() {
     }
   ].filter(activity => activity.show)
 
+  const handleProfileUpdate = () => {
+    // Trigger a re-fetch of user data if needed
+    window.location.reload()
+  }
+
+  const profileUser = {
+    id: user?.id || '',
+    name: user?.user_metadata?.name || user?.user_metadata?.full_name || '',
+    email: user?.email || '',
+    image: user?.user_metadata?.avatar_url || user?.user_metadata?.picture || '',
+    coverPhoto: user?.user_metadata?.cover_photo || '',
+    role: userRole,
+    location: user?.user_metadata?.location || '',
+    bio: user?.user_metadata?.bio || '',
+    rating: 4.8, // This would come from your database
+    reviewCount: 12 // This would come from your database
+  }
+
   return (
-    <div className="container mx-auto py-8 px-4">
-      <div className="space-y-8">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold">Profile & Dashboard</h1>
-            <p className="text-muted-foreground">
-              Manage your account and see what's happening.
-            </p>
-          </div>
-          <Badge variant="secondary" className="text-sm">
-            {userRole === 'USER' && 'Regular User'}
-            {userRole === 'PROFESSIONAL' && 'Service Professional'}
-            {userRole === 'ADMIN' && 'Administrator'}
-          </Badge>
+    <div className="min-h-screen bg-gray-50">
+      {/* Profile Header with Cover Photo and Profile Picture */}
+      <div className="bg-white shadow-sm">
+        <div className="container mx-auto">
+          <ProfileHeader
+            user={profileUser}
+            isOwnProfile={true}
+            onProfileUpdate={handleProfileUpdate}
+          />
         </div>
+      </div>
+
+      {/* Main Content */}
+      <div className="container mx-auto py-8 px-4">
+        <div className="space-y-8">
 
         {/* Stats Grid */}
         {stats.length > 0 && (
@@ -400,8 +433,11 @@ function ProfilePageContent() {
 
           <Card>
             <CardHeader>
-              <CardTitle>Profile Information</CardTitle>
-              <CardDescription>Update your account information</CardDescription>
+              <CardTitle className="flex items-center gap-2">
+                <Edit3 className="h-5 w-5" />
+                Profile Information
+              </CardTitle>
+              <CardDescription>Update your personal information and preferences</CardDescription>
             </CardHeader>
             <CardContent>
               {error && (
@@ -417,21 +453,78 @@ function ProfilePageContent() {
                 </Alert>
               )}
 
-              <form onSubmit={handleUpdateProfile} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input id="email" type="email" value={user.email} disabled />
-                  <p className="text-sm text-muted-foreground">
-                    Your email address is your unique identifier and cannot be changed.
-                  </p>
+              <form onSubmit={handleUpdateProfile} className="space-y-6">
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label htmlFor="email" className="flex items-center gap-2">
+                      <Mail className="h-4 w-4" />
+                      Email
+                    </Label>
+                    <Input id="email" type="email" value={user.email} disabled />
+                    <p className="text-sm text-muted-foreground">
+                      Your email address is your unique identifier and cannot be changed.
+                    </p>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="name" className="flex items-center gap-2">
+                      <User className="h-4 w-4" />
+                      Full Name
+                    </Label>
+                    <Input
+                      id="name"
+                      type="text"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      placeholder="Enter your full name"
+                      required
+                    />
+                  </div>
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="name">Full Name</Label>
-                  <Input id="name" type="text" value={name} onChange={(e) => setName(e.target.value)} required />
+                  <Label htmlFor="bio" className="flex items-center gap-2">
+                    <FileText className="h-4 w-4" />
+                    Bio
+                  </Label>
+                  <textarea
+                    id="bio"
+                    className="w-full min-h-[100px] px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="Tell us about yourself..."
+                    value={bio}
+                    onChange={(e) => setBio(e.target.value)}
+                  />
                 </div>
 
-                <Button type="submit" disabled={loading || !supabase}>
+                <div className="space-y-2">
+                  <Label htmlFor="location" className="flex items-center gap-2">
+                    <MapPin className="h-4 w-4" />
+                    Location
+                  </Label>
+                  <Input
+                    id="location"
+                    type="text"
+                    placeholder="City, State"
+                    value={location}
+                    onChange={(e) => setLocation(e.target.value)}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="phone" className="flex items-center gap-2">
+                    <Phone className="h-4 w-4" />
+                    Phone Number
+                  </Label>
+                  <Input
+                    id="phone"
+                    type="tel"
+                    placeholder="(555) 123-4567"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                  />
+                </div>
+
+                <Button type="submit" disabled={loading || !supabase} className="w-full md:w-auto">
                   {loading ? "Updating..." : "Update Profile"}
                 </Button>
               </form>
@@ -517,6 +610,7 @@ function ProfilePageContent() {
             </CardContent>
           </Card>
         </RoleGuard>
+        </div>
       </div>
     </div>
   )
