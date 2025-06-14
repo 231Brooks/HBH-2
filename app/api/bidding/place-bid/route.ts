@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getCurrentUser } from "@/lib/auth"
 import prisma from "@/lib/prisma"
+import { checkAuctionExtension, sendOutbidNotifications, updateAuctionAnalytics } from "@/lib/auction-management"
 
 export async function POST(request: NextRequest) {
   try {
@@ -109,6 +110,18 @@ export async function POST(request: NextRequest) {
       })
 
       return bid
+    })
+
+    // Post-transaction operations (don't block the response)
+    Promise.all([
+      // Check if auction should be extended
+      checkAuctionExtension(propertyId, result.id),
+      // Send outbid notifications
+      sendOutbidNotifications(propertyId, amount),
+      // Update auction analytics
+      updateAuctionAnalytics(propertyId)
+    ]).catch(error => {
+      console.error("Error in post-bid operations:", error)
     })
 
     return NextResponse.json({

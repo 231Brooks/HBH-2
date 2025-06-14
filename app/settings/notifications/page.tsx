@@ -134,6 +134,68 @@ function NotificationSettingsContent() {
       inApp: true
     },
 
+    // Auction Notifications
+    {
+      id: "auction-outbid",
+      title: "Outbid Notifications",
+      description: "When someone outbids you in an auction",
+      category: "Auctions",
+      email: true,
+      push: true,
+      inApp: true,
+      sms: false
+    },
+    {
+      id: "auction-ending-soon",
+      title: "Auction Ending Soon",
+      description: "When auctions you're watching are ending soon",
+      category: "Auctions",
+      email: true,
+      push: true,
+      inApp: true,
+      sms: false
+    },
+    {
+      id: "auction-won",
+      title: "Auction Won",
+      description: "When you win an auction",
+      category: "Auctions",
+      email: true,
+      push: true,
+      inApp: true,
+      sms: true
+    },
+    {
+      id: "auction-lost",
+      title: "Auction Lost",
+      description: "When an auction you participated in ends",
+      category: "Auctions",
+      email: true,
+      push: false,
+      inApp: true,
+      sms: false
+    },
+    {
+      id: "auction-extended",
+      title: "Auction Extended",
+      description: "When an auction is extended due to last-minute bids",
+      category: "Auctions",
+      email: true,
+      push: true,
+      inApp: true,
+      sms: false
+    },
+    {
+      id: "reserve-price-met",
+      title: "Reserve Price Met",
+      description: "When reserve price is met on auctions you're watching",
+      category: "Auctions",
+      email: true,
+      push: true,
+      inApp: true,
+      sms: false
+    },
+
     // Calendar & Appointments
     {
       id: "appointment-reminders",
