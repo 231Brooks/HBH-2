@@ -1,106 +1,123 @@
-import { NextResponse } from "next/server"
-import { createClient } from "@supabase/supabase-js"
-import { withCallbackLogging } from "@/lib/callback-logger"
+import { NextRequest, NextResponse } from "next/server"
+import { getCurrentUser } from "@/lib/auth"
+import prisma from "@/lib/prisma"
 
-async function handlePlaceBid(request: Request) {
+export async function POST(request: NextRequest) {
   try {
+    const user = await getCurrentUser()
+    if (!user?.id) {
+      return NextResponse.json({ error: "Authentication required" }, { status: 401 })
+    }
+
     const { propertyId, amount } = await request.json()
 
-    // Validate input
     if (!propertyId || !amount) {
-      return NextResponse.json({ error: "Property ID and bid amount are required" }, { status: 400 })
+      return NextResponse.json({ error: "Property ID and amount are required" }, { status: 400 })
     }
 
     if (typeof amount !== "number" || amount <= 0) {
       return NextResponse.json({ error: "Bid amount must be a positive number" }, { status: 400 })
     }
 
-    // Initialize Supabase client
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
-    const supabase = createClient(supabaseUrl, supabaseServiceKey)
+    // Get property details with auction information
+    const property = await prisma.property.findUnique({
+      where: { id: propertyId },
+      select: {
+        id: true,
+        status: true,
+        currentBid: true,
+        minimumBid: true,
+        bidIncrement: true,
+        auctionEndDate: true,
+        ownerId: true,
+      },
+    })
 
-    // Check if property exists
-    const { data: property, error: propertyError } = await supabase
-      .from("properties")
-      .select("id, current_bid, minimum_bid")
-      .eq("id", propertyId)
-      .single()
-
-    if (propertyError || !property) {
+    if (!property) {
       return NextResponse.json({ error: "Property not found" }, { status: 404 })
     }
 
-    // Check if bid is high enough
-    const minimumBid = property.current_bid
-      ? property.current_bid + (property.minimum_bid || 1000)
-      : property.minimum_bid || 0
+    // Check if property is an auction
+    if (property.status !== "AUCTION") {
+      return NextResponse.json({ error: "Property is not an auction" }, { status: 400 })
+    }
+
+    // Check if auction has ended
+    if (property.auctionEndDate && new Date() > property.auctionEndDate) {
+      return NextResponse.json({ error: "Auction has ended" }, { status: 400 })
+    }
+
+    // Check if user is trying to bid on their own property
+    if (property.ownerId === user.id) {
+      return NextResponse.json({ error: "You cannot bid on your own property" }, { status: 400 })
+    }
+
+    // Calculate minimum bid
+    const currentBid = property.currentBid || 0
+    const bidIncrement = property.bidIncrement || 1000
+    const minimumBid = currentBid > 0 ? currentBid + bidIncrement : property.minimumBid || 5000
 
     if (amount < minimumBid) {
       return NextResponse.json(
         {
           error: "Bid amount is too low",
           minimumBid,
-          currentBid: property.current_bid,
+          currentBid: property.currentBid,
         },
         { status: 400 },
       )
     }
 
-    // Record the bid
-    const { data: bid, error: bidError } = await supabase
-      .from("bids")
-      .insert({
-        property_id: propertyId,
-        amount,
-        user_id: "test-user", // In a real implementation, get this from auth
-        status: "pending",
+    // Use transaction to ensure data consistency
+    const result = await prisma.$transaction(async (tx) => {
+      // Mark all previous bids as outbid
+      await tx.bid.updateMany({
+        where: {
+          propertyId,
+          status: "ACTIVE",
+        },
+        data: {
+          status: "OUTBID",
+          isWinning: false,
+        },
       })
-      .select()
-      .single()
 
-    if (bidError) {
-      console.error("Error recording bid:", bidError)
-      return NextResponse.json({ error: "Failed to record bid" }, { status: 500 })
-    }
-
-    // Update property current bid
-    const { error: updateError } = await supabase
-      .from("properties")
-      .update({ current_bid: amount })
-      .eq("id", propertyId)
-
-    if (updateError) {
-      console.error("Error updating property bid:", updateError)
-      // We still return success since the bid was recorded
-    }
-
-    // Send notification about new bid
-    try {
-      await supabase.from("notifications").insert({
-        user_id: property.user_id, // Property owner
-        message: `New bid of $${amount.toLocaleString()} on your property`,
-        type: "bid",
-        reference_id: propertyId,
+      // Create the new bid
+      const bid = await tx.bid.create({
+        data: {
+          amount,
+          propertyId,
+          bidderId: user.id,
+          status: "ACTIVE",
+          isWinning: true,
+        },
+        include: {
+          bidder: {
+            select: {
+              id: true,
+              name: true,
+              image: true,
+            },
+          },
+        },
       })
-    } catch (notificationError) {
-      console.error("Error sending notification:", notificationError)
-      // Non-critical error, continue
-    }
+
+      // Update property current bid
+      await tx.property.update({
+        where: { id: propertyId },
+        data: { currentBid: amount },
+      })
+
+      return bid
+    })
 
     return NextResponse.json({
       success: true,
-      bid: {
-        id: bid.id,
-        amount,
-        status: "pending",
-      },
+      bid: result,
+      newCurrentBid: amount,
     })
-  } catch (error: any) {
-    console.error("Bid error:", error)
-    return NextResponse.json({ error: error.message || "An unexpected error occurred" }, { status: 500 })
+  } catch (error) {
+    console.error("Error placing bid:", error)
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }
-
-// Wrap the handler with logging
-export const POST = withCallbackLogging(handlePlaceBid, "bidding/place-bid")

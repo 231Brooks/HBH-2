@@ -3,7 +3,7 @@ import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { MapPin, Gavel, Building, Home, ArrowUpRight, MessageSquare, Heart, Calendar } from "lucide-react"
+import { MapPin, Gavel, Building, Home, ArrowUpRight, MessageSquare, Heart, Calendar, Clock } from "lucide-react"
 import { QuickContactButton } from "@/components/contact-dialog"
 import { PropertyViewingDialog } from "@/components/property-viewing-dialog"
 
@@ -35,6 +35,28 @@ export function PropertyCard({ property, viewMode }: PropertyCardProps) {
   const statusBadge = getStatusBadge(property.status)
   const primaryImage = property.images?.[0]?.url || "/placeholder.svg?height=400&width=600"
   const fullAddress = `${property.address}, ${property.city}, ${property.state} ${property.zipCode}`
+
+  // Auction-specific data
+  const isAuction = property.status === "AUCTION"
+  const auctionEndDate = property.auctionEndDate ? new Date(property.auctionEndDate) : null
+  const currentBid = property.currentBid
+  const auctionEnded = auctionEndDate ? new Date() > auctionEndDate : false
+
+  const formatAuctionTime = (endDate: Date) => {
+    const now = new Date()
+    const diff = endDate.getTime() - now.getTime()
+
+    if (diff <= 0) return "Ended"
+
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24))
+    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
+
+    if (days > 0) return `${days}d ${hours}h left`
+    if (hours > 0) return `${hours}h left`
+
+    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))
+    return `${minutes}m left`
+  }
   
   if (viewMode === "grid") {
     return (
@@ -75,6 +97,24 @@ export function PropertyCard({ property, viewMode }: PropertyCardProps) {
             <MapPin className="h-3 w-3 sm:h-4 sm:w-4 mr-1 flex-shrink-0" />
             <span className="truncate">{fullAddress}</span>
           </div>
+
+          {/* Auction Information */}
+          {isAuction && (
+            <div className="mb-3 space-y-1">
+              {currentBid && (
+                <div className="flex items-center text-xs sm:text-sm">
+                  <span className="text-muted-foreground">Current Bid:</span>
+                  <span className="ml-1 font-semibold text-primary">{formatPrice(currentBid)}</span>
+                </div>
+              )}
+              {auctionEndDate && (
+                <div className={`flex items-center text-xs sm:text-sm ${auctionEnded ? 'text-red-600' : 'text-amber-600'}`}>
+                  <Clock className="h-3 w-3 mr-1" />
+                  <span>{auctionEnded ? "Auction Ended" : formatAuctionTime(auctionEndDate)}</span>
+                </div>
+              )}
+            </div>
+          )}
           <div className="flex justify-between mb-4 flex-grow">
             <div className="flex flex-wrap gap-1 sm:gap-2">
               {property.beds && <Badge variant="outline" className="text-xs">{property.beds} Beds</Badge>}
@@ -158,6 +198,24 @@ export function PropertyCard({ property, viewMode }: PropertyCardProps) {
               <MapPin className="h-3 w-3 sm:h-4 sm:w-4 mr-1 flex-shrink-0" />
               <span className="truncate">{fullAddress}</span>
             </div>
+
+            {/* Auction Information for List View */}
+            {isAuction && (
+              <div className="mb-3 space-y-1">
+                {currentBid && (
+                  <div className="flex items-center text-xs sm:text-sm">
+                    <span className="text-muted-foreground">Current Bid:</span>
+                    <span className="ml-1 font-semibold text-primary">{formatPrice(currentBid)}</span>
+                  </div>
+                )}
+                {auctionEndDate && (
+                  <div className={`flex items-center text-xs sm:text-sm ${auctionEnded ? 'text-red-600' : 'text-amber-600'}`}>
+                    <Clock className="h-3 w-3 mr-1" />
+                    <span>{auctionEnded ? "Auction Ended" : formatAuctionTime(auctionEndDate)}</span>
+                  </div>
+                )}
+              </div>
+            )}
             <p className="text-xs sm:text-sm text-muted-foreground mb-4 line-clamp-2 flex-grow">{property.description}</p>
             <div className="flex flex-wrap gap-2 sm:gap-4 mb-4">
               {property.beds && (

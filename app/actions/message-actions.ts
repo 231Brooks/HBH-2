@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache"
 import prisma from "@/lib/prisma"
-import { auth } from "@/lib/auth"
+import { getCurrentUser } from "@/lib/auth"
 
 // Get all conversations for the current user
 export async function getUserConversations() {

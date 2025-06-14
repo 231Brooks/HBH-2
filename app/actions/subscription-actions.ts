@@ -1,7 +1,7 @@
 "use server"
 
 import { revalidatePath } from "next/cache"
-import { auth } from "@/lib/auth"
+import { getCurrentUser } from "@/lib/auth"
 import prisma from "@/lib/prisma"
 import { SubscriptionTier, FeeType, FeeStatus } from "@prisma/client"
 import {
@@ -29,13 +29,13 @@ export async function getMySubscription() {
 }
 
 export async function checkListingPermission() {
-  const session = await auth()
-  if (!session?.user?.id) {
+  const user = await getCurrentUser()
+  if (!user?.id) {
     return { success: false, error: "Authentication required" }
   }
 
   try {
-    const result = await canCreateListing(session.user.id)
+    const result = await canCreateListing(user.id)
     return { success: true, ...result }
   } catch (error) {
     console.error("Failed to check listing permission:", error)
@@ -44,25 +44,25 @@ export async function checkListingPermission() {
 }
 
 export async function upgradeSubscription(tier: SubscriptionTier, paymentMethodId?: string) {
-  const session = await auth()
-  if (!session?.user?.id) {
+  const user = await getCurrentUser()
+  if (!user?.id) {
     return { success: false, error: "Authentication required" }
   }
 
   try {
     // For monthly subscriptions, we need Stripe integration
     if (tier === SubscriptionTier.PROFESSIONAL_MONTHLY && paymentMethodId) {
-      const result = await createStripeSubscription(session.user.id, tier, paymentMethodId)
+      const result = await createStripeSubscription(user.id, tier, paymentMethodId)
       revalidatePath("/settings/subscription")
       return { success: true, ...result }
     }
 
     // For pay-per-listing or free, just update the database
     const subscription = await prisma.subscription.upsert({
-      where: { userId: session.user.id },
+      where: { userId: user.id },
       update: { tier },
       create: {
-        userId: session.user.id,
+        userId: user.id,
         tier,
         currentPeriodStart: new Date(),
         currentPeriodEnd: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000), // 1 year
@@ -78,13 +78,13 @@ export async function upgradeSubscription(tier: SubscriptionTier, paymentMethodI
 }
 
 export async function cancelMySubscription() {
-  const session = await auth()
-  if (!session?.user?.id) {
+  const user = await getCurrentUser()
+  if (!user?.id) {
     return { success: false, error: "Authentication required" }
   }
 
   try {
-    await cancelSubscription(session.user.id)
+    await cancelSubscription(user.id)
     revalidatePath("/settings/subscription")
     return { success: true }
   } catch (error) {
@@ -94,13 +94,13 @@ export async function cancelMySubscription() {
 }
 
 export async function reactivateMySubscription() {
-  const session = await auth()
-  if (!session?.user?.id) {
+  const user = await getCurrentUser()
+  if (!user?.id) {
     return { success: false, error: "Authentication required" }
   }
 
   try {
-    await reactivateSubscription(session.user.id)
+    await reactivateSubscription(user.id)
     revalidatePath("/settings/subscription")
     return { success: true }
   } catch (error) {
@@ -110,19 +110,19 @@ export async function reactivateMySubscription() {
 }
 
 export async function createListingFee(serviceId: string) {
-  const session = await auth()
-  if (!session?.user?.id) {
+  const user = await getCurrentUser()
+  if (!user?.id) {
     return { success: false, error: "Authentication required" }
   }
 
   try {
-    const subscription = await getUserSubscription(session.user.id)
+    const subscription = await getUserSubscription(user.id)
 
     // Check if user needs to pay per listing
     if (subscription.tier === SubscriptionTier.PAY_PER_LISTING) {
       const fee = await prisma.fee.create({
         data: {
-          userId: session.user.id,
+          userId: user.id,
           type: FeeType.LISTING_FEE,
           amount: 10, // $10 per listing
           description: `Listing fee for service ${serviceId}`,
@@ -142,18 +142,18 @@ export async function createListingFee(serviceId: string) {
 }
 
 export async function createTransactionFee(serviceOrderId: string, amount: number) {
-  const session = await auth()
-  if (!session?.user?.id) {
+  const user = await getCurrentUser()
+  if (!user?.id) {
     return { success: false, error: "Authentication required" }
   }
 
   try {
-    const feeAmount = await calculateServiceFee(amount, session.user.id)
+    const feeAmount = await calculateServiceFee(amount, user.id)
 
     if (feeAmount > 0) {
       const fee = await prisma.fee.create({
         data: {
-          userId: session.user.id,
+          userId: user.id,
           type: FeeType.TRANSACTION_FEE,
           amount: feeAmount,
           description: `Transaction fee for service order ${serviceOrderId}`,
@@ -173,14 +173,14 @@ export async function createTransactionFee(serviceOrderId: string, amount: numbe
 }
 
 export async function getMyBillingHistory() {
-  const session = await auth()
-  if (!session?.user?.id) {
+  const user = await getCurrentUser()
+  if (!user?.id) {
     return { success: false, error: "Authentication required" }
   }
 
   try {
     const fees = await prisma.fee.findMany({
-      where: { userId: session.user.id },
+      where: { userId: user.id },
       include: {
         serviceOrder: {
           include: {

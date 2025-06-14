@@ -11,6 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { BidForm } from "@/components/bidding/bid-form"
 import { BidHistory } from "@/components/bidding/bid-history"
+import { AuctionTimer } from "@/components/auction/auction-timer"
 import { QuickContactButton } from "@/components/contact-dialog"
 import {
   ArrowLeft,
@@ -226,14 +227,83 @@ function PropertyDetailContent() {
             </CardContent>
           </Card>
 
-          {/* Bidding Section for Auction Properties */}
+          {/* Auction Section for Auction Properties */}
           {property.status === "AUCTION" && (
             <div className="space-y-6">
+              {/* Auction Timer */}
+              {property.auctionEndDate && (
+                <AuctionTimer
+                  endDate={new Date(property.auctionEndDate)}
+                  onAuctionEnd={() => {
+                    // Refresh the page when auction ends
+                    window.location.reload()
+                  }}
+                />
+              )}
+
+              {/* Auction Information */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Auction Details</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-sm text-muted-foreground">Current Bid</p>
+                      <p className="text-2xl font-bold text-primary">
+                        {property.currentBid ? `$${property.currentBid.toLocaleString()}` : "No bids yet"}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground">Starting Bid</p>
+                      <p className="text-lg font-semibold">
+                        ${property.minimumBid?.toLocaleString() || "N/A"}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-sm text-muted-foreground">Bid Increment</p>
+                      <p className="text-lg font-semibold">
+                        ${property.bidIncrement?.toLocaleString() || "1,000"}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground">Auction Ends</p>
+                      <p className="text-lg font-semibold">
+                        {property.auctionEndDate
+                          ? new Date(property.auctionEndDate).toLocaleDateString() + " at " + new Date(property.auctionEndDate).toLocaleTimeString()
+                          : "N/A"
+                        }
+                      </p>
+                    </div>
+                  </div>
+
+                  {property.reservePrice && (
+                    <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                      <p className="text-sm text-amber-800">
+                        <strong>Reserve Price:</strong> This auction has a reserve price. The seller is not obligated to sell if the reserve is not met.
+                      </p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Bidding Form */}
               <BidForm
                 propertyId={property.id}
                 currentBid={property.currentBid}
                 minimumBid={property.minimumBid || 5000}
+                bidIncrement={property.bidIncrement || 1000}
+                auctionEndDate={property.auctionEndDate ? new Date(property.auctionEndDate) : undefined}
+                onBidPlaced={() => {
+                  // Refresh the page to show updated bid information
+                  window.location.reload()
+                }}
               />
+
+              {/* Bid History */}
               <BidHistory propertyId={property.id} />
             </div>
           )}

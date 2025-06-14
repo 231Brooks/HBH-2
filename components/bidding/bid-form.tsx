@@ -14,17 +14,22 @@ interface BidFormProps {
   propertyId: string
   currentBid: number | null
   minimumBid: number
+  bidIncrement?: number
+  auctionEndDate?: Date
   onBidPlaced?: (amount: number) => void
 }
 
-export function BidForm({ propertyId, currentBid, minimumBid, onBidPlaced }: BidFormProps) {
+export function BidForm({ propertyId, currentBid, minimumBid, bidIncrement = 1000, auctionEndDate, onBidPlaced }: BidFormProps) {
   const { supabase, user } = useSupabase()
   const { toast } = useToast()
   const [bidAmount, setBidAmount] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   // Calculate minimum bid amount
-  const minBidAmount = currentBid ? currentBid + minimumBid : minimumBid
+  const minBidAmount = currentBid ? currentBid + bidIncrement : minimumBid
+
+  // Check if auction has ended
+  const auctionEnded = auctionEndDate ? new Date() > new Date(auctionEndDate) : false
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -118,15 +123,20 @@ export function BidForm({ propertyId, currentBid, minimumBid, onBidPlaced }: Bid
               </div>
               <p className="text-sm text-gray-500 mt-1">
                 {currentBid
-                  ? `Current bid: $${currentBid.toLocaleString()} • Minimum increment: $${minimumBid.toLocaleString()}`
+                  ? `Current bid: $${currentBid.toLocaleString()} • Minimum increment: $${bidIncrement.toLocaleString()}`
                   : `Starting bid: $${minimumBid.toLocaleString()}`}
               </p>
+              {auctionEnded && (
+                <p className="text-sm text-red-600 mt-1 font-medium">
+                  This auction has ended. No more bids can be placed.
+                </p>
+              )}
             </div>
           </div>
         </CardContent>
         <CardFooter>
-          <Button type="submit" className="w-full" disabled={isSubmitting || !user}>
-            {isSubmitting ? "Placing Bid..." : "Place Bid"}
+          <Button type="submit" className="w-full" disabled={isSubmitting || !user || auctionEnded}>
+            {auctionEnded ? "Auction Ended" : isSubmitting ? "Placing Bid..." : "Place Bid"}
           </Button>
         </CardFooter>
       </form>

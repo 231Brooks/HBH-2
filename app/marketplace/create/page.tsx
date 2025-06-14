@@ -11,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Checkbox } from "@/components/ui/checkbox"
-import { ArrowLeft, AlertCircle, Plus, Building2, MapPin, DollarSign, Upload, Home } from "lucide-react"
+import { ArrowLeft, AlertCircle, Plus, Building2, MapPin, DollarSign, Upload, Home, Gavel } from "lucide-react"
 import { ProtectedRoute } from "@/components/protected-route"
 import { createProperty } from "@/app/actions/property-actions"
 import { useSupabase } from "@/contexts/supabase-context"
@@ -57,6 +57,11 @@ function CreatePropertyContent() {
     type: "",
     status: "ACTIVE",
     features: [] as string[],
+    // Auction-specific fields
+    auctionEndDate: "",
+    minimumBid: "",
+    bidIncrement: "1000",
+    reservePrice: "",
   })
 
   const [imageUrls, setImageUrls] = useState<string[]>([])
@@ -370,6 +375,111 @@ function CreatePropertyContent() {
               </div>
             </CardContent>
           </Card>
+
+          {/* Auction Settings - Only show when status is AUCTION */}
+          {formData.status === "AUCTION" && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Gavel className="h-5 w-5" />
+                  Auction Settings
+                </CardTitle>
+                <CardDescription>
+                  Configure your auction parameters and timeline
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="space-y-2">
+                  <Label htmlFor="auctionEndDate">Auction End Date & Time *</Label>
+                  <Input
+                    id="auctionEndDate"
+                    type="datetime-local"
+                    value={formData.auctionEndDate}
+                    onChange={(e) => handleInputChange("auctionEndDate", e.target.value)}
+                    min={new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().slice(0, 16)} // Minimum 24 hours from now
+                    required
+                  />
+                  <p className="text-sm text-muted-foreground">
+                    Auction must run for at least 24 hours
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="minimumBid">Starting Bid *</Label>
+                    <div className="relative">
+                      <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                      <Input
+                        id="minimumBid"
+                        type="number"
+                        value={formData.minimumBid}
+                        onChange={(e) => handleInputChange("minimumBid", e.target.value)}
+                        placeholder="50000"
+                        className="pl-10"
+                        min="1000"
+                        step="1000"
+                        required
+                      />
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      Minimum starting bid amount
+                    </p>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="bidIncrement">Bid Increment *</Label>
+                    <div className="relative">
+                      <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                      <Input
+                        id="bidIncrement"
+                        type="number"
+                        value={formData.bidIncrement}
+                        onChange={(e) => handleInputChange("bidIncrement", e.target.value)}
+                        placeholder="1000"
+                        className="pl-10"
+                        min="100"
+                        step="100"
+                        required
+                      />
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      Minimum amount between bids
+                    </p>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="reservePrice">Reserve Price (Optional)</Label>
+                  <div className="relative">
+                    <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                    <Input
+                      id="reservePrice"
+                      type="number"
+                      value={formData.reservePrice}
+                      onChange={(e) => handleInputChange("reservePrice", e.target.value)}
+                      placeholder="Leave empty for no reserve"
+                      className="pl-10"
+                      min="0"
+                      step="1000"
+                    />
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    Minimum price you'll accept. If not met, you can decline the sale.
+                  </p>
+                </div>
+
+                <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg">
+                  <h4 className="font-medium text-amber-800 mb-2">Auction Guidelines</h4>
+                  <ul className="text-sm text-amber-700 space-y-1">
+                    <li>• Auctions cannot be cancelled once started</li>
+                    <li>• Bidders will be notified when outbid</li>
+                    <li>• Winner will be contacted automatically</li>
+                    <li>• Reserve price is not visible to bidders</li>
+                  </ul>
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Property Photos */}
           <PropertyImageUpload

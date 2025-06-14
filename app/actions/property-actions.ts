@@ -2,13 +2,13 @@
 
 import { revalidatePath } from "next/cache"
 import prisma from "@/lib/prisma-pool" // Updated import
-import { auth } from "@/lib/auth"
+import { getCurrentUser } from "@/lib/auth"
 import { withQueryPerformance } from "@/lib/db-monitoring"
 
 // Create a new property listing with images
 export async function createProperty(formData: FormData) {
-  const session = await auth()
-  if (!session?.user?.id) {
+  const user = await getCurrentUser()
+  if (!user?.id) {
     throw new Error("You must be logged in to create a property")
   }
 
@@ -27,9 +27,30 @@ export async function createProperty(formData: FormData) {
   const features = formData.getAll("features") as string[]
   const imageUrls = formData.getAll("imageUrls") as string[]
 
+  // Auction-specific fields
+  const auctionEndDate = formData.get("auctionEndDate") as string
+  const minimumBid = formData.get("minimumBid") as string
+  const bidIncrement = formData.get("bidIncrement") as string
+  const reservePrice = formData.get("reservePrice") as string
+
   // Validate required fields
   if (!title || !address || !city || !state || !zipCode || !price || !type || !status) {
     throw new Error("Missing required fields")
+  }
+
+  // Validate auction-specific fields if status is AUCTION
+  if (status === "AUCTION") {
+    if (!auctionEndDate || !minimumBid || !bidIncrement) {
+      throw new Error("Auction end date, minimum bid, and bid increment are required for auctions")
+    }
+
+    const endDate = new Date(auctionEndDate)
+    const now = new Date()
+    const minEndDate = new Date(now.getTime() + 24 * 60 * 60 * 1000) // 24 hours from now
+
+    if (endDate <= minEndDate) {
+      throw new Error("Auction must run for at least 24 hours")
+    }
   }
 
   try {
@@ -52,7 +73,15 @@ export async function createProperty(formData: FormData) {
             type: type as any,
             status: status as any,
             features,
-            ownerId: session.user.id,
+            ownerId: user.id,
+            // Auction-specific fields
+            ...(status === "AUCTION" && {
+              auctionEndDate: new Date(auctionEndDate),
+              minimumBid: Number.parseFloat(minimumBid),
+              bidIncrement: Number.parseFloat(bidIncrement),
+              reservePrice: reservePrice ? Number.parseFloat(reservePrice) : null,
+              currentBid: null, // No bids yet
+            }),
           },
         })
 
@@ -83,8 +112,8 @@ export async function createProperty(formData: FormData) {
 
 // Add images to an existing property
 export async function addPropertyImages(propertyId: string, imageUrls: string[]) {
-  const session = await auth()
-  if (!session?.user?.id) {
+  const user = await getCurrentUser()
+  if (!user?.id) {
     throw new Error("You must be logged in to add images")
   }
 
@@ -95,7 +124,7 @@ export async function addPropertyImages(propertyId: string, imageUrls: string[])
       select: { ownerId: true },
     })
 
-    if (!property || property.ownerId !== session.user.id) {
+    if (!property || property.ownerId !== user.id) {
       throw new Error("Property not found or you don't have permission")
     }
 
@@ -127,8 +156,8 @@ export async function addPropertyImages(propertyId: string, imageUrls: string[])
 
 // Remove a property image
 export async function removePropertyImage(imageId: string) {
-  const session = await auth()
-  if (!session?.user?.id) {
+  const user = await getCurrentUser()
+  if (!user?.id) {
     throw new Error("You must be logged in to remove images")
   }
 
@@ -143,7 +172,7 @@ export async function removePropertyImage(imageId: string) {
       },
     })
 
-    if (!image || image.property.ownerId !== session.user.id) {
+    if (!image || image.property.ownerId !== user.id) {
       throw new Error("Image not found or you don't have permission")
     }
 
@@ -185,6 +214,7 @@ export async function getProperties(options: {
           p.id, p.title, p.description, p.address, p.city, p.state,
           p."zipCode", p.price, p.beds, p.baths, p.sqft, p.type, p.status,
           p."createdAt", p."updatedAt", p."ownerId",
+          p."auctionEndDate", p."minimumBid", p."currentBid", p."bidIncrement", p."reservePrice",
           json_agg(DISTINCT pi.*) FILTER (WHERE pi.id IS NOT NULL) as images,
           json_build_object(
             'id', u.id,
@@ -277,6 +307,21 @@ export async function getPropertyById(id: string) {
             select: {
               userId: true,
             },
+          },
+          bids: {
+            include: {
+              bidder: {
+                select: {
+                  id: true,
+                  name: true,
+                  image: true,
+                },
+              },
+            },
+            orderBy: {
+              createdAt: "desc",
+            },
+            take: 10, // Get latest 10 bids
           },
         },
       })

@@ -1,15 +1,15 @@
 "use server"
 
 import { revalidatePath } from "next/cache"
-import { auth } from "@/lib/auth"
+import { getCurrentUser } from "@/lib/auth"
 import prisma from "@/lib/prisma"
 import { createServiceOrderPaymentIntent, createTransactionFeePaymentIntent, verifyPaymentIntent } from "@/lib/stripe"
 import { sendPaymentConfirmationEmail } from "@/lib/email-notifications"
 
 // Create payment intent for service order
 export async function createServiceOrderPayment(orderId: string) {
-  const session = await auth()
-  if (!session?.user?.id) {
+  const user = await getCurrentUser()
+  if (!user?.id) {
     return { success: false, error: "Authentication required" }
   }
 
@@ -28,7 +28,7 @@ export async function createServiceOrderPayment(orderId: string) {
     }
 
     // Verify the user is the client
-    if (order.clientId !== session.user.id) {
+    if (order.clientId !== user.id) {
       return { success: false, error: "Unauthorized" }
     }
 
@@ -60,8 +60,8 @@ export async function createServiceOrderPayment(orderId: string) {
 
 // Create payment intent for transaction fee
 export async function createTransactionFeePayment(transactionId: string, feeAmount = 100) {
-  const session = await auth()
-  if (!session?.user?.id) {
+  const user = await getCurrentUser()
+  if (!user?.id) {
     return { success: false, error: "Authentication required" }
   }
 
@@ -77,11 +77,11 @@ export async function createTransactionFeePayment(transactionId: string, feeAmou
 
     // Verify the user is involved in the transaction
     const isInvolved =
-      transaction.creatorId === session.user.id ||
+      transaction.creatorId === user.id ||
       (await prisma.transactionParty.findFirst({
         where: {
           transactionId,
-          userId: session.user.id,
+          userId: user.id,
         },
       }))
 
@@ -92,7 +92,7 @@ export async function createTransactionFeePayment(transactionId: string, feeAmou
     // Create payment intent
     const { clientSecret } = await createTransactionFeePaymentIntent(feeAmount, {
       transactionId: transaction.id,
-      userId: session.user.id,
+      userId: user.id,
     })
 
     return { success: true, clientSecret }

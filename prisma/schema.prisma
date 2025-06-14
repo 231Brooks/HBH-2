@@ -32,6 +32,7 @@ model User {
   
   // Relations
   properties        Property[]          @relation("UserProperties")
+  auctionWins       Property[]          @relation("AuctionWinner")
   savedProperties   SavedProperty[]
   transactions      Transaction[]       @relation("UserTransactions")
   transactionParty  TransactionParty[]
@@ -53,6 +54,7 @@ model User {
   responsesSent     ServiceResponse[]   @relation("ServiceResponseProvider")
   advertisements    Advertisement[]
   adPurchases       AdPurchase[]
+  bids              Bid[]               // Bids placed by this user
 }
 
 enum UserRole {
@@ -82,13 +84,23 @@ model Property {
   features        String[]
   latitude        Float?
   longitude       Float?
-  
+
+  // Auction-specific fields
+  auctionEndDate  DateTime?         // When auction ends
+  minimumBid      Float?            // Starting/minimum bid amount
+  currentBid      Float?            // Current highest bid
+  bidIncrement    Float?            // Minimum bid increment (default: 1000)
+  reservePrice    Float?            // Reserve price (optional)
+  auctionWinnerId String?           // Winner of the auction
+  auctionWinner   User?             @relation("AuctionWinner", fields: [auctionWinnerId], references: [id])
+
   // Relations
   ownerId         String
   owner           User              @relation("UserProperties", fields: [ownerId], references: [id])
   savedBy         SavedProperty[]
   transactions    Transaction[]
   appointments    Appointment[]
+  bids            Bid[]             // Bids placed on this property
 }
 
 enum PropertyType {
@@ -123,6 +135,31 @@ model SavedProperty {
   createdAt   DateTime  @default(now())
 
   @@unique([userId, propertyId])
+}
+
+// Bid model for auction functionality
+model Bid {
+  id          String      @id @default(cuid())
+  amount      Float       // Bid amount
+  propertyId  String
+  property    Property    @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  bidderId    String
+  bidder      User        @relation(fields: [bidderId], references: [id], onDelete: Cascade)
+  status      BidStatus   @default(ACTIVE)
+  isWinning   Boolean     @default(false)  // Whether this is currently the winning bid
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  @@index([propertyId, amount])
+  @@index([propertyId, createdAt])
+}
+
+enum BidStatus {
+  ACTIVE      // Bid is active and valid
+  OUTBID      // Bid has been outbid by a higher bid
+  WITHDRAWN   // Bid was withdrawn by the bidder
+  WINNING     // Bid won the auction
+  EXPIRED     // Auction ended without this bid winning
 }
 
 // Transaction model
