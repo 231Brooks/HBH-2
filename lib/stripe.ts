@@ -1,4 +1,6 @@
 import Stripe from "stripe"
+import { paperMoneyConfig } from "./paper-money-config"
+import { mockPaymentService as mockService } from "./mock-payment-service"
 
 // Initialize Stripe only if the API key is available
 export const stripe = process.env.STRIPE_SECRET_KEY
@@ -6,6 +8,9 @@ export const stripe = process.env.STRIPE_SECRET_KEY
       apiVersion: "2023-10-16", // Use the latest API version
     })
   : null
+
+// Check if we should use mock payments
+const shouldUseMockPayments = paperMoneyConfig.mode.isPaperMoney && paperMoneyConfig.mode.enableMock
 
 // Create a payment intent for service orders
 export async function createServiceOrderPaymentIntent(
@@ -18,6 +23,23 @@ export async function createServiceOrderPaymentIntent(
   },
 ) {
   try {
+    // Use mock payment service in paper money mode
+    if (shouldUseMockPayments) {
+      console.log(`[PAPER MONEY] Creating mock payment intent for $${(amount / 100).toFixed(2)}`)
+      const mockIntent = await mockService.createPaymentIntent({
+        amount: Math.round(amount * 100),
+        currency: "usd",
+        metadata: {
+          orderId: metadata.orderId,
+          serviceId: metadata.serviceId,
+          clientId: metadata.clientId,
+          providerId: metadata.providerId,
+          paperMoney: "true",
+        },
+      })
+      return { clientSecret: mockIntent.client_secret }
+    }
+
     if (!stripe) {
       throw new Error("Stripe not configured")
     }
@@ -25,7 +47,10 @@ export async function createServiceOrderPaymentIntent(
     const paymentIntent = await stripe.paymentIntents.create({
       amount: Math.round(amount * 100), // Convert to cents
       currency: "usd",
-      metadata,
+      metadata: {
+        ...metadata,
+        environment: paperMoneyConfig.mode.isPaperMoney ? "test" : "production",
+      },
       automatic_payment_methods: {
         enabled: true,
       },
@@ -48,6 +73,23 @@ export async function createTransactionFeePaymentIntent(
   },
 ) {
   try {
+    // Use mock payment service in paper money mode
+    if (shouldUseMockPayments) {
+      console.log(`[PAPER MONEY] Creating mock fee payment intent for $${(amount / 100).toFixed(2)}`)
+      const mockIntent = await mockService.createPaymentIntent({
+        amount: Math.round(amount * 100),
+        currency: "usd",
+        metadata: {
+          transactionId: metadata.transactionId,
+          feeId: metadata.feeId || "",
+          userId: metadata.userId,
+          type: "transaction_fee",
+          paperMoney: "true",
+        },
+      })
+      return { clientSecret: mockIntent.client_secret }
+    }
+
     if (!stripe) {
       throw new Error("Stripe not configured")
     }
@@ -55,7 +97,10 @@ export async function createTransactionFeePaymentIntent(
     const paymentIntent = await stripe.paymentIntents.create({
       amount: Math.round(amount * 100), // Convert to cents
       currency: "usd",
-      metadata,
+      metadata: {
+        ...metadata,
+        environment: paperMoneyConfig.mode.isPaperMoney ? "test" : "production",
+      },
       automatic_payment_methods: {
         enabled: true,
       },
@@ -71,6 +116,16 @@ export async function createTransactionFeePaymentIntent(
 // Verify a payment intent's status
 export async function verifyPaymentIntent(paymentIntentId: string) {
   try {
+    // Use mock payment service in paper money mode
+    if (shouldUseMockPayments) {
+      console.log(`[PAPER MONEY] Verifying mock payment intent: ${paymentIntentId}`)
+      const mockIntent = await mockService.retrievePaymentIntent(paymentIntentId)
+      return {
+        status: mockIntent.status,
+        metadata: mockIntent.metadata,
+      }
+    }
+
     if (!stripe) {
       throw new Error("Stripe not configured")
     }
@@ -84,4 +139,17 @@ export async function verifyPaymentIntent(paymentIntentId: string) {
     console.error("Error verifying payment intent:", error)
     throw new Error("Failed to verify payment")
   }
+}
+
+// Paper money utility functions
+export function getPaperMoneyTestCards() {
+  return paperMoneyConfig.payments.testCards
+}
+
+export function isPaperMoneyMode() {
+  return paperMoneyConfig.mode.isPaperMoney
+}
+
+export function formatPaperMoneyAmount(amountInCents: number) {
+  return paperMoneyConfig.utils.formatAmount(amountInCents)
 }
