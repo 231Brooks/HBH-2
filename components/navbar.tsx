@@ -29,6 +29,7 @@ import { useIsMobile } from "@/hooks/use-mobile"
 import { useSupabase } from "@/contexts/supabase-context"
 import { usePermissions } from "@/hooks/use-permissions"
 import { ClientOnly } from "@/components/client-only"
+import { StartTourButton } from "@/components/user-tour"
 
 // Desktop navigation items - these will be filtered based on user permissions
 const getDesktopNavItems = (isProfessional: boolean) => [
@@ -97,6 +98,7 @@ export default function Navbar() {
                 <Link
                   key={item.href}
                   href={item.href}
+                  data-tour={`${item.name.toLowerCase().replace(/\s+/g, '-')}-nav`}
                   className={cn(
                     "flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-2 text-xs sm:text-sm font-medium transition-colors hover:text-primary hover:bg-muted/50 rounded-md whitespace-nowrap",
                     pathname?.startsWith(item.href) ? "text-primary bg-muted" : "text-muted-foreground",
@@ -129,6 +131,9 @@ export default function Navbar() {
               <div className="text-sm text-muted-foreground">Loading...</div>
             ) : user ? (
               <>
+                {/* Tour button for authenticated users */}
+                <StartTourButton />
+
                 {/* Notifications button */}
                 <Button variant="outline" size="icon" asChild>
                   <Link href="/notifications">
