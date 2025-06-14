@@ -174,49 +174,7 @@ export async function getUserTransactions(options: {
     }
   } catch (error) {
     console.error("Failed to fetch transactions:", error)
-
-    // Return sample data for demonstration
-    const sampleTransactions = [
-      {
-        id: "1",
-        title: "Downtown Condo Purchase",
-        status: "IN_PROGRESS",
-        closingDate: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000), // 15 days from now
-        property: {
-          address: "123 Main Street",
-          city: "Phoenix",
-          state: "AZ",
-        },
-      },
-      {
-        id: "2",
-        title: "Suburban Home Sale",
-        status: "IN_PROGRESS",
-        closingDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
-        property: {
-          address: "456 Oak Avenue",
-          city: "Scottsdale",
-          state: "AZ",
-        },
-      },
-      {
-        id: "3",
-        title: "Investment Property Purchase",
-        status: "IN_PROGRESS",
-        closingDate: new Date(Date.now() + 45 * 24 * 60 * 60 * 1000), // 45 days from now
-        property: {
-          address: "789 Pine Road",
-          city: "Tempe",
-          state: "AZ",
-        },
-      },
-    ]
-
-    return {
-      transactions: sampleTransactions,
-      total: sampleTransactions.length,
-      hasMore: false
-    }
+    return { transactions: [], total: 0, hasMore: false }
   }
 }
 

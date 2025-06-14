@@ -228,23 +228,23 @@ export default function Home() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {["Title Services", "Home Inspection", "Real Estate Photography", "Renovation"].map((service, i) => (
-            <Card key={i} className="overflow-hidden">
-              <div className="relative h-40">
-                <Image
-                  src={`/placeholder.svg?height=300&width=400&text=${service.replace(" ", "+")}`}
-                  alt={service}
-                  fill
-                  className="object-cover"
-                />
+          {[
+            { name: "Title Services", category: "TITLE_SERVICES", icon: "🏛️" },
+            { name: "Home Inspection", category: "HOME_INSPECTION", icon: "🔍" },
+            { name: "Real Estate Photography", category: "PHOTOGRAPHY", icon: "📸" },
+            { name: "Renovation", category: "CONTRACTORS", icon: "🔨" }
+          ].map((service, i) => (
+            <Card key={i} className="overflow-hidden hover:shadow-lg transition-shadow">
+              <div className="relative h-40 bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
+                <span className="text-4xl">{service.icon}</span>
               </div>
               <CardContent className="p-4">
-                <h3 className="text-lg font-semibold mb-2">{service}</h3>
+                <h3 className="text-lg font-semibold mb-2">{service.name}</h3>
                 <p className="text-sm text-muted-foreground mb-4">
-                  Professional {service.toLowerCase()} from verified providers.
+                  Professional {service.name.toLowerCase()} from verified providers.
                 </p>
                 <Button size="sm" variant="outline" className="w-full" asChild>
-                  <Link href={`/services?category=${service.toLowerCase().replace(" ", "-")}`}>Find Providers</Link>
+                  <Link href={`/services?category=${service.category}`}>Find Providers</Link>
                 </Button>
               </CardContent>
             </Card>
