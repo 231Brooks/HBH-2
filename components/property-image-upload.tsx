@@ -40,9 +40,13 @@ export function PropertyImageUpload({
 
     const uploadPromises = files.map(async (file, index) => {
       try {
-        // Validate file type
-        if (!file.type.startsWith('image/')) {
-          throw new Error(`${file.name} is not an image file`)
+        // Validate file type - include HEIC support
+        const isValidImageType = file.type.startsWith('image/') ||
+                                file.name.toLowerCase().endsWith('.heic') ||
+                                file.name.toLowerCase().endsWith('.heif')
+
+        if (!isValidImageType) {
+          throw new Error(`${file.name} is not a supported image file (JPG, PNG, GIF, HEIC, etc.)`)
         }
 
         // Validate file size
@@ -121,7 +125,7 @@ export function PropertyImageUpload({
           <input
             type="file"
             multiple
-            accept="image/*"
+            accept="image/*,.heic,.heif"
             onChange={handleFileSelect}
             disabled={isUploading || images.length >= maxImages}
             className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed"
@@ -145,7 +149,7 @@ export function PropertyImageUpload({
             <p className="text-xs text-gray-500">
               {images.length >= maxImages
                 ? `Maximum ${maxImages} photos reached`
-                : `PNG, JPG, GIF up to ${maxSizePerImage}MB each`
+                : `PNG, JPG, GIF, HEIC up to ${maxSizePerImage}MB each`
               }
             </p>
           </label>

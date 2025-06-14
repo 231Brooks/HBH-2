@@ -17,7 +17,7 @@ interface CloudinaryUploadProps {
 export default function CloudinaryUpload({
   onUpload,
   label = "Upload Image",
-  accept = "image/*",
+  accept = "image/*,.heic,.heif",
   maxSize = 5, // Default 5MB
 }: CloudinaryUploadProps) {
   const [isUploading, setIsUploading] = useState(false)

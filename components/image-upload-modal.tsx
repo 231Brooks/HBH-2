@@ -38,9 +38,13 @@ export function ImageUploadModal({
     const file = event.target.files?.[0]
     if (!file) return
 
-    // Validate file type
-    if (!file.type.startsWith('image/')) {
-      setError('Please select an image file')
+    // Validate file type - include HEIC support
+    const isValidImageType = file.type.startsWith('image/') ||
+                            file.name.toLowerCase().endsWith('.heic') ||
+                            file.name.toLowerCase().endsWith('.heif')
+
+    if (!isValidImageType) {
+      setError('Please select an image file (JPG, PNG, GIF, HEIC, etc.)')
       return
     }
 
@@ -58,6 +62,9 @@ export function ImageUploadModal({
     reader.onload = (e) => {
       setPreview(e.target?.result as string)
     }
+
+    // For HEIC files, the browser may not be able to display them directly
+    // but we'll still create a data URL for upload purposes
     reader.readAsDataURL(file)
   }
 
@@ -127,7 +134,7 @@ export function ImageUploadModal({
             <input
               ref={fileInputRef}
               type="file"
-              accept="image/*"
+              accept="image/*,.heic,.heif"
               onChange={handleFileSelect}
               className="hidden"
             />
@@ -142,7 +149,7 @@ export function ImageUploadModal({
                   Click to select an image
                 </p>
                 <p className="text-xs text-gray-500 mt-1">
-                  PNG, JPG, GIF up to 5MB
+                  PNG, JPG, GIF, HEIC up to 5MB
                 </p>
               </div>
             ) : (
