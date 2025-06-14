@@ -55,6 +55,7 @@ model User {
   advertisements    Advertisement[]
   adPurchases       AdPurchase[]
   bids              Bid[]               // Bids placed by this user
+  auctionWatchList  AuctionWatchList[]  // Auctions this user is watching
 }
 
 enum UserRole {
@@ -101,6 +102,9 @@ model Property {
   transactions    Transaction[]
   appointments    Appointment[]
   bids            Bid[]             // Bids placed on this property
+  watchedBy       AuctionWatchList[] // Users watching this auction
+  analytics       AuctionAnalytics?  // Analytics for this auction
+  extensions      AuctionExtension[] // Extension history for this auction
 }
 
 enum PropertyType {
@@ -150,8 +154,61 @@ model Bid {
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
 
+  // Relations
+  triggeredExtensions AuctionExtension[] // Extensions triggered by this bid
+
   @@index([propertyId, amount])
   @@index([propertyId, createdAt])
+}
+
+// Auction watch list for users to track auctions without bidding
+model AuctionWatchList {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  propertyId String
+  property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+
+  @@unique([userId, propertyId])
+  @@index([userId])
+  @@index([propertyId])
+}
+
+// Auction analytics for tracking auction performance
+model AuctionAnalytics {
+  id                String   @id @default(cuid())
+  propertyId        String   @unique
+  property          Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  totalBids         Int      @default(0)
+  uniqueBidders     Int      @default(0)
+  highestBid        Float?
+  averageBid        Float?
+  viewCount         Int      @default(0)
+  watchListCount    Int      @default(0)
+  reservePriceMet   Boolean  @default(false)
+  extensionCount    Int      @default(0)  // Number of times auction was extended
+  finalSalePrice    Float?   // Final sale price if auction completed
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@index([propertyId])
+}
+
+// Auction extension logs to track when auctions are extended
+model AuctionExtension {
+  id               String   @id @default(cuid())
+  propertyId       String
+  property         Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  originalEndDate  DateTime // Original end date
+  newEndDate       DateTime // New end date after extension
+  triggerBidId     String?  // Bid that triggered the extension
+  triggerBid       Bid?     @relation(fields: [triggerBidId], references: [id], onDelete: SetNull)
+  extensionMinutes Int      @default(10) // How many minutes the auction was extended
+  createdAt        DateTime @default(now())
+
+  @@index([propertyId])
+  @@index([originalEndDate])
 }
 
 enum BidStatus {

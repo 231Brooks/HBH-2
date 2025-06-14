@@ -12,6 +12,8 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { BidForm } from "@/components/bidding/bid-form"
 import { BidHistory } from "@/components/bidding/bid-history"
 import { AuctionTimer } from "@/components/auction/auction-timer"
+import { AuctionWatchButton } from "@/components/auction/auction-watch-button"
+import { ReservePriceIndicator } from "@/components/auction/reserve-price-indicator"
 import { QuickContactButton } from "@/components/contact-dialog"
 import {
   ArrowLeft,
@@ -241,6 +243,11 @@ function PropertyDetailContent() {
                 />
               )}
 
+              {/* Watch Button */}
+              <div className="flex justify-center">
+                <AuctionWatchButton propertyId={property.id} />
+              </div>
+
               {/* Auction Information */}
               <Card>
                 <CardHeader>
@@ -280,13 +287,13 @@ function PropertyDetailContent() {
                     </div>
                   </div>
 
-                  {property.reservePrice && (
-                    <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg">
-                      <p className="text-sm text-amber-800">
-                        <strong>Reserve Price:</strong> This auction has a reserve price. The seller is not obligated to sell if the reserve is not met.
-                      </p>
-                    </div>
-                  )}
+                  {/* Reserve Price Indicator */}
+                  <ReservePriceIndicator
+                    reservePrice={property.reservePrice}
+                    currentBid={property.currentBid}
+                    minimumBid={property.minimumBid}
+                    showAmount={false} // Don't show exact reserve amount to bidders
+                  />
                 </CardContent>
               </Card>
 
