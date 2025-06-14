@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { FileText, Clock, CheckCircle, AlertCircle, Users, Search, Plus, Filter, ArrowUpRight, Building2, Briefcase, Star, DollarSign, MapPin, TrendingUp } from "lucide-react"
+import { FileText, Clock, CheckCircle, AlertCircle, Users, Search, Plus, Filter, ArrowUpRight, Building2, Briefcase, Star, DollarSign, MapPin, TrendingUp, BarChart3, Upload } from "lucide-react"
 import { ProtectedRoute } from "@/components/protected-route"
 import { getUserTransactions } from "@/app/actions/transaction-actions"
 import { useSupabase } from "@/contexts/supabase-context"
@@ -42,7 +42,51 @@ function ProgressPageContent() {
       // Load service projects for professionals
       if (isProfessional) {
         // TODO: Replace with actual API call to get user's service projects
-        setServiceProjects([])
+        const mockServiceProjects = [
+          {
+            id: "sp-1",
+            title: "Kitchen Renovation - 123 Main St",
+            status: "IN_PROGRESS",
+            progress: 65,
+            amount: 25000,
+            dueDate: new Date("2024-03-15"),
+            location: "Springfield, IL",
+            client: {
+              name: "John & Sarah Smith",
+              rating: 4.8
+            },
+            createdAt: new Date("2024-01-15")
+          },
+          {
+            id: "sp-2",
+            title: "Home Inspection - 456 Oak Ave",
+            status: "COMPLETED",
+            progress: 100,
+            amount: 500,
+            dueDate: new Date("2024-02-01"),
+            location: "Springfield, IL",
+            client: {
+              name: "Mike Johnson",
+              rating: 5.0
+            },
+            createdAt: new Date("2024-01-28")
+          },
+          {
+            id: "sp-3",
+            title: "Real Estate Photography - 789 Pine St",
+            status: "PENDING",
+            progress: 0,
+            amount: 350,
+            dueDate: new Date("2024-02-20"),
+            location: "Springfield, IL",
+            client: {
+              name: "Lisa Chen",
+              rating: 4.9
+            },
+            createdAt: new Date("2024-02-10")
+          }
+        ]
+        setServiceProjects(mockServiceProjects)
       }
     } catch (error) {
       console.error("Failed to load data:", error)
@@ -775,8 +819,23 @@ function ServiceProjectCard({ project }: ServiceProjectCardProps) {
         <div className="bg-slate-50 p-6 border-t md:border-t-0 md:border-l flex flex-col justify-between">
           <div className="space-y-3">
             <Button variant="outline" className="w-full justify-start" asChild>
-              <Link href="/progress">
+              <Link href={`/progress/${project.id}/details`}>
                 <FileText className="mr-2 h-4 w-4" /> View Details
+              </Link>
+            </Button>
+            <Button variant="outline" className="w-full justify-start" asChild>
+              <Link href={`/progress/${project.id}/update-progress`}>
+                <Clock className="mr-2 h-4 w-4" /> Update Progress
+              </Link>
+            </Button>
+            <Button variant="outline" className="w-full justify-start" asChild>
+              <Link href={`/progress/${project.id}/analytics`}>
+                <BarChart3 className="mr-2 h-4 w-4" /> View Analytics
+              </Link>
+            </Button>
+            <Button variant="outline" className="w-full justify-start" asChild>
+              <Link href={`/progress/${project.id}/deliverables`}>
+                <Upload className="mr-2 h-4 w-4" /> Deliverables
               </Link>
             </Button>
             <Button variant="outline" className="w-full justify-start" asChild>
@@ -784,14 +843,9 @@ function ServiceProjectCard({ project }: ServiceProjectCardProps) {
                 <Users className="mr-2 h-4 w-4" /> Contact Client
               </Link>
             </Button>
-            <Button variant="outline" className="w-full justify-start" asChild>
-              <Link href="/progress">
-                <Clock className="mr-2 h-4 w-4" /> Update Progress
-              </Link>
-            </Button>
           </div>
           <Button className="mt-4 w-full" asChild>
-            <Link href="/progress">Manage Project</Link>
+            <Link href={`/progress/${project.id}/manage-project`}>Manage Project</Link>
           </Button>
         </div>
       </div>
