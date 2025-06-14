@@ -152,44 +152,47 @@ export default function ServicesClient() {
   }
 
   return (
-    <div className="container mx-auto py-8 px-4">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
-        <div>
-          <h1 className="text-3xl font-bold mb-1">Third Party Services</h1>
-          <p className="text-muted-foreground">Find and hire trusted professionals for all your real estate needs</p>
+    <div className="container mx-auto py-6 sm:py-8 px-4 sm:px-6 lg:px-8 max-w-7xl overflow-x-hidden">
+      {/* Header section with responsive design */}
+      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-6 sm:mb-8 gap-4">
+        <div className="w-full lg:w-auto">
+          <h1 className="text-2xl sm:text-3xl font-bold mb-1">Third Party Services</h1>
+          <p className="text-sm sm:text-base text-muted-foreground">Find and hire trusted professionals for all your real estate needs</p>
         </div>
-        <div className="flex items-center gap-2">
-          <Button asChild>
+        <div className="flex items-center gap-2 w-full lg:w-auto">
+          <Button className="w-full lg:w-auto" asChild>
             <Link href="/services/create">
-              <Plus className="mr-2 h-4 w-4" /> List Your Service
+              <Plus className="mr-2 h-4 w-4" />
+              <span className="hidden sm:inline">List Your Service</span>
+              <span className="sm:hidden">List Service</span>
             </Link>
           </Button>
         </div>
       </div>
 
-      {/* Search and Filters */}
-      <div className="bg-slate-50 rounded-lg p-6 mb-8">
-        <div className="flex flex-col md:flex-row gap-4">
+      {/* Search and Filters with responsive design */}
+      <div className="bg-slate-50 rounded-lg p-4 sm:p-6 mb-6 sm:mb-8">
+        <div className="flex flex-col lg:flex-row gap-3 sm:gap-4">
           <div className="relative flex-grow">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-            <Input 
-              placeholder="Search for services or professionals" 
-              className="pl-10"
+            <Input
+              placeholder="Search for services or professionals"
+              className="pl-10 w-full"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
-          <div className="flex gap-2">
-            <Button 
-              variant="outline" 
-              className="flex items-center gap-1"
+          <div className="flex flex-col sm:flex-row gap-2">
+            <Button
+              variant="outline"
+              className="flex items-center gap-1 w-full sm:w-auto"
               onClick={() => setShowFilters(!showFilters)}
             >
               <Filter className="h-4 w-4" />
               Filter
             </Button>
             <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-              <SelectTrigger className="w-[180px]">
+              <SelectTrigger className="w-full sm:w-[180px]">
                 <SelectValue placeholder="All Categories" />
               </SelectTrigger>
               <SelectContent>
@@ -200,33 +203,37 @@ export default function ServicesClient() {
                 ))}
               </SelectContent>
             </Select>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 justify-center">
               <Button
                 variant={viewMode === "grid" ? "default" : "outline"}
                 size="sm"
+                className="flex-1 sm:flex-none"
                 onClick={() => setViewMode("grid")}
               >
                 <Grid3X3 className="h-4 w-4" />
+                <span className="ml-1 sm:hidden">Grid</span>
               </Button>
               <Button
                 variant={viewMode === "list" ? "default" : "outline"}
                 size="sm"
+                className="flex-1 sm:flex-none"
                 onClick={() => setViewMode("list")}
               >
                 <List className="h-4 w-4" />
+                <span className="ml-1 sm:hidden">List</span>
               </Button>
             </div>
           </div>
         </div>
 
-        {/* Advanced Filters */}
+        {/* Advanced Filters with responsive design */}
         {showFilters && (
-          <div className="mt-4 p-4 border rounded-lg bg-white">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="mt-3 sm:mt-4 p-3 sm:p-4 border rounded-lg bg-white">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
               <div>
-                <label className="text-sm font-medium mb-2 block">Sort By</label>
+                <label className="text-xs sm:text-sm font-medium mb-2 block">Sort By</label>
                 <Select value={sortBy} onValueChange={setSortBy}>
-                  <SelectTrigger>
+                  <SelectTrigger className="h-9 sm:h-10">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -238,7 +245,7 @@ export default function ServicesClient() {
                   </SelectContent>
                 </Select>
               </div>
-              <div className="flex items-end">
+              <div className="flex items-end sm:col-span-2 lg:col-span-1">
                 <Button onClick={resetFilters} variant="outline" className="w-full">
                   Reset Filters
                 </Button>
@@ -248,57 +255,67 @@ export default function ServicesClient() {
         )}
       </div>
 
-      {/* Services Ads */}
-      <div className="mb-8">
+      {/* Services Ads with responsive container */}
+      <div className="mb-6 sm:mb-8">
         <ServicesAds />
       </div>
 
-      {/* Service Categories */}
-      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4 mb-10">
+      {/* Service Categories with responsive grid */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-3 sm:gap-4 mb-8 sm:mb-10">
         {serviceCategories.slice(1).map((category, i) => (
           <button
             key={i}
             onClick={() => setSelectedCategory(category.value)}
-            className={`p-4 rounded-lg border transition-all hover:shadow-md hover:border-slate-300 ${
+            className={`p-3 sm:p-4 rounded-lg border transition-all hover:shadow-md hover:border-slate-300 ${
               selectedCategory === category.value ? 'border-primary bg-primary/5' : 'border-slate-200'
             }`}
           >
             <div className="flex flex-col items-center text-center">
-              <div className={`p-3 rounded-full mb-3 ${
+              <div className={`p-2 sm:p-3 rounded-full mb-2 sm:mb-3 ${
                 selectedCategory === category.value ? 'bg-primary/10' : 'bg-slate-100'
               }`}>
-                {category.icon}
+                <div className="w-4 h-4 sm:w-5 sm:h-5">
+                  {category.icon}
+                </div>
               </div>
-              <h3 className="font-medium text-sm">{category.label}</h3>
+              <h3 className="font-medium text-xs sm:text-sm leading-tight">{category.label}</h3>
             </div>
           </button>
         ))}
       </div>
 
-      {/* Services Tabs and Listings */}
+      {/* Services Tabs and Listings with responsive design */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <div className="flex justify-between items-center mb-6">
-          <TabsList>
-            <TabsTrigger value="all">All Services ({total})</TabsTrigger>
-            <TabsTrigger value="verified">Verified Only</TabsTrigger>
-            <TabsTrigger value="featured">Featured</TabsTrigger>
-            <TabsTrigger value="nearby">Nearby</TabsTrigger>
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 sm:mb-6 gap-3 sm:gap-4">
+          <TabsList className="w-full sm:w-auto grid grid-cols-2 sm:flex overflow-x-auto">
+            <TabsTrigger value="all" className="text-xs sm:text-sm whitespace-nowrap">
+              All Services ({total})
+            </TabsTrigger>
+            <TabsTrigger value="verified" className="text-xs sm:text-sm whitespace-nowrap">
+              Verified Only
+            </TabsTrigger>
+            <TabsTrigger value="featured" className="text-xs sm:text-sm whitespace-nowrap">
+              Featured
+            </TabsTrigger>
+            <TabsTrigger value="nearby" className="text-xs sm:text-sm whitespace-nowrap">
+              Nearby
+            </TabsTrigger>
           </TabsList>
         </div>
 
         <TabsContent value="all" className="mt-0">
           {loading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
               {Array(6).fill(0).map((_, i) => (
-                <div key={i} className="h-80 bg-gray-200 animate-pulse rounded-lg"></div>
+                <div key={i} className="h-64 sm:h-80 bg-gray-200 animate-pulse rounded-lg"></div>
               ))}
             </div>
           ) : (
             <>
               {Array.isArray(services) && services.length > 0 ? (
-                <div className={viewMode === "grid" ? 
-                  "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" : 
-                  "space-y-4"
+                <div className={viewMode === "grid" ?
+                  "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6" :
+                  "space-y-3 sm:space-y-4"
                 }>
                   {services.map((service) => (
                     <ServiceCard
@@ -309,19 +326,19 @@ export default function ServicesClient() {
                   ))}
                 </div>
               ) : (
-                <div className="text-center py-12">
-                  <Briefcase className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">No services found</h3>
-                  <p className="text-gray-500 mb-4">Try adjusting your search criteria or filters.</p>
-                  <Button onClick={resetFilters} variant="outline">
+                <div className="text-center py-8 sm:py-12 px-4">
+                  <Briefcase className="mx-auto h-10 w-10 sm:h-12 sm:w-12 text-gray-400 mb-3 sm:mb-4" />
+                  <h3 className="text-base sm:text-lg font-medium text-gray-900 mb-2">No services found</h3>
+                  <p className="text-sm sm:text-base text-gray-500 mb-3 sm:mb-4">Try adjusting your search criteria or filters.</p>
+                  <Button onClick={resetFilters} variant="outline" size="sm">
                     Reset Filters
                   </Button>
                 </div>
               )}
 
               {hasMore && (
-                <div className="mt-8 flex justify-center">
-                  <Button variant="outline" onClick={loadMore} disabled={loading}>
+                <div className="mt-6 sm:mt-8 flex justify-center">
+                  <Button variant="outline" className="w-full sm:w-auto" onClick={loadMore} disabled={loading}>
                     {loading ? (
                       <>
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -388,66 +405,71 @@ interface ServiceCardProps {
 function ServiceCard({ service, viewMode }: ServiceCardProps) {
   const averageRating = service.provider.rating || 0
   const reviewCount = service.provider.reviewCount || 0
-  
+
   return (
-    <Card className={`overflow-hidden transition-all hover:shadow-md ${
-      viewMode === "list" ? "flex flex-row" : ""
+    <Card className={`overflow-hidden transition-all hover:shadow-md h-full flex flex-col ${
+      viewMode === "list" ? "sm:flex-row" : ""
     }`}>
-      <CardHeader className={`p-0 ${viewMode === "list" ? "w-48 flex-shrink-0" : ""}`}>
-        <div className={`relative ${viewMode === "list" ? "h-full" : "h-48"}`}>
-          <Image 
-            src={service.image || "/placeholder.svg?height=300&width=300"} 
-            alt={service.name} 
-            fill 
-            className="object-cover" 
+      <CardHeader className={`p-0 ${viewMode === "list" ? "sm:w-48 sm:flex-shrink-0" : ""}`}>
+        <div className={`relative ${viewMode === "list" ? "h-48 sm:h-full" : "h-40 sm:h-48"}`}>
+          <Image
+            src={service.image || "/placeholder.svg?height=300&width=300"}
+            alt={service.name}
+            fill
+            className="object-cover"
           />
-          <Badge className="absolute top-2 right-2 bg-primary">
-            {serviceCategories.find(cat => cat.value === service.category)?.label || service.category}
+          <Badge className="absolute top-2 right-2 bg-primary text-xs">
+            <span className="hidden sm:inline">
+              {serviceCategories.find(cat => cat.value === service.category)?.label || service.category}
+            </span>
+            <span className="sm:hidden">
+              {(serviceCategories.find(cat => cat.value === service.category)?.label || service.category).slice(0, 8)}
+            </span>
           </Badge>
         </div>
       </CardHeader>
-      <CardContent className={`p-4 ${viewMode === "list" ? "flex-1" : ""}`}>
-        <div className="flex justify-between items-start mb-2">
-          <div className="flex items-center gap-2">
-            <h3 className="font-semibold">{service.name}</h3>
+      <CardContent className={`p-3 sm:p-4 flex-1 flex flex-col ${viewMode === "list" ? "sm:flex-1" : ""}`}>
+        <div className="flex flex-col sm:flex-row justify-between items-start mb-2 gap-2">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-1 sm:gap-2 min-w-0 flex-1">
+            <h3 className="font-semibold text-sm sm:text-base line-clamp-1">{service.name}</h3>
             {service.verified && (
-              <Badge variant="outline" className="text-xs bg-green-50 text-green-600 border-green-200">
+              <Badge variant="outline" className="text-xs bg-green-50 text-green-600 border-green-200 flex-shrink-0">
                 <CheckCircle className="mr-1 h-3 w-3" /> Verified
               </Badge>
             )}
           </div>
         </div>
-        
-        <div className="flex items-center gap-4 text-sm text-muted-foreground mb-3">
+
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4 text-xs sm:text-sm text-muted-foreground mb-3">
           <div className="flex items-center gap-1">
-            <MapPin className="h-4 w-4" />
-            <span>{service.location || "Remote"}</span>
+            <MapPin className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+            <span className="truncate">{service.location || "Remote"}</span>
           </div>
           <div className="flex items-center gap-1">
-            <DollarSign className="h-4 w-4" />
-            <span>{service.price || (service.hourlyRate ? `$${service.hourlyRate}/hr` : "Custom")}</span>
+            <DollarSign className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+            <span className="truncate">{service.price || (service.hourlyRate ? `$${service.hourlyRate}/hr` : "Custom")}</span>
           </div>
         </div>
-        
+
         <div className="flex items-center gap-1 mb-3">
-          <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
-          <span className="font-medium">{averageRating.toFixed(1)}</span>
-          <span className="text-sm text-muted-foreground">({reviewCount} reviews)</span>
+          <Star className="h-3 w-3 sm:h-4 sm:w-4 fill-amber-400 text-amber-400 flex-shrink-0" />
+          <span className="font-medium text-sm sm:text-base">{averageRating.toFixed(1)}</span>
+          <span className="text-xs sm:text-sm text-muted-foreground">({reviewCount} reviews)</span>
         </div>
-        
-        <p className="text-sm text-muted-foreground mb-4 line-clamp-2">
+
+        <p className="text-xs sm:text-sm text-muted-foreground mb-4 line-clamp-2 flex-grow">
           {service.description || "Professional service provider"}
         </p>
-        
-        <div className="flex gap-2">
-          <Button variant="outline" className="flex-1" asChild>
+
+        <div className="flex flex-col sm:flex-row gap-2 mt-auto">
+          <Button variant="outline" className="flex-1 text-xs sm:text-sm" size="sm" asChild>
             <Link href={`/services/${service.id}`}>
-              <ArrowUpRight className="mr-1 h-4 w-4" /> Details
+              <ArrowUpRight className="mr-1 h-3 w-3 sm:h-4 sm:w-4" /> Details
             </Link>
           </Button>
           <ServiceBookingDialog service={service}>
-            <Button className="flex-1">
-              <Calendar className="mr-1 h-4 w-4" /> Book
+            <Button className="flex-1 text-xs sm:text-sm" size="sm">
+              <Calendar className="mr-1 h-3 w-3 sm:h-4 sm:w-4" /> Book
             </Button>
           </ServiceBookingDialog>
         </div>
@@ -463,9 +485,9 @@ function ServiceCard({ service, viewMode }: ServiceCardProps) {
             contextTitle={service.name}
             variant="outline"
             size="sm"
-            className="w-full"
+            className="w-full text-xs sm:text-sm"
           >
-            <MessageSquare className="mr-1 h-4 w-4" /> Message
+            <MessageSquare className="mr-1 h-3 w-3 sm:h-4 sm:w-4" /> Message
           </QuickContactButton>
         </div>
       </CardContent>

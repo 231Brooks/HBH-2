@@ -113,54 +113,61 @@ function ProgressPageContent() {
   )
 
   return (
-    <div className="container mx-auto py-8 px-4">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
-        <div>
-          <h1 className="text-3xl font-bold mb-1">
+    <div className="container mx-auto py-6 sm:py-8 px-4 sm:px-6 lg:px-8 max-w-7xl overflow-x-hidden">
+      {/* Header section with responsive design */}
+      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-6 sm:mb-8 gap-4">
+        <div className="w-full lg:w-auto">
+          <h1 className="text-2xl sm:text-3xl font-bold mb-1">
             {isProfessional ? "Progress & Projects" : "Transaction Progress"}
           </h1>
-          <p className="text-muted-foreground">
+          <p className="text-sm sm:text-base text-muted-foreground">
             {isProfessional
               ? "Track your service projects and real estate transactions"
               : "Track and manage your real estate transactions with title companies"
             }
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          <Button asChild>
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full lg:w-auto">
+          <Button className="w-full sm:w-auto" asChild>
             <Link href="/progress/create">
-              <Plus className="mr-2 h-4 w-4" /> New Transaction
+              <Plus className="mr-2 h-4 w-4" />
+              <span className="hidden sm:inline">New Transaction</span>
+              <span className="sm:hidden">New</span>
             </Link>
           </Button>
           {isProfessional && (
-            <Button asChild variant="outline">
+            <Button className="w-full sm:w-auto" asChild variant="outline">
               <Link href="/services">
-                <Briefcase className="mr-2 h-4 w-4" /> Manage Services
+                <Briefcase className="mr-2 h-4 w-4" />
+                <span className="hidden sm:inline">Manage Services</span>
+                <span className="sm:hidden">Services</span>
               </Link>
             </Button>
           )}
         </div>
       </div>
 
-      <div className="flex flex-col md:flex-row gap-6">
-        <div className="md:w-3/4">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
-            <div className="relative w-full sm:w-auto">
+      {/* Main content area with responsive layout */}
+      <div className="flex flex-col xl:flex-row gap-4 sm:gap-6">
+        <div className="xl:w-3/4">
+          {/* Search and filter controls with responsive design */}
+          <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-4 sm:mb-6 gap-3 sm:gap-4">
+            <div className="relative w-full lg:w-auto">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
               <Input
                 placeholder="Search transactions..."
-                className="pl-10 w-full sm:w-[300px]"
+                className="pl-10 w-full lg:w-[300px]"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
-            <div className="flex items-center gap-2 w-full sm:w-auto">
-              <Button variant="outline" size="sm" className="flex items-center gap-1">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full lg:w-auto">
+              <Button variant="outline" size="sm" className="flex items-center gap-1 w-full sm:w-auto">
                 <Filter className="h-4 w-4" />
                 Filter
               </Button>
               <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-[150px]">
+                <SelectTrigger className="w-full sm:w-[150px]">
                   <SelectValue placeholder="All Statuses" />
                 </SelectTrigger>
                 <SelectContent>
@@ -176,16 +183,27 @@ function ProgressPageContent() {
             </div>
           </div>
 
+          {/* Responsive tabs */}
           <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="mb-6">
+            <TabsList className="mb-4 sm:mb-6 w-full grid grid-cols-2 lg:grid-cols-4 h-auto p-1">
               {isProfessional && (
-                <TabsTrigger value="service-projects">
-                  Service Projects ({serviceProjects.length})
+                <TabsTrigger value="service-projects" className="text-xs sm:text-sm p-2">
+                  <span className="hidden sm:inline">Service Projects</span>
+                  <span className="sm:hidden">Projects</span> ({serviceProjects.length})
                 </TabsTrigger>
               )}
-              <TabsTrigger value="active">Active Transactions ({activeTransactions.length})</TabsTrigger>
-              <TabsTrigger value="completed">Completed ({completedTransactions.length})</TabsTrigger>
-              <TabsTrigger value="all">All Transactions ({filteredTransactions.length})</TabsTrigger>
+              <TabsTrigger value="active" className="text-xs sm:text-sm p-2">
+                <span className="hidden sm:inline">Active Transactions</span>
+                <span className="sm:hidden">Active</span> ({activeTransactions.length})
+              </TabsTrigger>
+              <TabsTrigger value="completed" className="text-xs sm:text-sm p-2">
+                <span className="hidden sm:inline">Completed</span>
+                <span className="sm:hidden">Done</span> ({completedTransactions.length})
+              </TabsTrigger>
+              <TabsTrigger value="all" className="text-xs sm:text-sm p-2">
+                <span className="hidden sm:inline">All Transactions</span>
+                <span className="sm:hidden">All</span> ({filteredTransactions.length})
+              </TabsTrigger>
             </TabsList>
 
             {isProfessional && (
@@ -285,7 +303,8 @@ function ProgressPageContent() {
           </Tabs>
         </div>
 
-        <div className="md:w-1/4 space-y-6">
+        {/* Sidebar with responsive design */}
+        <div className="xl:w-1/4 space-y-4 sm:space-y-6">
           {isProfessional ? (
             <Card>
               <CardHeader className="pb-3">

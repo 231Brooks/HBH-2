@@ -273,10 +273,10 @@ function ProfilePageContent() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 overflow-x-hidden">
       {/* Profile Header with Cover Photo and Profile Picture */}
       <div className="bg-white shadow-sm">
-        <div className="container mx-auto">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <ProfileHeader
             user={profileUser}
             isOwnProfile={true}
@@ -285,21 +285,23 @@ function ProfilePageContent() {
         </div>
       </div>
 
-      {/* Main Content */}
-      <div className="container mx-auto py-8 px-4">
-        <div className="space-y-8">
+      {/* Main Content with responsive design */}
+      <div className="container mx-auto py-6 sm:py-8 px-4 sm:px-6 lg:px-8 max-w-7xl">
+        <div className="space-y-6 sm:space-y-8">
 
-        {/* Stats Grid */}
+        {/* Stats Grid with responsive design */}
         {stats.length > 0 && (
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-3 sm:gap-4 grid-cols-2 lg:grid-cols-4">
             {stats.map((stat, index) => (
               <Card key={index}>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">{stat.title}</CardTitle>
-                  {stat.icon}
+                  <CardTitle className="text-xs sm:text-sm font-medium">{stat.title}</CardTitle>
+                  <div className="w-4 h-4 sm:w-5 sm:h-5">
+                    {stat.icon}
+                  </div>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{stat.value}</div>
+                  <div className="text-lg sm:text-2xl font-bold">{stat.value}</div>
                   <p className="text-xs text-muted-foreground">{stat.description}</p>
                 </CardContent>
               </Card>
@@ -307,27 +309,29 @@ function ProfilePageContent() {
           </div>
         )}
 
-        <div className="grid gap-6 lg:grid-cols-3">
-          {/* Quick Actions */}
-          <Card className="lg:col-span-2">
+        <div className="grid gap-4 sm:gap-6 xl:grid-cols-3">
+          {/* Quick Actions with responsive design */}
+          <Card className="xl:col-span-2">
             <CardHeader>
-              <CardTitle>Quick Actions</CardTitle>
-              <CardDescription>Common tasks for your account type</CardDescription>
+              <CardTitle className="text-lg sm:text-xl">Quick Actions</CardTitle>
+              <CardDescription className="text-sm sm:text-base">Common tasks for your account type</CardDescription>
             </CardHeader>
-            <CardContent className="grid gap-3 md:grid-cols-2">
+            <CardContent className="grid gap-3 sm:grid-cols-2">
               {quickActions.map((action, index) => (
                 <Button
                   key={index}
                   variant="outline"
-                  className="justify-start h-auto p-4"
+                  className="justify-start h-auto p-3 sm:p-4"
                   asChild
                 >
                   <Link href={action.href}>
-                    <div className="flex items-center gap-3">
-                      {action.icon}
-                      <div className="text-left">
-                        <div className="font-medium">{action.title}</div>
-                        <div className="text-sm text-muted-foreground">{action.description}</div>
+                    <div className="flex items-center gap-2 sm:gap-3">
+                      <div className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0">
+                        {action.icon}
+                      </div>
+                      <div className="text-left min-w-0">
+                        <div className="font-medium text-sm sm:text-base">{action.title}</div>
+                        <div className="text-xs sm:text-sm text-muted-foreground line-clamp-2">{action.description}</div>
                       </div>
                     </div>
                   </Link>
@@ -336,24 +340,24 @@ function ProfilePageContent() {
             </CardContent>
           </Card>
 
-          {/* Recent Activity */}
+          {/* Recent Activity with responsive design */}
           <Card>
             <CardHeader>
-              <CardTitle>Recent Activity</CardTitle>
-              <CardDescription>Your latest updates</CardDescription>
+              <CardTitle className="text-lg sm:text-xl">Recent Activity</CardTitle>
+              <CardDescription className="text-sm sm:text-base">Your latest updates</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-3">
+            <CardContent className="space-y-2 sm:space-y-3">
               {recentActivity.map((activity, index) => (
-                <div key={index} className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted/50">
-                  <div className="w-2 h-2 bg-primary rounded-full" />
-                  <div className="flex-1">
-                    <p className="text-sm font-medium">{activity.title}</p>
+                <div key={index} className="flex items-center gap-2 sm:gap-3 p-2 rounded-lg hover:bg-muted/50 transition-colors">
+                  <div className="w-2 h-2 bg-primary rounded-full flex-shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs sm:text-sm font-medium line-clamp-2">{activity.title}</p>
                     <p className="text-xs text-muted-foreground">{activity.time}</p>
                   </div>
                 </div>
               ))}
               {recentActivity.length === 0 && (
-                <p className="text-sm text-muted-foreground text-center py-4">
+                <p className="text-xs sm:text-sm text-muted-foreground text-center py-4">
                   No recent activity
                 </p>
               )}
@@ -361,8 +365,8 @@ function ProfilePageContent() {
           </Card>
         </div>
 
-        <div className="max-w-4xl mx-auto">
-          <div className="grid gap-6">
+        <div className="max-w-5xl mx-auto">
+          <div className="grid gap-4 sm:gap-6">
             {/* Account Type Card */}
           <Card>
             <CardHeader>

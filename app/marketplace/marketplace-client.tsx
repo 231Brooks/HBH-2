@@ -183,91 +183,100 @@ export default function MarketplaceClient() {
   }
 
   return (
-    <div className="container mx-auto py-8 px-4">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
-        <div>
-          <h1 className="text-3xl font-bold mb-1">Marketplace</h1>
-          <p className="text-muted-foreground">Discover properties and connect with service professionals</p>
+    <div className="container mx-auto py-6 sm:py-8 px-4 sm:px-6 lg:px-8 max-w-7xl overflow-x-hidden">
+      {/* Header section with responsive design */}
+      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-6 sm:mb-8 gap-4">
+        <div className="w-full lg:w-auto">
+          <h1 className="text-2xl sm:text-3xl font-bold mb-1">Marketplace</h1>
+          <p className="text-sm sm:text-base text-muted-foreground">Discover properties and connect with service professionals</p>
         </div>
-        <div className="flex items-center gap-2">
-          <Button asChild>
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full lg:w-auto">
+          <Button className="w-full sm:w-auto" asChild>
             <Link href="/marketplace/create">
               <Plus className="mr-2 h-4 w-4" />
-              List Property
+              <span className="hidden sm:inline">List Property</span>
+              <span className="sm:hidden">List</span>
             </Link>
           </Button>
-          <Button asChild variant="outline">
+          <Button className="w-full sm:w-auto" asChild variant="outline">
             <Link href="/marketplace/create-request">
               <MessageSquare className="mr-2 h-4 w-4" />
-              Request Service
+              <span className="hidden sm:inline">Request Service</span>
+              <span className="sm:hidden">Request</span>
             </Link>
           </Button>
           {activeTab === "properties" && (
-            <>
-              <Button variant="outline" size="sm" onClick={() => setShowFilters(!showFilters)}>
-                <Filter className="mr-2 h-4 w-4" />
-                Filters
+            <div className="flex gap-2 w-full sm:w-auto">
+              <Button variant="outline" size="sm" className="flex-1 sm:flex-none" onClick={() => setShowFilters(!showFilters)}>
+                <Filter className="mr-1 sm:mr-2 h-4 w-4" />
+                <span className="hidden sm:inline">Filters</span>
               </Button>
-              <Button variant="outline" size="sm" onClick={() => setViewMode("map")}>
-                <MapPin className="mr-2 h-4 w-4" />
-                Map View
+              <Button variant="outline" size="sm" className="flex-1 sm:flex-none" onClick={() => setViewMode("map")}>
+                <MapPin className="mr-1 sm:mr-2 h-4 w-4" />
+                <span className="hidden sm:inline">Map</span>
               </Button>
-            </>
+            </div>
           )}
         </div>
       </div>
 
-      {/* Marketplace Ads */}
-      <div className="mb-6">
+      {/* Marketplace Ads with responsive container */}
+      <div className="mb-4 sm:mb-6">
         <MarketplaceAds />
       </div>
 
-      {/* Search and View Controls */}
-      <div className="mb-6">
-        <div className="flex flex-col md:flex-row gap-4">
+      {/* Search and View Controls with responsive design */}
+      <div className="mb-4 sm:mb-6">
+        <div className="flex flex-col lg:flex-row gap-3 sm:gap-4">
           <div className="relative flex-grow">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
             <Input
               placeholder="Search by location, address, or keyword"
-              className="pl-10"
+              className="pl-10 w-full"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               onKeyPress={(e) => e.key === 'Enter' && applyFilters()}
             />
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 sm:gap-2 justify-center lg:justify-start">
             <Button
               variant={viewMode === "grid" ? "default" : "outline"}
               size="sm"
+              className="flex-1 sm:flex-none"
               onClick={() => setViewMode("grid")}
             >
               <Grid3X3 className="h-4 w-4" />
+              <span className="ml-1 sm:hidden">Grid</span>
             </Button>
             <Button
               variant={viewMode === "list" ? "default" : "outline"}
               size="sm"
+              className="flex-1 sm:flex-none"
               onClick={() => setViewMode("list")}
             >
               <List className="h-4 w-4" />
+              <span className="ml-1 sm:hidden">List</span>
             </Button>
             <Button
               variant={viewMode === "map" ? "default" : "outline"}
               size="sm"
+              className="flex-1 sm:flex-none"
               onClick={() => setViewMode("map")}
             >
               <Map className="h-4 w-4" />
+              <span className="ml-1 sm:hidden">Map</span>
             </Button>
           </div>
         </div>
 
-        {/* Filters Panel - Only show for properties */}
+        {/* Responsive Filters Panel - Only show for properties */}
         {showFilters && activeTab === "properties" && (
-          <div className="mt-4 p-4 border rounded-lg bg-muted/50">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="mt-3 sm:mt-4 p-3 sm:p-4 border rounded-lg bg-muted/50">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
               <div>
-                <label className="text-sm font-medium mb-2 block">Property Type</label>
+                <label className="text-xs sm:text-sm font-medium mb-2 block">Property Type</label>
                 <Select value={filters.type} onValueChange={(value) => setFilters({...filters, type: value})}>
-                  <SelectTrigger>
+                  <SelectTrigger className="h-9 sm:h-10">
                     <SelectValue placeholder="Any Type" />
                   </SelectTrigger>
                   <SelectContent>
@@ -280,29 +289,29 @@ export default function MarketplaceClient() {
                 </Select>
               </div>
 
-              <div>
-                <label className="text-sm font-medium mb-2 block">Price Range</label>
+              <div className="sm:col-span-2 lg:col-span-1">
+                <label className="text-xs sm:text-sm font-medium mb-2 block">Price Range</label>
                 <div className="space-y-2">
-                  <Slider 
-                    value={[filters.minPrice, filters.maxPrice]} 
+                  <Slider
+                    value={[filters.minPrice, filters.maxPrice]}
                     onValueChange={([min, max]) => setFilters({...filters, minPrice: min, maxPrice: max})}
-                    min={0} 
-                    max={2000000} 
-                    step={10000} 
+                    min={0}
+                    max={2000000}
+                    step={10000}
                   />
                   <div className="flex items-center gap-2">
-                    <Input 
-                      placeholder="Min" 
-                      type="number" 
-                      className="h-8"
+                    <Input
+                      placeholder="Min"
+                      type="number"
+                      className="h-8 sm:h-9 text-xs sm:text-sm"
                       value={filters.minPrice || ""}
                       onChange={(e) => setFilters({...filters, minPrice: parseInt(e.target.value) || 0})}
                     />
-                    <span>to</span>
-                    <Input 
-                      placeholder="Max" 
-                      type="number" 
-                      className="h-8"
+                    <span className="text-xs sm:text-sm">to</span>
+                    <Input
+                      placeholder="Max"
+                      type="number"
+                      className="h-8 sm:h-9 text-xs sm:text-sm"
                       value={filters.maxPrice || ""}
                       onChange={(e) => setFilters({...filters, maxPrice: parseInt(e.target.value) || 1000000})}
                     />
@@ -311,9 +320,9 @@ export default function MarketplaceClient() {
               </div>
 
               <div>
-                <label className="text-sm font-medium mb-2 block">Bedrooms</label>
+                <label className="text-xs sm:text-sm font-medium mb-2 block">Bedrooms</label>
                 <Select value={filters.beds.toString()} onValueChange={(value) => setFilters({...filters, beds: parseInt(value) || 0})}>
-                  <SelectTrigger>
+                  <SelectTrigger className="h-9 sm:h-10">
                     <SelectValue placeholder="Any" />
                   </SelectTrigger>
                   <SelectContent>
@@ -328,9 +337,9 @@ export default function MarketplaceClient() {
               </div>
 
               <div>
-                <label className="text-sm font-medium mb-2 block">Bathrooms</label>
+                <label className="text-xs sm:text-sm font-medium mb-2 block">Bathrooms</label>
                 <Select value={filters.baths.toString()} onValueChange={(value) => setFilters({...filters, baths: parseFloat(value) || 0})}>
-                  <SelectTrigger>
+                  <SelectTrigger className="h-9 sm:h-10">
                     <SelectValue placeholder="Any" />
                   </SelectTrigger>
                   <SelectContent>
@@ -344,23 +353,28 @@ export default function MarketplaceClient() {
               </div>
             </div>
 
-            <div className="flex gap-2 mt-4">
-              <Button onClick={applyFilters}>Apply Filters</Button>
-              <Button variant="outline" onClick={resetFilters}>Reset</Button>
+            <div className="flex flex-col sm:flex-row gap-2 mt-3 sm:mt-4">
+              <Button className="w-full sm:w-auto" onClick={applyFilters}>Apply Filters</Button>
+              <Button className="w-full sm:w-auto" variant="outline" onClick={resetFilters}>Reset</Button>
             </div>
           </div>
         )}
       </div>
 
-      {/* Marketplace Listings */}
+      {/* Marketplace Listings with responsive design */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <div className="flex justify-between items-center mb-6">
-          <TabsList>
-            <TabsTrigger value="properties">Properties ({properties.length})</TabsTrigger>
-            <TabsTrigger value="service-requests">Service Requests ({serviceRequests.length})</TabsTrigger>
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 sm:mb-6 gap-3 sm:gap-4">
+          <TabsList className="w-full sm:w-auto grid grid-cols-2 sm:flex">
+            <TabsTrigger value="properties" className="text-xs sm:text-sm">
+              Properties ({properties.length})
+            </TabsTrigger>
+            <TabsTrigger value="service-requests" className="text-xs sm:text-sm">
+              <span className="hidden sm:inline">Service Requests</span>
+              <span className="sm:hidden">Services</span> ({serviceRequests.length})
+            </TabsTrigger>
           </TabsList>
           <Select value={sortBy} onValueChange={setSortBy}>
-            <SelectTrigger className="w-[180px]">
+            <SelectTrigger className="w-full sm:w-[180px]">
               <SelectValue placeholder="Sort by" />
             </SelectTrigger>
             <SelectContent>
@@ -374,20 +388,20 @@ export default function MarketplaceClient() {
 
         <TabsContent value="properties" className="mt-0">
           {loading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
               {Array(6).fill(0).map((_, i) => (
-                <div key={i} className="h-80 bg-gray-200 animate-pulse rounded-lg"></div>
+                <div key={i} className="h-64 sm:h-80 bg-gray-200 animate-pulse rounded-lg"></div>
               ))}
             </div>
           ) : viewMode === "map" ? (
-            <div className="h-[600px] rounded-lg overflow-hidden border">
+            <div className="h-[400px] sm:h-[500px] lg:h-[600px] rounded-lg overflow-hidden border">
               <PropertyMap properties={properties} />
             </div>
           ) : (
             <div className={viewMode === "grid" ? "grid-view" : "list-view"}>
               {Array.isArray(properties) && properties.length > 0 ? (
                 viewMode === "grid" ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                     {properties.map((property: any) => (
                       <PropertyCard
                         key={property.id}
@@ -397,7 +411,7 @@ export default function MarketplaceClient() {
                     ))}
                   </div>
                 ) : (
-                  <div className="space-y-4">
+                  <div className="space-y-3 sm:space-y-4">
                     {properties.map((property: any) => (
                       <PropertyCard
                         key={property.id}
@@ -408,11 +422,11 @@ export default function MarketplaceClient() {
                   </div>
                 )
               ) : (
-                <div className="text-center py-12">
-                  <Building className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">No properties found</h3>
-                  <p className="text-gray-500 mb-4">Try adjusting your search criteria or filters.</p>
-                  <Button onClick={resetFilters} variant="outline">
+                <div className="text-center py-8 sm:py-12 px-4">
+                  <Building className="mx-auto h-10 w-10 sm:h-12 sm:w-12 text-gray-400 mb-3 sm:mb-4" />
+                  <h3 className="text-base sm:text-lg font-medium text-gray-900 mb-2">No properties found</h3>
+                  <p className="text-sm sm:text-base text-gray-500 mb-3 sm:mb-4">Try adjusting your search criteria or filters.</p>
+                  <Button onClick={resetFilters} variant="outline" size="sm">
                     Reset Filters
                   </Button>
                 </div>
@@ -421,8 +435,8 @@ export default function MarketplaceClient() {
           )}
 
           {hasMore && (
-            <div className="mt-8 flex justify-center">
-              <Button variant="outline" onClick={loadMore} disabled={loading}>
+            <div className="mt-6 sm:mt-8 flex justify-center">
+              <Button variant="outline" className="w-full sm:w-auto" onClick={loadMore} disabled={loading}>
                 {loading ? "Loading..." : "Load More Properties"}
               </Button>
             </div>
@@ -431,23 +445,23 @@ export default function MarketplaceClient() {
 
         <TabsContent value="service-requests" className="mt-0">
           {loading ? (
-            <div className="grid grid-cols-1 gap-6">
+            <div className="grid grid-cols-1 gap-4 sm:gap-6">
               {Array(3).fill(0).map((_, i) => (
-                <div key={i} className="h-48 bg-gray-200 animate-pulse rounded-lg"></div>
+                <div key={i} className="h-40 sm:h-48 bg-gray-200 animate-pulse rounded-lg"></div>
               ))}
             </div>
           ) : serviceRequests.length > 0 ? (
-            <div className="grid grid-cols-1 gap-6">
+            <div className="grid grid-cols-1 gap-4 sm:gap-6">
               {serviceRequests.map((request: any) => (
                 <ServiceRequestCard key={request.id} request={request} />
               ))}
             </div>
           ) : (
-            <div className="text-center py-12">
-              <MessageSquare className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">No service requests found</h3>
-              <p className="text-gray-500 mb-4">Be the first to post a service request.</p>
-              <Button asChild>
+            <div className="text-center py-8 sm:py-12 px-4">
+              <MessageSquare className="mx-auto h-10 w-10 sm:h-12 sm:w-12 text-gray-400 mb-3 sm:mb-4" />
+              <h3 className="text-base sm:text-lg font-medium text-gray-900 mb-2">No service requests found</h3>
+              <p className="text-sm sm:text-base text-gray-500 mb-3 sm:mb-4">Be the first to post a service request.</p>
+              <Button className="w-full sm:w-auto" asChild>
                 <Link href="/marketplace/create-request">
                   <MessageSquare className="mr-2 h-4 w-4" />
                   Request a Service
@@ -476,59 +490,59 @@ function ServiceRequestCard({ request }: ServiceRequestCardProps) {
 
   return (
     <Card className="hover:shadow-md transition-shadow">
-      <CardHeader>
-        <div className="flex justify-between items-start">
-          <div className="flex-1">
-            <CardTitle className="text-xl mb-2">{request.title}</CardTitle>
-            <CardDescription className="text-base">{request.description}</CardDescription>
+      <CardHeader className="pb-3 sm:pb-6">
+        <div className="flex flex-col sm:flex-row justify-between items-start gap-3 sm:gap-4">
+          <div className="flex-1 min-w-0">
+            <CardTitle className="text-lg sm:text-xl mb-2 line-clamp-2">{request.title}</CardTitle>
+            <CardDescription className="text-sm sm:text-base line-clamp-3">{request.description}</CardDescription>
           </div>
-          <Badge className={urgencyColors[request.urgency as ServiceUrgency]}>
+          <Badge className={`${urgencyColors[request.urgency as ServiceUrgency]} flex-shrink-0`}>
             <UrgencyIcon className="h-3 w-3 mr-1" />
-            {request.urgency}
+            <span className="text-xs">{request.urgency}</span>
           </Badge>
         </div>
       </CardHeader>
-      <CardContent>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-          <div className="flex items-center text-sm text-muted-foreground">
-            <MapPin className="h-4 w-4 mr-2" />
-            {request.location}
+      <CardContent className="pt-0">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 mb-4">
+          <div className="flex items-center text-xs sm:text-sm text-muted-foreground">
+            <MapPin className="h-3 w-3 sm:h-4 sm:w-4 mr-2 flex-shrink-0" />
+            <span className="truncate">{request.location}</span>
           </div>
           {request.budget && (
-            <div className="flex items-center text-sm text-muted-foreground">
-              <DollarSign className="h-4 w-4 mr-2" />
-              {request.budget}
+            <div className="flex items-center text-xs sm:text-sm text-muted-foreground">
+              <DollarSign className="h-3 w-3 sm:h-4 sm:w-4 mr-2 flex-shrink-0" />
+              <span className="truncate">{request.budget}</span>
             </div>
           )}
-          <div className="flex items-center text-sm text-muted-foreground">
-            <Clock className="h-4 w-4 mr-2" />
-            {formatDistanceToNow(new Date(request.createdAt), { addSuffix: true })}
+          <div className="flex items-center text-xs sm:text-sm text-muted-foreground">
+            <Clock className="h-3 w-3 sm:h-4 sm:w-4 mr-2 flex-shrink-0" />
+            <span className="truncate">{formatDistanceToNow(new Date(request.createdAt), { addSuffix: true })}</span>
           </div>
         </div>
 
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
+          <div className="flex items-center space-x-2 min-w-0 flex-1">
+            <div className="w-6 h-6 sm:w-8 sm:h-8 bg-gray-200 rounded-full flex items-center justify-center flex-shrink-0">
               {request.client?.image ? (
-                <img src={request.client.image} alt={request.client.name} className="w-8 h-8 rounded-full" />
+                <img src={request.client.image} alt={request.client.name} className="w-6 h-6 sm:w-8 sm:h-8 rounded-full" />
               ) : (
-                <User className="h-4 w-4" />
+                <User className="h-3 w-3 sm:h-4 sm:w-4" />
               )}
             </div>
-            <div>
-              <p className="text-sm font-medium">{request.client?.name || "Anonymous"}</p>
+            <div className="min-w-0 flex-1">
+              <p className="text-xs sm:text-sm font-medium truncate">{request.client?.name || "Anonymous"}</p>
               <div className="flex items-center text-xs text-muted-foreground">
-                <Star className="h-3 w-3 mr-1 fill-current text-yellow-400" />
-                {request.client?.rating?.toFixed(1) || "New"} ({request.client?.reviewCount || 0} reviews)
+                <Star className="h-3 w-3 mr-1 fill-current text-yellow-400 flex-shrink-0" />
+                <span className="truncate">{request.client?.rating?.toFixed(1) || "New"} ({request.client?.reviewCount || 0} reviews)</span>
               </div>
             </div>
           </div>
 
-          <div className="flex items-center space-x-2">
-            <span className="text-sm text-muted-foreground">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3 w-full sm:w-auto">
+            <span className="text-xs sm:text-sm text-muted-foreground">
               {request.responses?.length || 0} responses
             </span>
-            <Button asChild>
+            <Button size="sm" className="w-full sm:w-auto" asChild>
               <Link href={`/service-requests/${request.id}`}>
                 View Details
               </Link>

@@ -77,34 +77,37 @@ export default function Navbar() {
         isScrolled ? "bg-white/95 backdrop-blur-sm border-b shadow-sm" : "bg-white border-b",
       )}
     >
-      <div className="container flex h-16 items-center justify-between">
-        <div className="flex items-center gap-6">
-          <Link href="/" className="font-bold text-xl flex items-center gap-2">
-            <Home className="h-6 w-6" />
+      {/* Responsive container with proper padding and overflow handling */}
+      <div className="container mx-auto flex h-16 items-center justify-between px-4 sm:px-6 lg:px-8 max-w-full">
+        <div className="flex items-center gap-2 sm:gap-6 min-w-0 flex-shrink-0">
+          <Link href="/" className="font-bold text-lg sm:text-xl flex items-center gap-2 flex-shrink-0">
+            <Home className="h-5 w-5 sm:h-6 sm:w-6" />
             <span className="hidden sm:inline">HBH</span>
           </Link>
 
+          {/* Desktop navigation with responsive spacing */}
           {!isMobile && (
-            <nav className="flex items-center gap-1">
+            <nav className="flex items-center gap-1 overflow-x-auto">
               {navItems.map((item) => (
                 <Link
                   key={item.href}
                   href={item.href}
                   className={cn(
-                    "flex items-center gap-2 px-3 py-2 text-sm font-medium transition-colors hover:text-primary hover:bg-muted/50 rounded-md",
+                    "flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-2 text-xs sm:text-sm font-medium transition-colors hover:text-primary hover:bg-muted/50 rounded-md whitespace-nowrap",
                     pathname?.startsWith(item.href) ? "text-primary bg-muted" : "text-muted-foreground",
                   )}
                   title={item.name}
                 >
                   {item.icon}
-                  <span>{item.name}</span>
+                  <span className="hidden md:inline">{item.name}</span>
                 </Link>
               ))}
             </nav>
           )}
         </div>
 
-        <div className="flex items-center gap-4">
+        {/* Right side actions with responsive spacing */}
+        <div className="flex items-center gap-2 sm:gap-4 flex-shrink-0">
           <ClientOnly
             fallback={
               <div className="flex items-center gap-2">
@@ -151,11 +154,11 @@ export default function Navbar() {
                 )}
               </>
             ) : (
-              <div className="flex items-center gap-2">
-                <Button variant="outline" asChild>
+              <div className="flex items-center gap-1 sm:gap-2">
+                <Button variant="outline" size="sm" asChild>
                   <Link href="/auth/login">Login</Link>
                 </Button>
-                <Button asChild>
+                <Button size="sm" asChild>
                   <Link href="/auth/signup">Sign Up</Link>
                 </Button>
               </div>

@@ -27,10 +27,16 @@ export default function RootLayout({
       <body className={inter.className}>
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
           <SupabaseProviderWrapper>
-            <div className="flex flex-col min-h-screen bg-[#EBEBEB]">
+            {/* Main layout container with responsive design */}
+            <div className="flex flex-col min-h-screen bg-[#EBEBEB] overflow-x-hidden">
               <TestModeBanner />
               <Navbar />
-              <main className="flex-1 pb-safe pb-20">{children}</main>
+              {/* Main content area with proper responsive spacing */}
+              <main className="flex-1 w-full max-w-full pb-safe pb-16 md:pb-4 px-0">
+                <div className="w-full max-w-full overflow-x-hidden">
+                  {children}
+                </div>
+              </main>
               <BottomGlobalAds />
               <BottomNavbar />
             </div>
