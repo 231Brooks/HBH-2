@@ -3,11 +3,8 @@ import type { Metadata } from "next"
 import { Inter } from "next/font/google"
 import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
-import Navbar from "@/components/navbar"
-import BottomNavbar from "@/components/bottom-navbar"
-import { BottomGlobalAds } from "@/components/advertising/ad-banner"
 import { SupabaseProviderWrapper } from "@/components/supabase-provider-wrapper"
-import { TestModeBanner } from "@/components/test-mode-banner"
+import { LayoutClient } from "@/components/layout-client"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -27,19 +24,9 @@ export default function RootLayout({
       <body className={inter.className}>
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
           <SupabaseProviderWrapper>
-            {/* Main layout container with responsive design */}
-            <div className="flex flex-col min-h-screen bg-[#EBEBEB] overflow-x-hidden">
-              <TestModeBanner />
-              <Navbar />
-              {/* Main content area with proper responsive spacing */}
-              <main className="flex-1 w-full max-w-full pb-safe pb-16 md:pb-4 px-0">
-                <div className="w-full max-w-full overflow-x-hidden">
-                  {children}
-                </div>
-              </main>
-              <BottomGlobalAds />
-              <BottomNavbar />
-            </div>
+            <LayoutClient>
+              {children}
+            </LayoutClient>
           </SupabaseProviderWrapper>
         </ThemeProvider>
       </body>
