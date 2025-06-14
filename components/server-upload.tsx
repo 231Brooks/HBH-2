@@ -17,7 +17,7 @@ interface ServerUploadProps {
 export default function ServerUpload({
   onUpload,
   label = "Upload Image",
-  accept = "image/*",
+  accept = "image/*,.heic,.heif",
   maxSize = 5, // Default 5MB
 }: ServerUploadProps) {
   const [isUploading, setIsUploading] = useState(false)
