@@ -668,6 +668,7 @@ export default function ServicesClient() {
           </div>
         </div>
       </div>
+      </div>
     </ErrorBoundary>
   )
 }
