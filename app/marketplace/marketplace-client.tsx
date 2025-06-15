@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -24,6 +24,7 @@ import { PerformanceTracker } from "./performance-tracker"
 import { PropertyCard } from "@/components/marketplace/property-card"
 
 import { MarketplaceAds } from "@/components/advertising/ad-banner"
+import { ErrorBoundary } from "@/components/error-boundary"
 
 
 
@@ -59,17 +60,17 @@ export default function MarketplaceClient() {
     }, 500) // Debounce search
 
     return () => clearTimeout(timeoutId)
-  }, [activeTab, sortBy, searchTerm])
+  }, [activeTab, sortBy, searchTerm, loadData])
 
   // Function to load data based on active tab
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     if (activeTab === "properties" || activeTab === "all") {
       await loadProperties()
     }
-  }
+  }, [activeTab, loadProperties])
 
   // Function to load properties with filters
-  const loadProperties = async (newFilters?: any) => {
+  const loadProperties = useCallback(async (newFilters?: any) => {
     setLoading(true)
     const currentFilters = newFilters || filters
 
@@ -99,7 +100,7 @@ export default function MarketplaceClient() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [filters, searchTerm, sortBy, activeTab])
 
 
 
@@ -135,7 +136,8 @@ export default function MarketplaceClient() {
   }
 
   return (
-    <div className="container mx-auto py-6 sm:py-8 px-4 sm:px-6 lg:px-8 max-w-7xl overflow-x-hidden">
+    <ErrorBoundary>
+      <div className="container mx-auto py-6 sm:py-8 px-4 sm:px-6 lg:px-8 max-w-7xl overflow-x-hidden">
       {/* Header section with responsive design */}
       <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-6 sm:mb-8 gap-4">
         <div className="w-full lg:w-auto">
@@ -388,8 +390,9 @@ export default function MarketplaceClient() {
 
       </Tabs>
 
-      <PerformanceTracker />
-    </div>
+        <PerformanceTracker />
+      </div>
+    </ErrorBoundary>
   )
 }
 
