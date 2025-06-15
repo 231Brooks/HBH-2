@@ -40,6 +40,7 @@ import { AccountTypeSelector } from "@/components/account-type-selector"
 import { RoleGuard } from "@/components/role-guard"
 import { ROLE_DESCRIPTIONS, type UserRole } from "@/lib/user-roles"
 import { ProfileHeader } from "@/components/profile-header"
+import { ErrorBoundary } from "@/components/error-boundary"
 
 function ProfilePageContent() {
   const router = useRouter()
@@ -648,7 +649,9 @@ function ProfilePageContent() {
 export default function ProfilePage() {
   return (
     <ProtectedRoute>
-      <ProfilePageContent />
+      <ErrorBoundary>
+        <ProfilePageContent />
+      </ErrorBoundary>
     </ProtectedRoute>
   )
 }
