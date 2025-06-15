@@ -1,4 +1,4 @@
-export type UserRole = 'USER' | 'PROFESSIONAL' | 'ADMIN'
+export type UserRole = 'USER' | 'PROFESSIONAL' | 'ADMIN' | 'TITLE_COMPANY'
 
 export interface UserPermissions {
   // Property permissions
@@ -52,6 +52,11 @@ export interface UserPermissions {
   canViewServiceRequests: boolean
   canRespondToServiceRequests: boolean
   canAccessProfessionalDashboard: boolean
+
+  // Title Company permissions
+  canAccessTitleCompany: boolean
+  canManageClosings: boolean
+  canViewAllTransactions: boolean
 }
 
 export const USER_PERMISSIONS: Record<UserRole, UserPermissions> = {
@@ -107,6 +112,11 @@ export const USER_PERMISSIONS: Record<UserRole, UserPermissions> = {
     canViewServiceRequests: false,
     canRespondToServiceRequests: false,
     canAccessProfessionalDashboard: false,
+
+    // Title Company permissions
+    canAccessTitleCompany: false,
+    canManageClosings: false,
+    canViewAllTransactions: false,
   },
   
   PROFESSIONAL: {
@@ -161,6 +171,11 @@ export const USER_PERMISSIONS: Record<UserRole, UserPermissions> = {
     canViewServiceRequests: true,
     canRespondToServiceRequests: true,
     canAccessProfessionalDashboard: true,
+
+    // Title Company permissions
+    canAccessTitleCompany: false,
+    canManageClosings: false,
+    canViewAllTransactions: false,
   },
   
   ADMIN: {
@@ -215,6 +230,70 @@ export const USER_PERMISSIONS: Record<UserRole, UserPermissions> = {
     canViewServiceRequests: true,
     canRespondToServiceRequests: true,
     canAccessProfessionalDashboard: true,
+
+    // Title Company permissions
+    canAccessTitleCompany: true,
+    canManageClosings: true,
+    canViewAllTransactions: true,
+  },
+
+  TITLE_COMPANY: {
+    // Property permissions
+    canCreateProperty: false,
+    canEditOwnProperty: false,
+    canEditAnyProperty: false,
+    canDeleteOwnProperty: false,
+    canDeleteAnyProperty: false,
+    canViewAllProperties: true,
+
+    // Transaction permissions
+    canCreateTransaction: false,
+    canViewOwnTransactions: true,
+    canViewAllTransactions: true,
+    canManageTransactions: true,
+
+    // Service permissions
+    canCreateService: false,
+    canEditOwnService: false,
+    canEditAnyService: false,
+    canDeleteOwnService: false,
+    canDeleteAnyService: false,
+    canViewAllServices: true,
+
+    // User management permissions
+    canViewAllUsers: false,
+    canEditOwnProfile: true,
+    canEditAnyProfile: false,
+    canDeleteUsers: false,
+    canVerifyUsers: false,
+
+    // Admin permissions
+    canAccessAdmin: false,
+    canManageSystem: false,
+    canViewAnalytics: false,
+    canManagePayments: false,
+
+    // Communication permissions
+    canSendMessages: true,
+    canViewAllMessages: false,
+    canCreateAppointments: true,
+    canManageAppointments: true,
+
+    // Marketplace permissions
+    canPostJobs: false,
+    canApplyToJobs: false,
+    canManageJobs: false,
+
+    // Subscription permissions
+    canCreateServiceListings: false,
+    canViewServiceRequests: false,
+    canRespondToServiceRequests: false,
+    canAccessProfessionalDashboard: false,
+
+    // Title Company permissions
+    canAccessTitleCompany: true,
+    canManageClosings: true,
+    canViewAllTransactions: true,
   },
 }
 
@@ -293,6 +372,19 @@ export const ROLE_DESCRIPTIONS = {
       'Verify user accounts',
       'Manage payments and fees',
       'System diagnostics and optimization'
+    ]
+  },
+  TITLE_COMPANY: {
+    title: 'Title Company',
+    description: 'Manage closings, title work, and transaction coordination',
+    features: [
+      'View and manage all assigned transactions',
+      'Schedule and coordinate closings',
+      'Upload and manage title documents',
+      'Communicate with buyers, sellers, and agents',
+      'Track transaction milestones',
+      'Generate closing statements',
+      'Manage title commitments and policies'
     ]
   }
 } as const

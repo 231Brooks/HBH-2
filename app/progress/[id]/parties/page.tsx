@@ -21,49 +21,8 @@ import {
 } from "lucide-react"
 import { ProtectedRoute } from "@/components/protected-route"
 
-// Mock parties data - replace with actual API call
-const mockParties = [
-  {
-    id: "1",
-    name: "John Doe",
-    role: "Buyer",
-    email: "john.doe@email.com",
-    phone: "(555) 123-4567",
-    avatar: "",
-    company: "Self",
-    status: "active"
-  },
-  {
-    id: "2", 
-    name: "Jane Smith",
-    role: "Seller",
-    email: "jane.smith@email.com",
-    phone: "(555) 987-6543",
-    avatar: "",
-    company: "Smith Properties LLC",
-    status: "active"
-  },
-  {
-    id: "3",
-    name: "Mike Johnson",
-    role: "Real Estate Agent",
-    email: "mike@realestate.com",
-    phone: "(555) 456-7890",
-    avatar: "",
-    company: "Premier Realty",
-    status: "active"
-  },
-  {
-    id: "4",
-    name: "Sarah Wilson",
-    role: "Title Agent",
-    email: "sarah@titlecompany.com",
-    phone: "(555) 321-0987",
-    avatar: "",
-    company: "Secure Title Co.",
-    status: "active"
-  }
-]
+// TODO: Replace with actual API call to get transaction parties
+const mockParties: any[] = []
 
 export default function TransactionPartiesPage() {
   const params = useParams()

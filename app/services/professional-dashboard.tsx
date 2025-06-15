@@ -234,6 +234,7 @@ export default function ProfessionalDashboard() {
           <TabsTrigger value="completed-jobs">Completed Jobs</TabsTrigger>
           <TabsTrigger value="my-responses">My Responses</TabsTrigger>
           <TabsTrigger value="active-projects">Active Projects</TabsTrigger>
+          <TabsTrigger value="advertising" data-tour="advertising-tab">Advertising</TabsTrigger>
         </TabsList>
 
         <TabsContent value="find-jobs">
@@ -279,6 +280,108 @@ export default function ProfessionalDashboard() {
             <Calendar className="mx-auto h-12 w-12 text-blue-500 mb-4" />
             <h3 className="text-lg font-medium text-gray-900 mb-2">Active projects will appear here</h3>
             <p className="text-gray-500">Accepted service requests will show up as active projects.</p>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="advertising">
+          <div className="space-y-6">
+            {/* Quick Advertising Actions */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-lg">Create New Ad</CardTitle>
+                  <CardDescription>Promote your services to potential clients</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Button asChild className="w-full">
+                    <Link href="/advertising/create">
+                      <Plus className="mr-2 h-4 w-4" />
+                      Create Ad
+                    </Link>
+                  </Button>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-lg">Manage Ads</CardTitle>
+                  <CardDescription>View and manage your existing advertisements</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Button asChild variant="outline" className="w-full">
+                    <Link href="/advertising">
+                      <Eye className="mr-2 h-4 w-4" />
+                      View Dashboard
+                    </Link>
+                  </Button>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-lg">Pricing Info</CardTitle>
+                  <CardDescription>Learn about our advertising rates</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-center">
+                    <p className="text-2xl font-bold text-primary">$5/hour</p>
+                    <p className="text-sm text-muted-foreground">Base rate per slot</p>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Advertising Benefits */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Why Advertise Your Services?</CardTitle>
+                <CardDescription>Boost your visibility and attract more clients</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-4">
+                    <div className="flex items-start gap-3">
+                      <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
+                        <Eye className="h-4 w-4 text-blue-600" />
+                      </div>
+                      <div>
+                        <h4 className="font-semibold">Increased Visibility</h4>
+                        <p className="text-sm text-muted-foreground">Get your services seen by more potential clients across the platform</p>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0">
+                        <TrendingUp className="h-4 w-4 text-green-600" />
+                      </div>
+                      <div>
+                        <h4 className="font-semibold">More Leads</h4>
+                        <p className="text-sm text-muted-foreground">Generate more service requests and grow your business</p>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="space-y-4">
+                    <div className="flex items-start gap-3">
+                      <div className="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center flex-shrink-0">
+                        <MapPin className="h-4 w-4 text-purple-600" />
+                      </div>
+                      <div>
+                        <h4 className="font-semibold">Targeted Placement</h4>
+                        <p className="text-sm text-muted-foreground">Choose where your ads appear for maximum impact</p>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <div className="w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center flex-shrink-0">
+                        <BarChart className="h-4 w-4 text-orange-600" />
+                      </div>
+                      <div>
+                        <h4 className="font-semibold">Performance Tracking</h4>
+                        <p className="text-sm text-muted-foreground">Monitor clicks, impressions, and ROI with detailed analytics</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           </div>
         </TabsContent>
       </Tabs>

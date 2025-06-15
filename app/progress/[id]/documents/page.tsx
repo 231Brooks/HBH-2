@@ -20,36 +20,8 @@ import {
 } from "lucide-react"
 import { ProtectedRoute } from "@/components/protected-route"
 
-// Mock document data - replace with actual API call
-const mockDocuments = [
-  {
-    id: "1",
-    name: "Purchase Agreement",
-    type: "Contract",
-    uploadedBy: "John Doe",
-    uploadedAt: "2023-07-01",
-    status: "approved",
-    size: "2.4 MB"
-  },
-  {
-    id: "2", 
-    name: "Property Inspection Report",
-    type: "Report",
-    uploadedBy: "Jane Smith",
-    uploadedAt: "2023-07-05",
-    status: "pending",
-    size: "1.8 MB"
-  },
-  {
-    id: "3",
-    name: "Title Insurance Policy",
-    type: "Insurance",
-    uploadedBy: "Mike Johnson",
-    uploadedAt: "2023-07-10",
-    status: "approved",
-    size: "3.2 MB"
-  }
-]
+// TODO: Replace with actual API call to get transaction documents
+const mockDocuments: any[] = []
 
 export default function TransactionDocumentsPage() {
   const params = useParams()
