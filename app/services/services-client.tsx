@@ -29,6 +29,11 @@ import {
   Loader2,
   Calendar,
   MessageSquare,
+  TreePine,
+  Hammer,
+  ChevronRight,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
@@ -59,101 +64,171 @@ interface Service {
   reviews: any[]
 }
 
+// Hierarchical service category structure
+const serviceCategoryGroups = [
+  {
+    id: "PROPERTY_BUILDING",
+    label: "Property & Building",
+    icon: <Home className="h-6 w-6" />,
+    description: "Essential building services",
+    count: 18,
+    subcategories: [
+      { value: "PLUMBING", label: "Plumbing", icon: <Tool className="h-5 w-5" /> },
+      { value: "ELECTRICAL", label: "Electrical", icon: <Tool className="h-5 w-5" /> },
+      { value: "HVAC", label: "HVAC", icon: <Tool className="h-5 w-5" /> },
+      { value: "ROOFING", label: "Roofing", icon: <Home className="h-5 w-5" /> },
+      { value: "SIDING", label: "Siding", icon: <Home className="h-5 w-5" /> },
+      { value: "WINDOWS_DOORS", label: "Windows & Doors", icon: <Home className="h-5 w-5" /> },
+      { value: "INSULATION", label: "Insulation", icon: <Home className="h-5 w-5" /> },
+      { value: "FLOORING_INSTALLATION", label: "Flooring Installation", icon: <Home className="h-5 w-5" /> },
+      { value: "CARPET_INSTALLATION", label: "Carpet Installation", icon: <Home className="h-5 w-5" /> },
+      { value: "TILE_GROUT", label: "Tile & Grout Services", icon: <Home className="h-5 w-5" /> },
+      { value: "FOUNDATION_REPAIR", label: "Foundation Repair", icon: <Tool className="h-5 w-5" /> },
+      { value: "DRYWALL", label: "Drywall Installation & Repair", icon: <Tool className="h-5 w-5" /> },
+      { value: "MASONRY_CONCRETE", label: "Masonry & Concrete", icon: <Tool className="h-5 w-5" /> },
+      { value: "FRAMING_STRUCTURAL", label: "Framing & Structural Work", icon: <Tool className="h-5 w-5" /> },
+      { value: "WATERPROOFING", label: "Waterproofing", icon: <Tool className="h-5 w-5" /> },
+      { value: "CHIMNEY", label: "Chimney Cleaning & Repair", icon: <Home className="h-5 w-5" /> },
+      { value: "GUTTER", label: "Gutter Installation & Cleaning", icon: <Home className="h-5 w-5" /> },
+    ]
+  },
+  {
+    id: "MAINTENANCE_REPAIR",
+    label: "Maintenance & Repair",
+    icon: <Tool className="h-6 w-6" />,
+    description: "Ongoing maintenance services",
+    count: 12,
+    subcategories: [
+      { value: "APPLIANCE_REPAIR", label: "Appliance Repair", icon: <Tool className="h-5 w-5" /> },
+      { value: "HANDYMAN", label: "General Handyman Services", icon: <Tool className="h-5 w-5" /> },
+      { value: "PEST_CONTROL", label: "Pest Control", icon: <Tool className="h-5 w-5" /> },
+      { value: "MOLD_REMEDIATION", label: "Mold Remediation", icon: <Tool className="h-5 w-5" /> },
+      { value: "PROPERTY_CLEANING", label: "Property Cleaning", icon: <Tool className="h-5 w-5" /> },
+      { value: "PRESSURE_WASHING", label: "Pressure Washing", icon: <Tool className="h-5 w-5" /> },
+      { value: "POOL_SPA", label: "Pool & Spa Maintenance", icon: <Tool className="h-5 w-5" /> },
+      { value: "SEPTIC_TANK", label: "Septic Tank Services", icon: <Tool className="h-5 w-5" /> },
+      { value: "LOCKSMITH", label: "Locksmith Services", icon: <Tool className="h-5 w-5" /> },
+      { value: "FURNACE_REPAIR", label: "Furnace Repair", icon: <Tool className="h-5 w-5" /> },
+      { value: "WATER_HEATER", label: "Water Heater Installation", icon: <Tool className="h-5 w-5" /> },
+      { value: "GARAGE_DOOR", label: "Garage Door Installation & Repair", icon: <Tool className="h-5 w-5" /> },
+    ]
+  },
+  {
+    id: "DESIGN_STAGING",
+    label: "Design & Staging",
+    icon: <Paintbrush className="h-6 w-6" />,
+    description: "Interior & exterior design",
+    count: 10,
+    subcategories: [
+      { value: "INTERIOR_DESIGN", label: "Interior Design", icon: <Paintbrush className="h-5 w-5" /> },
+      { value: "EXTERIOR_DESIGN", label: "Exterior Design", icon: <Paintbrush className="h-5 w-5" /> },
+      { value: "HOME_STAGING", label: "Home Staging", icon: <Home className="h-5 w-5" /> },
+      { value: "PAINTING_INTERIOR", label: "Painting (Interior)", icon: <Paintbrush className="h-5 w-5" /> },
+      { value: "PAINTING_EXTERIOR", label: "Painting (Exterior)", icon: <Paintbrush className="h-5 w-5" /> },
+      { value: "WALLPAPER", label: "Wallpaper Installation", icon: <Paintbrush className="h-5 w-5" /> },
+      { value: "LIGHTING_DESIGN", label: "Lighting Design & Installation", icon: <Paintbrush className="h-5 w-5" /> },
+      { value: "CABINETRY_COUNTERTOPS", label: "Cabinetry & Countertops", icon: <Tool className="h-5 w-5" /> },
+      { value: "SMART_HOME", label: "Smart Home Design & Integration", icon: <Tool className="h-5 w-5" /> },
+      { value: "CLOSET_STORAGE", label: "Closet & Storage Design", icon: <Home className="h-5 w-5" /> },
+    ]
+  },
+  {
+    id: "OUTDOOR_LANDSCAPING",
+    label: "Outdoor & Landscaping",
+    icon: <TreePine className="h-6 w-6" />,
+    description: "Outdoor spaces & landscaping",
+    count: 10,
+    subcategories: [
+      { value: "LANDSCAPING", label: "Landscaping", icon: <TreePine className="h-5 w-5" /> },
+      { value: "LAWN_CARE", label: "Lawn Care & Sod Installation", icon: <TreePine className="h-5 w-5" /> },
+      { value: "TREE_SERVICES", label: "Tree Trimming & Removal", icon: <TreePine className="h-5 w-5" /> },
+      { value: "IRRIGATION", label: "Irrigation Systems", icon: <Tool className="h-5 w-5" /> },
+      { value: "FENCE", label: "Fence Installation & Repair", icon: <Tool className="h-5 w-5" /> },
+      { value: "DECK_PATIO", label: "Deck & Patio Construction", icon: <Tool className="h-5 w-5" /> },
+      { value: "OUTDOOR_KITCHEN", label: "Outdoor Kitchen/BBQ Design", icon: <Tool className="h-5 w-5" /> },
+      { value: "DRIVEWAY_PAVING", label: "Driveway Paving", icon: <Tool className="h-5 w-5" /> },
+      { value: "RETAINING_WALLS", label: "Retaining Walls", icon: <Tool className="h-5 w-5" /> },
+      { value: "OUTDOOR_LIGHTING", label: "Outdoor Lighting", icon: <Tool className="h-5 w-5" /> },
+    ]
+  },
+  {
+    id: "CONSTRUCTION_RENOVATION",
+    label: "Construction & Renovation",
+    icon: <Hammer className="h-6 w-6" />,
+    description: "Major construction projects",
+    count: 7,
+    subcategories: [
+      { value: "GENERAL_CONTRACTING", label: "General Contracting", icon: <Tool className="h-5 w-5" /> },
+      { value: "KITCHEN_REMODELING", label: "Kitchen Remodeling", icon: <Home className="h-5 w-5" /> },
+      { value: "BATHROOM_REMODELING", label: "Bathroom Remodeling", icon: <Home className="h-5 w-5" /> },
+      { value: "BASEMENT_FINISHING", label: "Basement Finishing", icon: <Home className="h-5 w-5" /> },
+      { value: "ROOM_ADDITIONS", label: "Room Additions", icon: <Home className="h-5 w-5" /> },
+      { value: "ADU_BUILDS", label: "ADU (Accessory Dwelling Unit) Builds", icon: <Home className="h-5 w-5" /> },
+      { value: "DEMOLITION", label: "Demolition Services", icon: <Tool className="h-5 w-5" /> },
+    ]
+  },
+  {
+    id: "INSPECTIONS_ASSESSMENTS",
+    label: "Inspections & Assessments",
+    icon: <FileText className="h-6 w-6" />,
+    description: "Professional inspections",
+    count: 9,
+    subcategories: [
+      { value: "HOME_INSPECTION", label: "Home Inspection", icon: <FileText className="h-5 w-5" /> },
+      { value: "TERMITE_INSPECTION", label: "Termite Inspection", icon: <FileText className="h-5 w-5" /> },
+      { value: "ROOF_INSPECTION", label: "Roof Inspection", icon: <FileText className="h-5 w-5" /> },
+      { value: "HVAC_INSPECTION", label: "HVAC Inspection", icon: <FileText className="h-5 w-5" /> },
+      { value: "SEWER_INSPECTION", label: "Sewer Line Inspection", icon: <FileText className="h-5 w-5" /> },
+      { value: "STRUCTURAL_ENGINEERING", label: "Structural Engineering Reports", icon: <FileText className="h-5 w-5" /> },
+      { value: "ENERGY_ASSESSMENT", label: "Energy Efficiency Assessment", icon: <FileText className="h-5 w-5" /> },
+      { value: "APPRAISAL", label: "Appraisal Services", icon: <FileText className="h-5 w-5" /> },
+      { value: "ENVIRONMENTAL_TESTING", label: "Environmental Testing", icon: <FileText className="h-5 w-5" /> },
+    ]
+  },
+  {
+    id: "LEGAL_ADMINISTRATIVE",
+    label: "Legal & Administrative",
+    icon: <Briefcase className="h-6 w-6" />,
+    description: "Legal & closing services",
+    count: 9,
+    subcategories: [
+      { value: "NOTARY", label: "Notary Services", icon: <FileText className="h-5 w-5" /> },
+      { value: "TITLE_SERVICES", label: "Title Search & Title Insurance", icon: <FileText className="h-5 w-5" /> },
+      { value: "ESCROW", label: "Escrow Services", icon: <FileText className="h-5 w-5" /> },
+      { value: "DEED_PREPARATION", label: "Deed Preparation", icon: <FileText className="h-5 w-5" /> },
+      { value: "LEGAL_CONSULTING", label: "Real Estate Legal Consulting", icon: <Briefcase className="h-5 w-5" /> },
+      { value: "LIEN_SERVICES", label: "Lien Searches & Resolution", icon: <FileText className="h-5 w-5" /> },
+      { value: "PERMIT_FILING", label: "Permit Filing", icon: <FileText className="h-5 w-5" /> },
+      { value: "ZONING_COMPLIANCE", label: "Zoning & Code Compliance", icon: <FileText className="h-5 w-5" /> },
+      { value: "CONTRACT_SERVICES", label: "Contract Drafting & Review", icon: <FileText className="h-5 w-5" /> },
+    ]
+  },
+  {
+    id: "TRANSACTION_LISTING",
+    label: "Transaction & Listing",
+    icon: <Camera className="h-6 w-6" />,
+    description: "Marketing & transaction support",
+    count: 11,
+    subcategories: [
+      { value: "PHOTOGRAPHY", label: "Real Estate Photography", icon: <Camera className="h-5 w-5" /> },
+      { value: "DRONE_PHOTOGRAPHY", label: "Drone Photography", icon: <Camera className="h-5 w-5" /> },
+      { value: "VIRTUAL_TOURS", label: "3D Virtual Tours", icon: <Camera className="h-5 w-5" /> },
+      { value: "MLS_LISTING", label: "MLS Listing Services", icon: <FileText className="h-5 w-5" /> },
+      { value: "PROPERTY_MARKETING", label: "Property Marketing", icon: <Briefcase className="h-5 w-5" /> },
+      { value: "SIGNAGE", label: "Signage Installation", icon: <Tool className="h-5 w-5" /> },
+      { value: "OPEN_HOUSE", label: "Open House Setup", icon: <Home className="h-5 w-5" /> },
+      { value: "LEAD_GENERATION", label: "Lead Generation & CRM Setup", icon: <Briefcase className="h-5 w-5" /> },
+      { value: "COPYWRITING", label: "Real Estate Copywriting", icon: <FileText className="h-5 w-5" /> },
+      { value: "MARKET_ANALYSIS", label: "Comparative Market Analysis (CMA)", icon: <FileText className="h-5 w-5" /> },
+      { value: "VIRTUAL_STAGING", label: "Virtual Staging", icon: <Camera className="h-5 w-5" /> },
+    ]
+  }
+]
+
+// Flatten all categories for dropdown and filtering
 const serviceCategories = [
   { value: "ALL", label: "All Categories", icon: <Briefcase className="h-5 w-5" /> },
-  // Property & Building Services
-  { value: "PLUMBING", label: "Plumbing", icon: <Tool className="h-5 w-5" /> },
-  { value: "ELECTRICAL", label: "Electrical", icon: <Tool className="h-5 w-5" /> },
-  { value: "HVAC", label: "HVAC", icon: <Tool className="h-5 w-5" /> },
-  { value: "ROOFING", label: "Roofing", icon: <Home className="h-5 w-5" /> },
-  { value: "SIDING", label: "Siding", icon: <Home className="h-5 w-5" /> },
-  { value: "WINDOWS_DOORS", label: "Windows & Doors", icon: <Home className="h-5 w-5" /> },
-  { value: "INSULATION", label: "Insulation", icon: <Home className="h-5 w-5" /> },
-  { value: "FLOORING_INSTALLATION", label: "Flooring Installation", icon: <Home className="h-5 w-5" /> },
-  { value: "CARPET_INSTALLATION", label: "Carpet Installation", icon: <Home className="h-5 w-5" /> },
-  { value: "TILE_GROUT", label: "Tile & Grout Services", icon: <Home className="h-5 w-5" /> },
-  { value: "FOUNDATION_REPAIR", label: "Foundation Repair", icon: <Tool className="h-5 w-5" /> },
-  { value: "DRYWALL", label: "Drywall Installation & Repair", icon: <Tool className="h-5 w-5" /> },
-  { value: "MASONRY_CONCRETE", label: "Masonry & Concrete", icon: <Tool className="h-5 w-5" /> },
-  { value: "FRAMING_STRUCTURAL", label: "Framing & Structural Work", icon: <Tool className="h-5 w-5" /> },
-  { value: "WATERPROOFING", label: "Waterproofing", icon: <Tool className="h-5 w-5" /> },
-  { value: "CHIMNEY", label: "Chimney Cleaning & Repair", icon: <Home className="h-5 w-5" /> },
-  { value: "GUTTER", label: "Gutter Installation & Cleaning", icon: <Home className="h-5 w-5" /> },
-  // Maintenance & Repair
-  { value: "APPLIANCE_REPAIR", label: "Appliance Repair", icon: <Tool className="h-5 w-5" /> },
-  { value: "HANDYMAN", label: "General Handyman Services", icon: <Tool className="h-5 w-5" /> },
-  { value: "PEST_CONTROL", label: "Pest Control", icon: <Tool className="h-5 w-5" /> },
-  { value: "MOLD_REMEDIATION", label: "Mold Remediation", icon: <Tool className="h-5 w-5" /> },
-  { value: "PROPERTY_CLEANING", label: "Property Cleaning", icon: <Tool className="h-5 w-5" /> },
-  { value: "PRESSURE_WASHING", label: "Pressure Washing", icon: <Tool className="h-5 w-5" /> },
-  { value: "POOL_SPA", label: "Pool & Spa Maintenance", icon: <Tool className="h-5 w-5" /> },
-  { value: "SEPTIC_TANK", label: "Septic Tank Services", icon: <Tool className="h-5 w-5" /> },
-  { value: "LOCKSMITH", label: "Locksmith Services", icon: <Tool className="h-5 w-5" /> },
-  { value: "FURNACE_REPAIR", label: "Furnace Repair", icon: <Tool className="h-5 w-5" /> },
-  { value: "WATER_HEATER", label: "Water Heater Installation", icon: <Tool className="h-5 w-5" /> },
-  { value: "GARAGE_DOOR", label: "Garage Door Installation & Repair", icon: <Tool className="h-5 w-5" /> },
-  // Interior & Exterior Design
-  { value: "INTERIOR_DESIGN", label: "Interior Design", icon: <Paintbrush className="h-5 w-5" /> },
-  { value: "EXTERIOR_DESIGN", label: "Exterior Design", icon: <Paintbrush className="h-5 w-5" /> },
-  { value: "HOME_STAGING", label: "Home Staging", icon: <Home className="h-5 w-5" /> },
-  { value: "PAINTING_INTERIOR", label: "Painting (Interior)", icon: <Paintbrush className="h-5 w-5" /> },
-  { value: "PAINTING_EXTERIOR", label: "Painting (Exterior)", icon: <Paintbrush className="h-5 w-5" /> },
-  { value: "WALLPAPER", label: "Wallpaper Installation", icon: <Paintbrush className="h-5 w-5" /> },
-  { value: "LIGHTING_DESIGN", label: "Lighting Design & Installation", icon: <Paintbrush className="h-5 w-5" /> },
-  { value: "CABINETRY_COUNTERTOPS", label: "Cabinetry & Countertops", icon: <Tool className="h-5 w-5" /> },
-  { value: "SMART_HOME", label: "Smart Home Design & Integration", icon: <Tool className="h-5 w-5" /> },
-  { value: "CLOSET_STORAGE", label: "Closet & Storage Design", icon: <Home className="h-5 w-5" /> },
-  // Outdoor & Landscaping
-  { value: "LANDSCAPING", label: "Landscaping", icon: <Tool className="h-5 w-5" /> },
-  { value: "LAWN_CARE", label: "Lawn Care & Sod Installation", icon: <Tool className="h-5 w-5" /> },
-  { value: "TREE_SERVICES", label: "Tree Trimming & Removal", icon: <Tool className="h-5 w-5" /> },
-  { value: "IRRIGATION", label: "Irrigation Systems", icon: <Tool className="h-5 w-5" /> },
-  { value: "FENCE", label: "Fence Installation & Repair", icon: <Tool className="h-5 w-5" /> },
-  { value: "DECK_PATIO", label: "Deck & Patio Construction", icon: <Tool className="h-5 w-5" /> },
-  { value: "OUTDOOR_KITCHEN", label: "Outdoor Kitchen/BBQ Design", icon: <Tool className="h-5 w-5" /> },
-  { value: "DRIVEWAY_PAVING", label: "Driveway Paving", icon: <Tool className="h-5 w-5" /> },
-  { value: "RETAINING_WALLS", label: "Retaining Walls", icon: <Tool className="h-5 w-5" /> },
-  { value: "OUTDOOR_LIGHTING", label: "Outdoor Lighting", icon: <Tool className="h-5 w-5" /> },
-  // Construction & Renovation
-  { value: "GENERAL_CONTRACTING", label: "General Contracting", icon: <Tool className="h-5 w-5" /> },
-  { value: "KITCHEN_REMODELING", label: "Kitchen Remodeling", icon: <Home className="h-5 w-5" /> },
-  { value: "BATHROOM_REMODELING", label: "Bathroom Remodeling", icon: <Home className="h-5 w-5" /> },
-  { value: "BASEMENT_FINISHING", label: "Basement Finishing", icon: <Home className="h-5 w-5" /> },
-  { value: "ROOM_ADDITIONS", label: "Room Additions", icon: <Home className="h-5 w-5" /> },
-  { value: "ADU_BUILDS", label: "ADU (Accessory Dwelling Unit) Builds", icon: <Home className="h-5 w-5" /> },
-  { value: "DEMOLITION", label: "Demolition Services", icon: <Tool className="h-5 w-5" /> },
-  // Inspections & Assessments
-  { value: "HOME_INSPECTION", label: "Home Inspection", icon: <FileText className="h-5 w-5" /> },
-  { value: "TERMITE_INSPECTION", label: "Termite Inspection", icon: <FileText className="h-5 w-5" /> },
-  { value: "ROOF_INSPECTION", label: "Roof Inspection", icon: <FileText className="h-5 w-5" /> },
-  { value: "HVAC_INSPECTION", label: "HVAC Inspection", icon: <FileText className="h-5 w-5" /> },
-  { value: "SEWER_INSPECTION", label: "Sewer Line Inspection", icon: <FileText className="h-5 w-5" /> },
-  { value: "STRUCTURAL_ENGINEERING", label: "Structural Engineering Reports", icon: <FileText className="h-5 w-5" /> },
-  { value: "ENERGY_ASSESSMENT", label: "Energy Efficiency Assessment", icon: <FileText className="h-5 w-5" /> },
-  { value: "APPRAISAL", label: "Appraisal Services", icon: <FileText className="h-5 w-5" /> },
-  { value: "ENVIRONMENTAL_TESTING", label: "Environmental Testing", icon: <FileText className="h-5 w-5" /> },
-  // Legal, Closing & Administrative
-  { value: "NOTARY", label: "Notary Services", icon: <FileText className="h-5 w-5" /> },
-  { value: "TITLE_SERVICES", label: "Title Search & Title Insurance", icon: <FileText className="h-5 w-5" /> },
-  { value: "ESCROW", label: "Escrow Services", icon: <FileText className="h-5 w-5" /> },
-  { value: "DEED_PREPARATION", label: "Deed Preparation", icon: <FileText className="h-5 w-5" /> },
-  { value: "LEGAL_CONSULTING", label: "Real Estate Legal Consulting", icon: <Briefcase className="h-5 w-5" /> },
-  { value: "LIEN_SERVICES", label: "Lien Searches & Resolution", icon: <FileText className="h-5 w-5" /> },
-  { value: "PERMIT_FILING", label: "Permit Filing", icon: <FileText className="h-5 w-5" /> },
-  { value: "ZONING_COMPLIANCE", label: "Zoning & Code Compliance", icon: <FileText className="h-5 w-5" /> },
-  { value: "CONTRACT_SERVICES", label: "Contract Drafting & Review", icon: <FileText className="h-5 w-5" /> },
-  // Transaction & Listing Support
-  { value: "PHOTOGRAPHY", label: "Real Estate Photography", icon: <Camera className="h-5 w-5" /> },
-  { value: "DRONE_PHOTOGRAPHY", label: "Drone Photography", icon: <Camera className="h-5 w-5" /> },
-  { value: "VIRTUAL_TOURS", label: "3D Virtual Tours", icon: <Camera className="h-5 w-5" /> },
-  { value: "MLS_LISTING", label: "MLS Listing Services", icon: <FileText className="h-5 w-5" /> },
-  { value: "PROPERTY_MARKETING", label: "Property Marketing", icon: <Briefcase className="h-5 w-5" /> },
-  { value: "SIGNAGE", label: "Signage Installation", icon: <Tool className="h-5 w-5" /> },
-  { value: "OPEN_HOUSE", label: "Open House Setup", icon: <Home className="h-5 w-5" /> },
-  { value: "LEAD_GENERATION", label: "Lead Generation & CRM Setup", icon: <Briefcase className="h-5 w-5" /> },
-  { value: "COPYWRITING", label: "Real Estate Copywriting", icon: <FileText className="h-5 w-5" /> },
-  { value: "MARKET_ANALYSIS", label: "Comparative Market Analysis (CMA)", icon: <FileText className="h-5 w-5" /> },
-  { value: "VIRTUAL_STAGING", label: "Virtual Staging", icon: <Camera className="h-5 w-5" /> },
+  ...serviceCategoryGroups.flatMap(group => group.subcategories)
 ]
 
 export default function ServicesClient() {
@@ -167,6 +242,8 @@ export default function ServicesClient() {
   const [activeTab, setActiveTab] = useState("all")
   const [total, setTotal] = useState(0)
   const [hasMore, setHasMore] = useState(false)
+  const [selectedGroup, setSelectedGroup] = useState<string | null>(null)
+  const [showAllCategories, setShowAllCategories] = useState(false)
 
   // Load services
   useEffect(() => {
@@ -345,28 +422,128 @@ export default function ServicesClient() {
         <ServicesAds />
       </div>
 
-      {/* Service Categories with responsive grid */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-3 sm:gap-4 mb-8 sm:mb-10">
-        {serviceCategories.slice(1).map((category, i) => (
-          <button
-            key={i}
-            onClick={() => setSelectedCategory(category.value)}
-            className={`p-3 sm:p-4 rounded-lg border transition-all hover:shadow-md hover:border-slate-300 ${
-              selectedCategory === category.value ? 'border-primary bg-primary/5' : 'border-slate-200'
-            }`}
+      {/* Service Category Groups - Hierarchical Structure */}
+      <div className="mb-8 sm:mb-10">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg sm:text-xl font-semibold">Browse by Category</h2>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setShowAllCategories(!showAllCategories)}
+            className="text-xs sm:text-sm"
           >
-            <div className="flex flex-col items-center text-center">
-              <div className={`p-2 sm:p-3 rounded-full mb-2 sm:mb-3 ${
-                selectedCategory === category.value ? 'bg-primary/10' : 'bg-slate-100'
-              }`}>
-                <div className="w-4 h-4 sm:w-5 sm:h-5">
-                  {category.icon}
+            {showAllCategories ? (
+              <>
+                <ChevronUp className="h-4 w-4 mr-1" />
+                Show Less
+              </>
+            ) : (
+              <>
+                <ChevronDown className="h-4 w-4 mr-1" />
+                Show All ({serviceCategories.length - 1})
+              </>
+            )}
+          </Button>
+        </div>
+
+        {!showAllCategories ? (
+          // Main Category Groups View
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+            {serviceCategoryGroups.map((group) => (
+              <Card
+                key={group.id}
+                className={`cursor-pointer transition-all hover:shadow-lg hover:border-primary/50 ${
+                  selectedGroup === group.id ? 'border-primary bg-primary/5' : ''
+                }`}
+                onClick={() => {
+                  if (selectedGroup === group.id) {
+                    setSelectedGroup(null)
+                  } else {
+                    setSelectedGroup(group.id)
+                  }
+                }}
+              >
+                <CardContent className="p-4 sm:p-6">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className={`p-2 rounded-lg ${
+                      selectedGroup === group.id ? 'bg-primary/10' : 'bg-slate-100'
+                    }`}>
+                      {group.icon}
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="font-semibold text-sm sm:text-base">{group.label}</h3>
+                      <p className="text-xs sm:text-sm text-muted-foreground">{group.count} services</p>
+                    </div>
+                    <ChevronRight className={`h-4 w-4 transition-transform ${
+                      selectedGroup === group.id ? 'rotate-90' : ''
+                    }`} />
+                  </div>
+                  <p className="text-xs sm:text-sm text-muted-foreground">{group.description}</p>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        ) : (
+          // All Categories Grid View (Original)
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-3 sm:gap-4">
+            {serviceCategories.slice(1).map((category, i) => (
+              <button
+                key={i}
+                onClick={() => setSelectedCategory(category.value)}
+                className={`p-3 sm:p-4 rounded-lg border transition-all hover:shadow-md hover:border-slate-300 ${
+                  selectedCategory === category.value ? 'border-primary bg-primary/5' : 'border-slate-200'
+                }`}
+              >
+                <div className="flex flex-col items-center text-center">
+                  <div className={`p-2 sm:p-3 rounded-full mb-2 sm:mb-3 ${
+                    selectedCategory === category.value ? 'bg-primary/10' : 'bg-slate-100'
+                  }`}>
+                    <div className="w-4 h-4 sm:w-5 sm:h-5">
+                      {category.icon}
+                    </div>
+                  </div>
+                  <h3 className="font-medium text-xs sm:text-sm leading-tight">{category.label}</h3>
                 </div>
-              </div>
-              <h3 className="font-medium text-xs sm:text-sm leading-tight">{category.label}</h3>
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* Subcategories for Selected Group */}
+        {selectedGroup && !showAllCategories && (
+          <div className="mt-6 p-4 sm:p-6 bg-slate-50 rounded-lg">
+            <h3 className="font-semibold mb-4 text-sm sm:text-base">
+              {serviceCategoryGroups.find(g => g.id === selectedGroup)?.label} Services
+            </h3>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 sm:gap-3">
+              {serviceCategoryGroups
+                .find(g => g.id === selectedGroup)
+                ?.subcategories.map((category) => (
+                <button
+                  key={category.value}
+                  onClick={() => {
+                    setSelectedCategory(category.value)
+                    setSelectedGroup(null) // Close subcategories after selection
+                  }}
+                  className={`p-2 sm:p-3 rounded-lg border text-left transition-all hover:shadow-sm hover:border-slate-300 ${
+                    selectedCategory === category.value ? 'border-primary bg-primary/5' : 'border-slate-200 bg-white'
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    <div className={`p-1 rounded ${
+                      selectedCategory === category.value ? 'bg-primary/10' : 'bg-slate-100'
+                    }`}>
+                      <div className="w-3 h-3 sm:w-4 sm:h-4">
+                        {category.icon}
+                      </div>
+                    </div>
+                    <span className="font-medium text-xs sm:text-sm leading-tight">{category.label}</span>
+                  </div>
+                </button>
+              ))}
             </div>
-          </button>
-        ))}
+          </div>
+        )}
       </div>
 
       {/* Services Tabs and Listings with responsive design */}
