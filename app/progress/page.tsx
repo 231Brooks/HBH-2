@@ -41,52 +41,9 @@ function ProgressPageContent() {
 
       // Load service projects for professionals
       if (isProfessional) {
-        // TODO: Replace with actual API call to get user's service projects
-        const mockServiceProjects = [
-          {
-            id: "sp-1",
-            title: "Kitchen Renovation - 123 Main St",
-            status: "IN_PROGRESS",
-            progress: 65,
-            amount: 25000,
-            dueDate: new Date("2024-03-15"),
-            location: "Springfield, IL",
-            client: {
-              name: "John & Sarah Smith",
-              rating: 4.8
-            },
-            createdAt: new Date("2024-01-15")
-          },
-          {
-            id: "sp-2",
-            title: "Home Inspection - 456 Oak Ave",
-            status: "COMPLETED",
-            progress: 100,
-            amount: 500,
-            dueDate: new Date("2024-02-01"),
-            location: "Springfield, IL",
-            client: {
-              name: "Mike Johnson",
-              rating: 5.0
-            },
-            createdAt: new Date("2024-01-28")
-          },
-          {
-            id: "sp-3",
-            title: "Real Estate Photography - 789 Pine St",
-            status: "PENDING",
-            progress: 0,
-            amount: 350,
-            dueDate: new Date("2024-02-20"),
-            location: "Springfield, IL",
-            client: {
-              name: "Lisa Chen",
-              rating: 4.9
-            },
-            createdAt: new Date("2024-02-10")
-          }
-        ]
-        setServiceProjects(mockServiceProjects)
+        // TODO: Implement actual API call to get user's service projects
+        // For now, show empty state until real data is available
+        setServiceProjects([])
       }
     } catch (error) {
       console.error("Failed to load data:", error)
@@ -399,85 +356,18 @@ function ProgressPageContent() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {isProfessional ? (
-                  <>
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center">
-                        <FileText className="h-5 w-5 text-slate-600" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium truncate">Inspection_Report_123Main.pdf</p>
-                        <p className="text-sm text-muted-foreground">Delivered 2 hours ago</p>
-                      </div>
-                      <Button variant="ghost" size="icon">
-                        <ArrowUpRight className="h-4 w-4" />
-                      </Button>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center">
-                        <FileText className="h-5 w-5 text-slate-600" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium truncate">Property_Photos_456Oak.zip</p>
-                        <p className="text-sm text-muted-foreground">Delivered 1 day ago</p>
-                      </div>
-                      <Button variant="ghost" size="icon">
-                        <ArrowUpRight className="h-4 w-4" />
-                      </Button>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center">
-                        <FileText className="h-5 w-5 text-slate-600" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium truncate">Title_Search_789Pine.pdf</p>
-                        <p className="text-sm text-muted-foreground">Delivered 3 days ago</p>
-                      </div>
-                      <Button variant="ghost" size="icon">
-                        <ArrowUpRight className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center">
-                        <FileText className="h-5 w-5 text-slate-600" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium truncate">Purchase_Agreement_123Main.pdf</p>
-                        <p className="text-sm text-muted-foreground">Uploaded 2 hours ago</p>
-                      </div>
-                      <Button variant="ghost" size="icon">
-                        <ArrowUpRight className="h-4 w-4" />
-                      </Button>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center">
-                        <FileText className="h-5 w-5 text-slate-600" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium truncate">Inspection_Report_456Oak.pdf</p>
-                        <p className="text-sm text-muted-foreground">Uploaded 1 day ago</p>
-                      </div>
-                      <Button variant="ghost" size="icon">
-                        <ArrowUpRight className="h-4 w-4" />
-                      </Button>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center">
-                        <FileText className="h-5 w-5 text-slate-600" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium truncate">Disclosure_Form_789Pine.pdf</p>
-                        <p className="text-sm text-muted-foreground">Uploaded 3 days ago</p>
-                      </div>
-                      <Button variant="ghost" size="icon">
-                        <ArrowUpRight className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </>
-                )}
+                <div className="text-center py-8">
+                  <FileText className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+                  <p className="text-muted-foreground">
+                    {isProfessional ? "No recent deliverables" : "No recent documents"}
+                  </p>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    {isProfessional
+                      ? "Deliverables will appear here when you upload them to projects"
+                      : "Documents will appear here when they're uploaded to your transactions"
+                    }
+                  </p>
+                </div>
                 <Button variant="outline" className="w-full">
                   {isProfessional ? "View All Deliverables" : "View All Documents"}
                 </Button>
@@ -492,32 +382,12 @@ function ProgressPageContent() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center">
-                    <Clock className="h-5 w-5 text-red-600" />
-                  </div>
-                  <div>
-                    <p className="font-medium">Closing: 101 River Lane</p>
-                    <p className="text-sm text-muted-foreground">Jul 5, 2023 (3 days left)</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center">
-                    <Clock className="h-5 w-5 text-amber-600" />
-                  </div>
-                  <div>
-                    <p className="font-medium">Inspection: 123 Main Street</p>
-                    <p className="text-sm text-muted-foreground">Jul 8, 2023 (6 days left)</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
-                    <Clock className="h-5 w-5 text-blue-600" />
-                  </div>
-                  <div>
-                    <p className="font-medium">Financing: 456 Oak Avenue</p>
-                    <p className="text-sm text-muted-foreground">Jul 20, 2023 (18 days left)</p>
-                  </div>
+                <div className="text-center py-8">
+                  <Clock className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+                  <p className="text-muted-foreground">No upcoming deadlines</p>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Important dates and deadlines will appear here
+                  </p>
                 </div>
                 <Button variant="outline" className="w-full" asChild>
                   <Link href="/calendar">View Calendar</Link>
