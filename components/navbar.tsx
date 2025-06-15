@@ -79,12 +79,6 @@ export default function Navbar() {
     return () => window.removeEventListener("scroll", handleScroll)
   }, [])
 
-  const handleSignOut = async () => {
-    if (supabase) {
-      await supabase.auth.signOut()
-    }
-  }
-
   return (
     <header
       className={cn(
