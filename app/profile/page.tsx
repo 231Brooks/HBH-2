@@ -181,6 +181,13 @@ function ProfilePageContent() {
       show: permissions.canPostJobs
     },
     {
+      title: "My Requests",
+      description: "View your service requests",
+      href: "/profile/my-requests",
+      icon: <MessageSquare className="h-5 w-5" />,
+      show: true
+    },
+    {
       title: "Find Work",
       description: "Browse available job opportunities",
       href: "/job-marketplace",
@@ -301,6 +308,8 @@ function ProfilePageContent() {
                 linkUrl = "/profile/my-properties"
               } else if (stat.title === "Services Offered") {
                 linkUrl = "/profile/my-services"
+              } else if (stat.title === "Service Requests") {
+                linkUrl = "/profile/my-requests"
               }
 
               const CardComponent = linkUrl !== "#" ? Link : "div"

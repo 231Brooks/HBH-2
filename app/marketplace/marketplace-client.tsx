@@ -52,7 +52,6 @@ const urgencyIcons = {
 
 export default function MarketplaceClient() {
   const [properties, setProperties] = useState<any[]>([])
-  const [serviceRequests, setServiceRequests] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [viewMode, setViewMode] = useState<"grid" | "list" | "map">("grid")
   const [searchTerm, setSearchTerm] = useState("")
@@ -198,13 +197,7 @@ export default function MarketplaceClient() {
               <span className="sm:hidden">List</span>
             </Link>
           </Button>
-          <Button className="w-full sm:w-auto" asChild variant="outline">
-            <Link href="/marketplace/create-request">
-              <MessageSquare className="mr-2 h-4 w-4" />
-              <span className="hidden sm:inline">Request Service</span>
-              <span className="sm:hidden">Request</span>
-            </Link>
-          </Button>
+
           {activeTab === "properties" && (
             <div className="flex gap-2 w-full sm:w-auto">
               <Button variant="outline" size="sm" className="flex-1 sm:flex-none" onClick={() => setShowFilters(!showFilters)}>
@@ -364,13 +357,9 @@ export default function MarketplaceClient() {
       {/* Marketplace Listings with responsive design */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 sm:mb-6 gap-3 sm:gap-4">
-          <TabsList className="w-full sm:w-auto grid grid-cols-2 sm:flex">
+          <TabsList className="w-full sm:w-auto grid grid-cols-1 sm:flex">
             <TabsTrigger value="properties" className="text-xs sm:text-sm">
               Properties ({properties.length})
-            </TabsTrigger>
-            <TabsTrigger value="service-requests" className="text-xs sm:text-sm">
-              <span className="hidden sm:inline">Service Requests</span>
-              <span className="sm:hidden">Services</span> ({serviceRequests.length})
             </TabsTrigger>
           </TabsList>
           <Select value={sortBy} onValueChange={setSortBy}>
@@ -443,33 +432,7 @@ export default function MarketplaceClient() {
           )}
         </TabsContent>
 
-        <TabsContent value="service-requests" className="mt-0">
-          {loading ? (
-            <div className="grid grid-cols-1 gap-4 sm:gap-6">
-              {Array(3).fill(0).map((_, i) => (
-                <div key={i} className="h-40 sm:h-48 bg-gray-200 animate-pulse rounded-lg"></div>
-              ))}
-            </div>
-          ) : serviceRequests.length > 0 ? (
-            <div className="grid grid-cols-1 gap-4 sm:gap-6">
-              {serviceRequests.map((request: any) => (
-                <ServiceRequestCard key={request.id} request={request} />
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-8 sm:py-12 px-4">
-              <MessageSquare className="mx-auto h-10 w-10 sm:h-12 sm:w-12 text-gray-400 mb-3 sm:mb-4" />
-              <h3 className="text-base sm:text-lg font-medium text-gray-900 mb-2">No service requests found</h3>
-              <p className="text-sm sm:text-base text-gray-500 mb-3 sm:mb-4">Be the first to post a service request.</p>
-              <Button className="w-full sm:w-auto" asChild>
-                <Link href="/marketplace/create-request">
-                  <MessageSquare className="mr-2 h-4 w-4" />
-                  Request a Service
-                </Link>
-              </Button>
-            </div>
-          )}
-        </TabsContent>
+
       </Tabs>
 
       <div className="mt-8">
@@ -481,75 +444,4 @@ export default function MarketplaceClient() {
   )
 }
 
-interface ServiceRequestCardProps {
-  request: any
-}
 
-function ServiceRequestCard({ request }: ServiceRequestCardProps) {
-  const UrgencyIcon = urgencyIcons[request.urgency as ServiceUrgency]
-
-  return (
-    <Card className="hover:shadow-md transition-shadow">
-      <CardHeader className="pb-3 sm:pb-6">
-        <div className="flex flex-col sm:flex-row justify-between items-start gap-3 sm:gap-4">
-          <div className="flex-1 min-w-0">
-            <CardTitle className="text-lg sm:text-xl mb-2 line-clamp-2">{request.title}</CardTitle>
-            <CardDescription className="text-sm sm:text-base line-clamp-3">{request.description}</CardDescription>
-          </div>
-          <Badge className={`${urgencyColors[request.urgency as ServiceUrgency]} flex-shrink-0`}>
-            <UrgencyIcon className="h-3 w-3 mr-1" />
-            <span className="text-xs">{request.urgency}</span>
-          </Badge>
-        </div>
-      </CardHeader>
-      <CardContent className="pt-0">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 mb-4">
-          <div className="flex items-center text-xs sm:text-sm text-muted-foreground">
-            <MapPin className="h-3 w-3 sm:h-4 sm:w-4 mr-2 flex-shrink-0" />
-            <span className="truncate">{request.location}</span>
-          </div>
-          {request.budget && (
-            <div className="flex items-center text-xs sm:text-sm text-muted-foreground">
-              <DollarSign className="h-3 w-3 sm:h-4 sm:w-4 mr-2 flex-shrink-0" />
-              <span className="truncate">{request.budget}</span>
-            </div>
-          )}
-          <div className="flex items-center text-xs sm:text-sm text-muted-foreground">
-            <Clock className="h-3 w-3 sm:h-4 sm:w-4 mr-2 flex-shrink-0" />
-            <span className="truncate">{formatDistanceToNow(new Date(request.createdAt), { addSuffix: true })}</span>
-          </div>
-        </div>
-
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
-          <div className="flex items-center space-x-2 min-w-0 flex-1">
-            <div className="w-6 h-6 sm:w-8 sm:h-8 bg-gray-200 rounded-full flex items-center justify-center flex-shrink-0">
-              {request.client?.image ? (
-                <img src={request.client.image} alt={request.client.name} className="w-6 h-6 sm:w-8 sm:h-8 rounded-full" />
-              ) : (
-                <User className="h-3 w-3 sm:h-4 sm:w-4" />
-              )}
-            </div>
-            <div className="min-w-0 flex-1">
-              <p className="text-xs sm:text-sm font-medium truncate">{request.client?.name || "Anonymous"}</p>
-              <div className="flex items-center text-xs text-muted-foreground">
-                <Star className="h-3 w-3 mr-1 fill-current text-yellow-400 flex-shrink-0" />
-                <span className="truncate">{request.client?.rating?.toFixed(1) || "New"} ({request.client?.reviewCount || 0} reviews)</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3 w-full sm:w-auto">
-            <span className="text-xs sm:text-sm text-muted-foreground">
-              {request.responses?.length || 0} responses
-            </span>
-            <Button size="sm" className="w-full sm:w-auto" asChild>
-              <Link href={`/service-requests/${request.id}`}>
-                View Details
-              </Link>
-            </Button>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  )
-}
