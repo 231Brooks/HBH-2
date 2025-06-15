@@ -62,13 +62,6 @@ export default function MarketplaceClient() {
     return () => clearTimeout(timeoutId)
   }, [activeTab, sortBy, searchTerm, loadData])
 
-  // Function to load data based on active tab
-  const loadData = useCallback(async () => {
-    if (activeTab === "properties" || activeTab === "all") {
-      await loadProperties()
-    }
-  }, [activeTab, loadProperties])
-
   // Function to load properties with filters
   const loadProperties = useCallback(async (newFilters?: any) => {
     setLoading(true)
@@ -101,6 +94,13 @@ export default function MarketplaceClient() {
       setLoading(false)
     }
   }, [filters, searchTerm, sortBy, activeTab])
+
+  // Function to load data based on active tab
+  const loadData = useCallback(async () => {
+    if (activeTab === "properties" || activeTab === "all") {
+      await loadProperties()
+    }
+  }, [activeTab, loadProperties])
 
 
 
