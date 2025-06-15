@@ -41,6 +41,7 @@ import { getServices } from "../actions/service-actions"
 import { QuickContactButton } from "@/components/contact-dialog"
 import { ServiceBookingDialog } from "@/components/service-booking-dialog"
 import { ServicesAds } from "@/components/advertising/ad-banner"
+import { usePermissions } from "@/hooks/use-permissions"
 
 interface Service {
   id: string
@@ -232,6 +233,7 @@ const serviceCategories = [
 ]
 
 export default function ServicesClient() {
+  const { isProfessional } = usePermissions()
   const [services, setServices] = useState<Service[]>([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState("")
@@ -244,6 +246,8 @@ export default function ServicesClient() {
   const [hasMore, setHasMore] = useState(false)
   const [selectedGroup, setSelectedGroup] = useState<string | null>(null)
   const [showAllCategories, setShowAllCategories] = useState(false)
+  const [serviceRequests, setServiceRequests] = useState<any[]>([])
+  const [showServiceRequests, setShowServiceRequests] = useState(false)
 
   // Load services
   useEffect(() => {
@@ -322,6 +326,13 @@ export default function ServicesClient() {
           <p className="text-sm sm:text-base text-muted-foreground">Find and hire trusted professionals for all your real estate needs</p>
         </div>
         <div className="flex items-center gap-2 w-full lg:w-auto">
+          <Button className="w-full lg:w-auto" asChild variant="outline">
+            <Link href="/services/request">
+              <MessageSquare className="mr-2 h-4 w-4" />
+              <span className="hidden sm:inline">Request Service</span>
+              <span className="sm:inline lg:hidden">Request</span>
+            </Link>
+          </Button>
           <Button className="w-full lg:w-auto" asChild>
             <Link href="/services/create">
               <Plus className="mr-2 h-4 w-4" />
