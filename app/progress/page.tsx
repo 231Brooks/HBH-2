@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { FileText, Clock, CheckCircle, AlertCircle, Users, Search, Plus, Filter, ArrowUpRight, Building2, Briefcase, Star, DollarSign, MapPin, TrendingUp } from "lucide-react"
+import { FileText, Clock, CheckCircle, AlertCircle, Users, Search, Plus, Filter, ArrowUpRight, Building2, Briefcase, Star, DollarSign, MapPin, TrendingUp, BarChart3, Upload } from "lucide-react"
 import { ProtectedRoute } from "@/components/protected-route"
 import { getUserTransactions } from "@/app/actions/transaction-actions"
 import { useSupabase } from "@/contexts/supabase-context"
@@ -41,7 +41,8 @@ function ProgressPageContent() {
 
       // Load service projects for professionals
       if (isProfessional) {
-        // TODO: Replace with actual API call to get user's service projects
+        // TODO: Implement actual API call to get user's service projects
+        // For now, show empty state until real data is available
         setServiceProjects([])
       }
     } catch (error) {
@@ -355,85 +356,18 @@ function ProgressPageContent() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {isProfessional ? (
-                  <>
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center">
-                        <FileText className="h-5 w-5 text-slate-600" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium truncate">Inspection_Report_123Main.pdf</p>
-                        <p className="text-sm text-muted-foreground">Delivered 2 hours ago</p>
-                      </div>
-                      <Button variant="ghost" size="icon">
-                        <ArrowUpRight className="h-4 w-4" />
-                      </Button>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center">
-                        <FileText className="h-5 w-5 text-slate-600" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium truncate">Property_Photos_456Oak.zip</p>
-                        <p className="text-sm text-muted-foreground">Delivered 1 day ago</p>
-                      </div>
-                      <Button variant="ghost" size="icon">
-                        <ArrowUpRight className="h-4 w-4" />
-                      </Button>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center">
-                        <FileText className="h-5 w-5 text-slate-600" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium truncate">Title_Search_789Pine.pdf</p>
-                        <p className="text-sm text-muted-foreground">Delivered 3 days ago</p>
-                      </div>
-                      <Button variant="ghost" size="icon">
-                        <ArrowUpRight className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center">
-                        <FileText className="h-5 w-5 text-slate-600" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium truncate">Purchase_Agreement_123Main.pdf</p>
-                        <p className="text-sm text-muted-foreground">Uploaded 2 hours ago</p>
-                      </div>
-                      <Button variant="ghost" size="icon">
-                        <ArrowUpRight className="h-4 w-4" />
-                      </Button>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center">
-                        <FileText className="h-5 w-5 text-slate-600" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium truncate">Inspection_Report_456Oak.pdf</p>
-                        <p className="text-sm text-muted-foreground">Uploaded 1 day ago</p>
-                      </div>
-                      <Button variant="ghost" size="icon">
-                        <ArrowUpRight className="h-4 w-4" />
-                      </Button>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center">
-                        <FileText className="h-5 w-5 text-slate-600" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium truncate">Disclosure_Form_789Pine.pdf</p>
-                        <p className="text-sm text-muted-foreground">Uploaded 3 days ago</p>
-                      </div>
-                      <Button variant="ghost" size="icon">
-                        <ArrowUpRight className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </>
-                )}
+                <div className="text-center py-8">
+                  <FileText className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+                  <p className="text-muted-foreground">
+                    {isProfessional ? "No recent deliverables" : "No recent documents"}
+                  </p>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    {isProfessional
+                      ? "Deliverables will appear here when you upload them to projects"
+                      : "Documents will appear here when they're uploaded to your transactions"
+                    }
+                  </p>
+                </div>
                 <Button variant="outline" className="w-full">
                   {isProfessional ? "View All Deliverables" : "View All Documents"}
                 </Button>
@@ -448,32 +382,12 @@ function ProgressPageContent() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center">
-                    <Clock className="h-5 w-5 text-red-600" />
-                  </div>
-                  <div>
-                    <p className="font-medium">Closing: 101 River Lane</p>
-                    <p className="text-sm text-muted-foreground">Jul 5, 2023 (3 days left)</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center">
-                    <Clock className="h-5 w-5 text-amber-600" />
-                  </div>
-                  <div>
-                    <p className="font-medium">Inspection: 123 Main Street</p>
-                    <p className="text-sm text-muted-foreground">Jul 8, 2023 (6 days left)</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
-                    <Clock className="h-5 w-5 text-blue-600" />
-                  </div>
-                  <div>
-                    <p className="font-medium">Financing: 456 Oak Avenue</p>
-                    <p className="text-sm text-muted-foreground">Jul 20, 2023 (18 days left)</p>
-                  </div>
+                <div className="text-center py-8">
+                  <Clock className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+                  <p className="text-muted-foreground">No upcoming deadlines</p>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Important dates and deadlines will appear here
+                  </p>
                 </div>
                 <Button variant="outline" className="w-full" asChild>
                   <Link href="/calendar">View Calendar</Link>
@@ -775,8 +689,23 @@ function ServiceProjectCard({ project }: ServiceProjectCardProps) {
         <div className="bg-slate-50 p-6 border-t md:border-t-0 md:border-l flex flex-col justify-between">
           <div className="space-y-3">
             <Button variant="outline" className="w-full justify-start" asChild>
-              <Link href="/progress">
+              <Link href={`/progress/${project.id}/details`}>
                 <FileText className="mr-2 h-4 w-4" /> View Details
+              </Link>
+            </Button>
+            <Button variant="outline" className="w-full justify-start" asChild>
+              <Link href={`/progress/${project.id}/update-progress`}>
+                <Clock className="mr-2 h-4 w-4" /> Update Progress
+              </Link>
+            </Button>
+            <Button variant="outline" className="w-full justify-start" asChild>
+              <Link href={`/progress/${project.id}/analytics`}>
+                <BarChart3 className="mr-2 h-4 w-4" /> View Analytics
+              </Link>
+            </Button>
+            <Button variant="outline" className="w-full justify-start" asChild>
+              <Link href={`/progress/${project.id}/deliverables`}>
+                <Upload className="mr-2 h-4 w-4" /> Deliverables
               </Link>
             </Button>
             <Button variant="outline" className="w-full justify-start" asChild>
@@ -784,14 +713,9 @@ function ServiceProjectCard({ project }: ServiceProjectCardProps) {
                 <Users className="mr-2 h-4 w-4" /> Contact Client
               </Link>
             </Button>
-            <Button variant="outline" className="w-full justify-start" asChild>
-              <Link href="/progress">
-                <Clock className="mr-2 h-4 w-4" /> Update Progress
-              </Link>
-            </Button>
           </div>
           <Button className="mt-4 w-full" asChild>
-            <Link href="/progress">Manage Project</Link>
+            <Link href={`/progress/${project.id}/manage-project`}>Manage Project</Link>
           </Button>
         </div>
       </div>

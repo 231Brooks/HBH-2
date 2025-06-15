@@ -2,6 +2,7 @@
 
 import { UserTour } from "@/components/user-tour"
 import { WelcomeModal, useWelcomeModal } from "@/components/welcome-modal"
+import { TestModeBanner } from "@/components/test-mode-banner"
 import Navbar from "@/components/navbar"
 import BottomNavbar from "@/components/bottom-navbar"
 import { BottomGlobalAds } from "@/components/advertising/ad-banner"
@@ -17,6 +18,7 @@ export function LayoutClient({ children }: LayoutClientProps) {
     <UserTour>
       {/* Main layout container with responsive design */}
       <div className="flex flex-col min-h-screen bg-[#EBEBEB] overflow-x-hidden">
+        <TestModeBanner />
         <Navbar />
         {/* Main content area with proper responsive spacing */}
         <main className="flex-1 w-full max-w-full pb-safe pb-16 md:pb-4 px-0">
