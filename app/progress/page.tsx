@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { FileText, Clock, CheckCircle, AlertCircle, Users, Search, Plus, Filter, ArrowUpRight, Building2, Briefcase, Star, DollarSign, MapPin, TrendingUp, BarChart3, Upload } from "lucide-react"
 import { ProtectedRoute } from "@/components/protected-route"
+import { ErrorBoundary } from "@/components/error-boundary"
 import { getUserTransactions } from "@/app/actions/transaction-actions"
 import { getUserServiceProjects } from "@/app/actions/service-actions"
 import { useSupabase } from "@/contexts/supabase-context"
@@ -413,7 +414,9 @@ function ProgressPageContent() {
 export default function ProgressPage() {
   return (
     <ProtectedRoute>
-      <ProgressPageContent />
+      <ErrorBoundary>
+        <ProgressPageContent />
+      </ErrorBoundary>
     </ProtectedRoute>
   )
 }
