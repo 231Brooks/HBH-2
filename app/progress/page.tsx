@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { FileText, Clock, CheckCircle, AlertCircle, Users, Search, Plus, Filter, ArrowUpRight, Building2, Briefcase, Star, DollarSign, MapPin, TrendingUp, BarChart3, Upload } from "lucide-react"
 import { ProtectedRoute } from "@/components/protected-route"
 import { getUserTransactions } from "@/app/actions/transaction-actions"
+import { getUserServiceProjects } from "@/app/actions/service-actions"
 import { useSupabase } from "@/contexts/supabase-context"
 import { usePermissions } from "@/hooks/use-permissions"
 
@@ -41,9 +42,17 @@ function ProgressPageContent() {
 
       // Load service projects for professionals
       if (isProfessional) {
-        // TODO: Implement actual API call to get user's service projects
-        // For now, show empty state until real data is available
-        setServiceProjects([])
+        try {
+          const result = await getUserServiceProjects({ limit: 10 })
+          if (result.success) {
+            setServiceProjects(result.projects || [])
+          } else {
+            setServiceProjects([])
+          }
+        } catch (error) {
+          console.error("Failed to load service projects:", error)
+          setServiceProjects([])
+        }
       }
     } catch (error) {
       console.error("Failed to load data:", error)
@@ -284,9 +293,9 @@ function ProgressPageContent() {
                     <span className="font-semibold">{serviceProjects.filter(p => p.status === 'COMPLETED').length}</span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-muted-foreground">Total Earnings</span>
+                    <span className="text-sm text-muted-foreground">Total Budget</span>
                     <span className="font-semibold">
-                      ${serviceProjects.reduce((sum, p) => p.status === 'COMPLETED' ? sum + p.amount : sum, 0).toLocaleString()}
+                      ${serviceProjects.reduce((sum, p) => p.status === 'COMPLETED' && p.budget ? sum + p.budget : sum, 0).toLocaleString()}
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
@@ -628,8 +637,8 @@ function ServiceProjectCard({ project }: ServiceProjectCardProps) {
   const progress = project.progress || 0
   const status = getStatusLabel(project.status)
   const statusColor = getStatusColor(project.status)
-  const dueDate = formatDate(project.dueDate)
-  const amount = formatPrice(project.amount)
+  const dueDate = formatDate(project.endDate)
+  const amount = project.budget ? formatPrice(project.budget) : "Budget TBD"
 
   return (
     <Card className="overflow-hidden">
@@ -659,18 +668,14 @@ function ServiceProjectCard({ project }: ServiceProjectCardProps) {
               <span className="text-sm">Due: {dueDate}</span>
             </div>
             <div className="flex items-center gap-2">
-              <MapPin className="h-4 w-4 text-muted-foreground" />
-              <span className="text-sm">{project.location}</span>
+              <Briefcase className="h-4 w-4 text-muted-foreground" />
+              <span className="text-sm">{project.service?.category || "General Service"}</span>
             </div>
           </div>
 
           <div className="flex items-center gap-2 mb-4">
             <Users className="h-4 w-4 text-muted-foreground" />
-            <span className="text-sm">Client: {project.client.name}</span>
-            <div className="flex items-center gap-1">
-              <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
-              <span className="text-xs text-muted-foreground">{project.client.rating}</span>
-            </div>
+            <span className="text-sm">Service: {project.service?.name || "Custom Project"}</span>
           </div>
 
           <div className="flex items-start gap-2 text-sm">

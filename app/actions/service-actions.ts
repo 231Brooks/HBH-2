@@ -148,6 +148,218 @@ export async function getServiceById(id: string) {
   }
 }
 
+// Get user's service projects
+export async function getUserServiceProjects(options: {
+  status?: string
+  limit?: number
+  offset?: number
+} = {}) {
+  const user = await getCurrentUser()
+  if (!user?.id) {
+    return { success: false, error: "Authentication required" }
+  }
+
+  const { status, limit = 10, offset = 0 } = options
+
+  try {
+    const where: any = { ownerId: user.id }
+    if (status && status !== "all") {
+      where.status = status
+    }
+
+    const projects = await prisma.project.findMany({
+      where,
+      include: {
+        service: {
+          select: {
+            id: true,
+            name: true,
+            category: true,
+          },
+        },
+      },
+      orderBy: { createdAt: "desc" },
+      take: limit,
+      skip: offset,
+    })
+
+    const total = await prisma.project.count({ where })
+
+    return {
+      success: true,
+      projects,
+      total,
+      hasMore: offset + limit < total,
+    }
+  } catch (error) {
+    console.error("Failed to fetch user projects:", error)
+    return { success: false, error: "Failed to load projects" }
+  }
+}
+
+// Create a new service project
+export async function createServiceProject(data: {
+  title: string
+  description?: string
+  serviceId?: string
+  budget?: number
+  startDate?: string
+  endDate?: string
+}) {
+  const user = await getCurrentUser()
+  if (!user?.id) {
+    return { success: false, error: "Authentication required" }
+  }
+
+  try {
+    const project = await prisma.project.create({
+      data: {
+        title: data.title,
+        description: data.description,
+        serviceId: data.serviceId,
+        budget: data.budget,
+        startDate: data.startDate ? new Date(data.startDate) : null,
+        endDate: data.endDate ? new Date(data.endDate) : null,
+        ownerId: user.id,
+        status: "IN_PROGRESS",
+        progress: 0,
+      },
+      include: {
+        service: {
+          select: {
+            id: true,
+            name: true,
+            category: true,
+          },
+        },
+      },
+    })
+
+    revalidatePath("/progress")
+    return { success: true, project }
+  } catch (error) {
+    console.error("Failed to create project:", error)
+    return { success: false, error: "Failed to create project" }
+  }
+}
+
+// Get project by ID
+export async function getProjectById(id: string) {
+  const user = await getCurrentUser()
+  if (!user?.id) {
+    return { success: false, error: "Authentication required" }
+  }
+
+  try {
+    const project = await prisma.project.findUnique({
+      where: { id },
+      include: {
+        service: {
+          select: {
+            id: true,
+            name: true,
+            category: true,
+            provider: {
+              select: {
+                id: true,
+                name: true,
+                image: true,
+                email: true,
+                phone: true,
+              },
+            },
+          },
+        },
+        owner: {
+          select: {
+            id: true,
+            name: true,
+            image: true,
+            email: true,
+            phone: true,
+          },
+        },
+      },
+    })
+
+    if (!project) {
+      return { success: false, error: "Project not found" }
+    }
+
+    // Check if user has access to this project
+    if (project.ownerId !== user.id && project.service?.provider?.id !== user.id) {
+      return { success: false, error: "Access denied" }
+    }
+
+    return { success: true, project }
+  } catch (error) {
+    console.error("Failed to fetch project:", error)
+    return { success: false, error: "Failed to load project" }
+  }
+}
+
+// Update project
+export async function updateProject(id: string, data: {
+  title?: string
+  description?: string
+  status?: string
+  progress?: number
+  budget?: number
+  startDate?: string
+  endDate?: string
+}) {
+  const user = await getCurrentUser()
+  if (!user?.id) {
+    return { success: false, error: "Authentication required" }
+  }
+
+  try {
+    const project = await prisma.project.findUnique({
+      where: { id },
+      select: { ownerId: true, service: { select: { providerId: true } } },
+    })
+
+    if (!project) {
+      return { success: false, error: "Project not found" }
+    }
+
+    // Check if user has permission to update this project
+    if (project.ownerId !== user.id && project.service?.providerId !== user.id) {
+      return { success: false, error: "Access denied" }
+    }
+
+    const updateData: any = {}
+    if (data.title !== undefined) updateData.title = data.title
+    if (data.description !== undefined) updateData.description = data.description
+    if (data.status !== undefined) updateData.status = data.status
+    if (data.progress !== undefined) updateData.progress = data.progress
+    if (data.budget !== undefined) updateData.budget = data.budget
+    if (data.startDate !== undefined) updateData.startDate = data.startDate ? new Date(data.startDate) : null
+    if (data.endDate !== undefined) updateData.endDate = data.endDate ? new Date(data.endDate) : null
+
+    const updatedProject = await prisma.project.update({
+      where: { id },
+      data: updateData,
+      include: {
+        service: {
+          select: {
+            id: true,
+            name: true,
+            category: true,
+          },
+        },
+      },
+    })
+
+    revalidatePath("/progress")
+    revalidatePath(`/progress/${id}`)
+    return { success: true, project: updatedProject }
+  } catch (error) {
+    console.error("Failed to update project:", error)
+    return { success: false, error: "Failed to update project" }
+  }
+}
+
 // Get admin fee report
 export async function getAdminFeeReport(startDate?: Date, endDate?: Date) {
   const user = await getCurrentUser()
