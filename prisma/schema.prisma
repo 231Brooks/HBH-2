@@ -319,6 +319,7 @@ model Milestone {
 
 enum MilestoneStatus {
   PENDING
+  IN_PROGRESS
   COMPLETED
   OVERDUE
 }
@@ -420,12 +421,7 @@ model ProjectMilestone {
   updatedAt       DateTime          @updatedAt
 }
 
-enum MilestoneStatus {
-  PENDING
-  IN_PROGRESS
-  COMPLETED
-  OVERDUE
-}
+
 
 // Project Deliverable model
 model ProjectDeliverable {
