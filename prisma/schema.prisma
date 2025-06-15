@@ -56,6 +56,8 @@ model User {
   adPurchases       AdPurchase[]
   bids              Bid[]               // Bids placed by this user
   auctionWatchList  AuctionWatchList[]  // Auctions this user is watching
+  deliverables      ProjectDeliverable[] // Deliverables uploaded by this user
+  teamMemberships   ProjectTeamMember[]  // Projects where this user is a team member
 }
 
 enum UserRole {
@@ -391,12 +393,88 @@ model Project {
   service         Service?      @relation(fields: [serviceId], references: [id])
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
+
+  // Relations
+  milestones      ProjectMilestone[]
+  deliverables    ProjectDeliverable[]
+  teamMembers     ProjectTeamMember[]
 }
 
 enum ProjectStatus {
   IN_PROGRESS
   COMPLETED
   CANCELLED
+}
+
+// Project Milestone model
+model ProjectMilestone {
+  id              String            @id @default(cuid())
+  title           String
+  description     String?           @db.Text
+  status          MilestoneStatus   @default(PENDING)
+  dueDate         DateTime?
+  completedDate   DateTime?
+  projectId       String
+  project         Project           @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+}
+
+enum MilestoneStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  OVERDUE
+}
+
+// Project Deliverable model
+model ProjectDeliverable {
+  id              String              @id @default(cuid())
+  title           String
+  description     String?             @db.Text
+  type            DeliverableType
+  status          DeliverableStatus   @default(DRAFT)
+  fileUrl         String?
+  fileName        String?
+  fileSize        String?
+  uploadedById    String?
+  uploadedBy      User?               @relation(fields: [uploadedById], references: [id])
+  projectId       String
+  project         Project             @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+}
+
+enum DeliverableType {
+  DOCUMENT
+  IMAGE
+  VIDEO
+  REPORT
+  PLAN
+  OTHER
+}
+
+enum DeliverableStatus {
+  DRAFT
+  PENDING_REVIEW
+  APPROVED
+  REJECTED
+  FINAL
+}
+
+// Project Team Member model
+model ProjectTeamMember {
+  id              String        @id @default(cuid())
+  name            String
+  role            String
+  email           String?
+  phone           String?
+  userId          String?       // Optional link to actual user
+  user            User?         @relation(fields: [userId], references: [id])
+  projectId       String
+  project         Project       @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
 }
 
 // Review model

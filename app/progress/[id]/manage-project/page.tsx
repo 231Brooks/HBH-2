@@ -31,6 +31,8 @@ import {
   Download
 } from "lucide-react"
 import { ProtectedRoute } from "@/components/protected-route"
+import { getProjectById, updateProject } from "@/app/actions/service-actions"
+import { addProjectTeamMember } from "@/app/actions/project-actions"
 
 export default function ManageProjectPage() {
   const params = useParams()
@@ -67,31 +69,24 @@ export default function ManageProjectPage() {
   const loadProject = async () => {
     setLoading(true)
     try {
-      // TODO: Replace with actual API call
-      const mockProject = {
-        id: params.id,
-        title: "Kitchen Renovation - 123 Main St",
-        description: "Complete kitchen remodeling including cabinets, countertops, flooring, and appliances",
-        budget: 25000,
-        estimatedEndDate: "2024-03-15",
-        team: [
-          { id: 1, name: "Mike Johnson", role: "Project Manager", email: "mike@contractor.com", phone: "(555) 234-5678" },
-          { id: 2, name: "Lisa Chen", role: "Designer", email: "lisa@design.com", phone: "(555) 345-6789" },
-          { id: 3, name: "Tom Wilson", role: "Electrician", email: "tom@electric.com", phone: "(555) 456-7890" }
-        ],
-        contracts: [
-          { id: 1, name: "Main Contract", type: "PRIMARY", status: "SIGNED", amount: 25000, signedDate: "2024-01-10" },
-          { id: 2, name: "Change Order #1", type: "CHANGE_ORDER", status: "PENDING", amount: 2500, signedDate: null }
-        ]
+      const result = await getProjectById(params.id as string)
+
+      if (result.success && result.project) {
+        const projectData = result.project
+        setProject(projectData)
+        setTitle(projectData.title)
+        setDescription(projectData.description || "")
+        setBudget(projectData.budget?.toString() || "")
+        setEstimatedEndDate(projectData.endDate ? new Date(projectData.endDate).toISOString().split('T')[0] : "")
+        setTeam(projectData.teamMembers || [])
+        setContracts([]) // Contracts not implemented yet
+      } else {
+        toast({
+          title: "Error",
+          description: result.error || "Failed to load project",
+          variant: "destructive"
+        })
       }
-      
-      setProject(mockProject)
-      setTitle(mockProject.title)
-      setDescription(mockProject.description)
-      setBudget(mockProject.budget.toString())
-      setEstimatedEndDate(mockProject.estimatedEndDate)
-      setTeam(mockProject.team)
-      setContracts(mockProject.contracts)
     } catch (error) {
       console.error("Failed to load project:", error)
       toast({
@@ -107,13 +102,25 @@ export default function ManageProjectPage() {
   const handleSaveSettings = async () => {
     setSaving(true)
     try {
-      // TODO: Replace with actual API call
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      
-      toast({
-        title: "Success",
-        description: "Project settings updated successfully"
+      const result = await updateProject(params.id as string, {
+        title,
+        description,
+        budget: budget ? parseFloat(budget) : undefined,
+        endDate: estimatedEndDate || undefined,
       })
+
+      if (result.success) {
+        toast({
+          title: "Success",
+          description: "Project settings updated successfully"
+        })
+      } else {
+        toast({
+          title: "Error",
+          description: result.error || "Failed to update project settings",
+          variant: "destructive"
+        })
+      }
     } catch (error) {
       console.error("Failed to update settings:", error)
       toast({
@@ -126,7 +133,7 @@ export default function ManageProjectPage() {
     }
   }
 
-  const addTeamMember = () => {
+  const addTeamMember = async () => {
     if (!newTeamMember.name || !newTeamMember.role || !newTeamMember.email) {
       toast({
         title: "Error",
@@ -136,19 +143,39 @@ export default function ManageProjectPage() {
       return
     }
 
-    const member = {
-      id: Date.now(),
-      ...newTeamMember
-    }
+    try {
+      const result = await addProjectTeamMember({
+        projectId: params.id as string,
+        name: newTeamMember.name,
+        role: newTeamMember.role,
+        email: newTeamMember.email,
+        phone: newTeamMember.phone,
+      })
 
-    setTeam(prev => [...prev, member])
-    setNewTeamMember({ name: "", role: "", email: "", phone: "" })
-    setShowAddTeamMember(false)
-    
-    toast({
-      title: "Success",
-      description: "Team member added successfully"
-    })
+      if (result.success) {
+        setTeam(prev => [...prev, result.teamMember])
+        setNewTeamMember({ name: "", role: "", email: "", phone: "" })
+        setShowAddTeamMember(false)
+
+        toast({
+          title: "Success",
+          description: "Team member added successfully"
+        })
+      } else {
+        toast({
+          title: "Error",
+          description: result.error || "Failed to add team member",
+          variant: "destructive"
+        })
+      }
+    } catch (error) {
+      console.error("Failed to add team member:", error)
+      toast({
+        title: "Error",
+        description: "Failed to add team member",
+        variant: "destructive"
+      })
+    }
   }
 
   const removeTeamMember = (memberId: number) => {
