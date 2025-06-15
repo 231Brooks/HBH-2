@@ -31,6 +31,8 @@ export function SupabaseProvider({ children }: { children: ReactNode }) {
     // Mark as hydrated on client
     setIsHydrated(true)
 
+    let subscription: any = null
+
     async function initializeAuth() {
       try {
         const client = getSupabaseClient()
@@ -44,18 +46,14 @@ export function SupabaseProvider({ children }: { children: ReactNode }) {
 
         // Set up auth state listener
         const {
-          data: { subscription },
+          data: { subscription: authSubscription },
         } = client.auth.onAuthStateChange((_event, session) => {
           console.log("Auth state changed:", _event, session?.user?.email)
           setUser(session?.user || null)
         })
 
+        subscription = authSubscription
         setLoading(false)
-
-        // Clean up subscription
-        return () => {
-          subscription.unsubscribe()
-        }
       } catch (err) {
         console.error("Error initializing Supabase client:", err)
         setError(err instanceof Error ? err : new Error("Failed to initialize Supabase client"))
@@ -64,6 +62,13 @@ export function SupabaseProvider({ children }: { children: ReactNode }) {
     }
 
     initializeAuth()
+
+    // Return cleanup function
+    return () => {
+      if (subscription) {
+        subscription.unsubscribe()
+      }
+    }
   }, [])
 
   return <SupabaseContext.Provider value={{ supabase, user, loading, error, isHydrated }}>{children}</SupabaseContext.Provider>

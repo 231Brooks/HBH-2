@@ -1,8 +1,8 @@
 #!/usr/bin/env tsx
 
 /**
- * Comprehensive Security and Authentication Test Script
- * Tests API keys, environment variables, authentication flows, and webhooks
+ * Comprehensive UX and State Management Test Script
+ * Tests state management, loading states, data persistence, auth flows, and user feedback
  */
 
 import { createClient } from '@supabase/supabase-js'
