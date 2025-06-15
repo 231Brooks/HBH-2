@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { useParams, useRouter } from "next/navigation"
 import Link from "next/link"
 import Image from "next/image"
+import { OptimizedImage } from "@/components/optimized-image"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -133,11 +134,14 @@ function PropertyDetailContent() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
         <div className="lg:col-span-2">
           <div className="relative h-96 rounded-lg overflow-hidden">
-            <Image
+            <OptimizedImage
               src={images[currentImageIndex]?.url || "/placeholder.svg"}
               alt={property.title}
-              fill
-              className="object-cover"
+              width={800}
+              height={600}
+              priority={true}
+              className="h-96 rounded-lg"
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 66vw, 50vw"
             />
             <Badge className={`absolute top-4 right-4 ${statusBadge.color} text-white`}>
               {statusBadge.label}
@@ -153,11 +157,13 @@ function PropertyDetailContent() {
                     index === currentImageIndex ? "ring-2 ring-primary" : ""
                   }`}
                 >
-                  <Image
+                  <OptimizedImage
                     src={image.url}
                     alt={`Property image ${index + 1}`}
-                    fill
-                    className="object-cover"
+                    width={80}
+                    height={80}
+                    className="h-20 w-20 rounded-md"
+                    sizes="80px"
                   />
                 </button>
               ))}
