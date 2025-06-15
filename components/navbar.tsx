@@ -62,6 +62,15 @@ export default function Navbar() {
     return true
   })
 
+  const handleSignOut = async () => {
+    try {
+      await supabase.auth.signOut()
+      // The auth state change will be handled by the context
+    } catch (error) {
+      console.error("Error signing out:", error)
+    }
+  }
+
   useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 10)

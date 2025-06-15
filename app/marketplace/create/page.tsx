@@ -13,6 +13,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Checkbox } from "@/components/ui/checkbox"
 import { ArrowLeft, AlertCircle, Plus, Building2, MapPin, DollarSign, Upload, Home, Gavel } from "lucide-react"
 import { ProtectedRoute } from "@/components/protected-route"
+import { ErrorBoundary } from "@/components/error-boundary"
 import { createProperty } from "@/app/actions/property-actions"
 import { useSupabase } from "@/contexts/supabase-context"
 import { PropertyImageUpload } from "@/components/property-image-upload"
@@ -515,7 +516,9 @@ function CreatePropertyContent() {
 export default function CreatePropertyPage() {
   return (
     <ProtectedRoute>
-      <CreatePropertyContent />
+      <ErrorBoundary>
+        <CreatePropertyContent />
+      </ErrorBoundary>
     </ProtectedRoute>
   )
 }

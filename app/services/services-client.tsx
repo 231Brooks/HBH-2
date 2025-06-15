@@ -42,6 +42,7 @@ import { QuickContactButton } from "@/components/contact-dialog"
 import { ServiceBookingDialog } from "@/components/service-booking-dialog"
 import { ServicesAds } from "@/components/advertising/ad-banner"
 import { usePermissions } from "@/hooks/use-permissions"
+import { ErrorBoundary } from "@/components/error-boundary"
 
 interface Service {
   id: string
@@ -318,7 +319,8 @@ export default function ServicesClient() {
   }
 
   return (
-    <div className="container mx-auto py-6 sm:py-8 px-4 sm:px-6 lg:px-8 max-w-7xl overflow-x-hidden">
+    <ErrorBoundary>
+      <div className="container mx-auto py-6 sm:py-8 px-4 sm:px-6 lg:px-8 max-w-7xl overflow-x-hidden">
       {/* Header section with responsive design */}
       <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-6 sm:mb-8 gap-4">
         <div className="w-full lg:w-auto">
@@ -666,7 +668,7 @@ export default function ServicesClient() {
           </div>
         </div>
       </div>
-    </div>
+    </ErrorBoundary>
   )
 }
 
