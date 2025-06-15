@@ -7,8 +7,6 @@ import { Input } from "@/components/ui/input"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Slider } from "@/components/ui/slider"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
 import {
   Search,
   Filter,
@@ -16,39 +14,18 @@ import {
   Grid3X3,
   List,
   Map,
-  Heart,
   Building,
   Plus,
-  MessageSquare,
-  Clock,
-  DollarSign,
-  User,
-  Star,
-  AlertCircle,
 } from "lucide-react"
 import { PropertyMap } from "./property-map"
-import { CachedMarketplaceItems } from "./cached-items"
+
 import { getProperties } from "../actions/property-actions"
-import { getServiceRequests } from "../actions/service-request-actions"
 import { PerformanceTracker } from "./performance-tracker"
 import { PropertyCard } from "@/components/marketplace/property-card"
-import { formatDistanceToNow } from "date-fns"
-import { ServiceUrgency, ServiceRequestStatus } from "@prisma/client"
+
 import { MarketplaceAds } from "@/components/advertising/ad-banner"
 
-const urgencyColors = {
-  LOW: "bg-gray-100 text-gray-800",
-  NORMAL: "bg-blue-100 text-blue-800",
-  HIGH: "bg-orange-100 text-orange-800",
-  URGENT: "bg-red-100 text-red-800",
-}
 
-const urgencyIcons = {
-  LOW: Clock,
-  NORMAL: Clock,
-  HIGH: AlertCircle,
-  URGENT: AlertCircle,
-}
 
 export default function MarketplaceClient() {
   const [properties, setProperties] = useState<any[]>([])
@@ -89,9 +66,6 @@ export default function MarketplaceClient() {
     if (activeTab === "properties" || activeTab === "all") {
       await loadProperties()
     }
-    if (activeTab === "service-requests" || activeTab === "all") {
-      await loadServiceRequests()
-    }
   }
 
   // Function to load properties with filters
@@ -127,28 +101,7 @@ export default function MarketplaceClient() {
     }
   }
 
-  // Function to load service requests
-  const loadServiceRequests = async () => {
-    setLoading(true)
-    try {
-      const result = await getServiceRequests({
-        location: searchTerm || undefined,
-        limit: 20,
-        offset: 0,
-      })
 
-      if (result.success) {
-        setServiceRequests(Array.isArray(result.serviceRequests) ? result.serviceRequests : [])
-      } else {
-        setServiceRequests([])
-      }
-    } catch (error) {
-      console.error("Failed to load service requests:", error)
-      setServiceRequests([])
-    } finally {
-      setLoading(false)
-    }
-  }
 
   // Apply filters
   const applyFilters = () => {
@@ -434,10 +387,6 @@ export default function MarketplaceClient() {
 
 
       </Tabs>
-
-      <div className="mt-8">
-        <CachedMarketplaceItems />
-      </div>
 
       <PerformanceTracker />
     </div>
