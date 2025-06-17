@@ -12,88 +12,88 @@ datasource db {
 
 // User model
 model User {
-  id                String              @id @default(cuid())
-  email             String              @unique
-  name              String?
-  password          String?
-  image             String?             // Profile picture
-  coverPhoto        String?             // Cover photo
-  role              UserRole            @default(USER)
-  createdAt         DateTime            @default(now())
-  updatedAt         DateTime            @updatedAt
-  emailVerified     Boolean             @default(false)
-  phoneVerified     Boolean             @default(false)
-  identityVerified  Boolean             @default(false)
-  location          String?
-  bio               String?
-  phone             String?
-  rating            Float?
-  reviewCount       Int                 @default(0)
-  
+  id               String   @id @default(cuid())
+  email            String   @unique
+  name             String?
+  password         String?
+  image            String? // Profile picture
+  coverPhoto       String? // Cover photo
+  role             UserRole @default(USER)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  emailVerified    Boolean  @default(false)
+  phoneVerified    Boolean  @default(false)
+  identityVerified Boolean  @default(false)
+  location         String?
+  bio              String?
+  phone            String?
+  rating           Float?
+  reviewCount      Int      @default(0)
+
   // Relations
-  properties        Property[]          @relation("UserProperties")
-  auctionWins       Property[]          @relation("AuctionWinner")
-  savedProperties   SavedProperty[]
-  transactions      Transaction[]       @relation("UserTransactions")
-  transactionParty  TransactionParty[]
-  reviews           Review[]            @relation("UserReviews")
-  reviewsReceived   Review[]            @relation("ReceivedReviews")
-  services          Service[]
-  projects          Project[]
-  appointments      Appointment[]
+  properties              Property[]               @relation("UserProperties")
+  auctionWins             Property[]               @relation("AuctionWinner")
+  savedProperties         SavedProperty[]
+  transactions            Transaction[]            @relation("UserTransactions")
+  transactionParty        TransactionParty[]
+  reviews                 Review[]                 @relation("UserReviews")
+  reviewsReceived         Review[]                 @relation("ReceivedReviews")
+  services                Service[]
+  projects                Project[]
+  appointments            Appointment[]
   appointmentParticipants AppointmentParticipant[]
-  calendarIntegrations CalendarIntegration[]
-  messages          Message[]           @relation("SentMessages")
-  receivedMessages  Message[]           @relation("ReceivedMessages")
-  subscription      Subscription?
-  serviceOrders     ServiceOrder[]      @relation("ClientOrders")
-  providedOrders    ServiceOrder[]      @relation("ProviderOrders")
-  fees              Fee[]
-  serviceRequests   ServiceRequest[]    @relation("ServiceRequestClient")
-  serviceResponses  ServiceRequest[]    @relation("ServiceRequestProvider")
-  responsesSent     ServiceResponse[]   @relation("ServiceResponseProvider")
-  advertisements    Advertisement[]
-  adPurchases       AdPurchase[]
-  bids              Bid[]               // Bids placed by this user
-  auctionWatchList  AuctionWatchList[]  // Auctions this user is watching
-  deliverables      ProjectDeliverable[] // Deliverables uploaded by this user
-  teamMemberships   ProjectTeamMember[]  // Projects where this user is a team member
+  calendarIntegrations    CalendarIntegration[]
+  messages                Message[]                @relation("SentMessages")
+  receivedMessages        Message[]                @relation("ReceivedMessages")
+  subscription            Subscription?
+  serviceOrders           ServiceOrder[]           @relation("ClientOrders")
+  providedOrders          ServiceOrder[]           @relation("ProviderOrders")
+  fees                    Fee[]
+  serviceRequests         ServiceRequest[]         @relation("ServiceRequestClient")
+  serviceResponses        ServiceRequest[]         @relation("ServiceRequestProvider")
+  responsesSent           ServiceResponse[]        @relation("ServiceResponseProvider")
+  advertisements          Advertisement[]
+  adPurchases             AdPurchase[]
+  bids                    Bid[] // Bids placed by this user
+  auctionWatchList        AuctionWatchList[] // Auctions this user is watching
+  deliverables            ProjectDeliverable[] // Deliverables uploaded by this user
+  teamMemberships         ProjectTeamMember[] // Projects where this user is a team member
 
   // ============================================================================
   // PORTAL PLATFORM EXTENSIONS
   // ============================================================================
 
   // Platform Access Control
-  hbh2Access        Boolean @default(true)
-  portalAccess      Boolean @default(false)
+  hbh2Access   Boolean @default(true)
+  portalAccess Boolean @default(false)
 
   // Portal-specific fields
-  employeeId        String? @unique
-  department        String?
-  hireDate          DateTime?
+  employeeId String?   @unique
+  department String?
+  hireDate   DateTime?
 
   // Team relationships
-  teamId            String?
-  team              Team? @relation("TeamMembers", fields: [teamId], references: [id])
-  managerId         String?
-  manager           User? @relation("ManagerEmployee", fields: [managerId], references: [id])
-  directReports     User[] @relation("ManagerEmployee")
-  ledTeams          Team[] @relation("TeamLeader")
+  teamId        String?
+  team          Team?   @relation("TeamMembers", fields: [teamId], references: [id])
+  managerId     String?
+  manager       User?   @relation("ManagerEmployee", fields: [managerId], references: [id])
+  directReports User[]  @relation("ManagerEmployee")
+  ledTeams      Team[]  @relation("TeamLeader")
 
   // Investment participation
-  investmentMemberships InvestmentGroupMember[] @relation("InvestmentMemberships")
-  createdInvestmentGroups InvestmentGroup[] @relation("CreatedInvestmentGroups")
-  managedInvestmentGroups InvestmentGroup[] @relation("ManagedInvestmentGroups")
+  investmentMemberships   InvestmentGroupMember[] @relation("InvestmentMemberships")
+  createdInvestmentGroups InvestmentGroup[]       @relation("CreatedInvestmentGroups")
+  managedInvestmentGroups InvestmentGroup[]       @relation("ManagedInvestmentGroups")
 
   // Learning & Development
   learningProgress  CourseProgress[] @relation("LearningProgress")
-  instructedCourses Course[] @relation("InstructedCourses")
-  quizAttempts      QuizScore[] @relation("QuizAttempts")
+  instructedCourses Course[]         @relation("InstructedCourses")
+  quizAttempts      QuizScore[]      @relation("QuizAttempts")
   certifications    Certification[]
 
   // Goals & KPIs
-  createdGoals      TeamGoal[] @relation("CreatedGoals")
-  kpis              KPI[] @relation("UserKPIs")
+  createdGoals TeamGoal[] @relation("CreatedGoals")
+  kpis         KPI[]      @relation("UserKPIs")
 
   // Portal notifications
   portalNotifications PortalNotification[] @relation("PortalNotifications")
@@ -107,45 +107,45 @@ enum UserRole {
 
 // Property model
 model Property {
-  id              String            @id @default(cuid())
-  title           String
-  description     String?           @db.Text
-  address         String
-  city            String
-  state           String
-  zipCode         String
-  price           Float
-  beds            Int?
-  baths           Float?
-  sqft            Int?
-  type            PropertyType
-  status          PropertyStatus    @default(FOR_SALE)
-  createdAt       DateTime          @default(now())
-  updatedAt       DateTime          @updatedAt
-  images          PropertyImage[]
-  features        String[]
-  latitude        Float?
-  longitude       Float?
+  id          String          @id @default(cuid())
+  title       String
+  description String?         @db.Text
+  address     String
+  city        String
+  state       String
+  zipCode     String
+  price       Float
+  beds        Int?
+  baths       Float?
+  sqft        Int?
+  type        PropertyType
+  status      PropertyStatus  @default(FOR_SALE)
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  images      PropertyImage[]
+  features    String[]
+  latitude    Float?
+  longitude   Float?
 
   // Auction-specific fields
-  auctionEndDate  DateTime?         // When auction ends
-  minimumBid      Float?            // Starting/minimum bid amount
-  currentBid      Float?            // Current highest bid
-  bidIncrement    Float?            // Minimum bid increment (default: 1000)
-  reservePrice    Float?            // Reserve price (optional)
-  auctionWinnerId String?           // Winner of the auction
-  auctionWinner   User?             @relation("AuctionWinner", fields: [auctionWinnerId], references: [id])
+  auctionEndDate  DateTime? // When auction ends
+  minimumBid      Float? // Starting/minimum bid amount
+  currentBid      Float? // Current highest bid
+  bidIncrement    Float? // Minimum bid increment (default: 1000)
+  reservePrice    Float? // Reserve price (optional)
+  auctionWinnerId String? // Winner of the auction
+  auctionWinner   User?     @relation("AuctionWinner", fields: [auctionWinnerId], references: [id])
 
   // Relations
-  ownerId         String
-  owner           User              @relation("UserProperties", fields: [ownerId], references: [id])
-  savedBy         SavedProperty[]
-  transactions    Transaction[]
-  appointments    Appointment[]
-  bids            Bid[]             // Bids placed on this property
-  watchedBy       AuctionWatchList[] // Users watching this auction
-  analytics       AuctionAnalytics?  // Analytics for this auction
-  extensions      AuctionExtension[] // Extension history for this auction
+  ownerId      String
+  owner        User               @relation("UserProperties", fields: [ownerId], references: [id])
+  savedBy      SavedProperty[]
+  transactions Transaction[]
+  appointments Appointment[]
+  bids         Bid[] // Bids placed on this property
+  watchedBy    AuctionWatchList[] // Users watching this auction
+  analytics    AuctionAnalytics? // Analytics for this auction
+  extensions   AuctionExtension[] // Extension history for this auction
 
   // Portal integration
   investmentProperty InvestmentProperty? @relation("InvestmentProperties")
@@ -166,37 +166,37 @@ enum PropertyStatus {
 }
 
 model PropertyImage {
-  id          String    @id @default(cuid())
-  url         String
-  propertyId  String
-  property    Property  @relation(fields: [propertyId], references: [id], onDelete: Cascade)
-  isPrimary   Boolean   @default(false)
-  createdAt   DateTime  @default(now())
+  id         String   @id @default(cuid())
+  url        String
+  propertyId String
+  property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  isPrimary  Boolean  @default(false)
+  createdAt  DateTime @default(now())
 }
 
 model SavedProperty {
-  id          String    @id @default(cuid())
-  userId      String
-  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  propertyId  String
-  property    Property  @relation(fields: [propertyId], references: [id], onDelete: Cascade)
-  createdAt   DateTime  @default(now())
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  propertyId String
+  property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
 
   @@unique([userId, propertyId])
 }
 
 // Bid model for auction functionality
 model Bid {
-  id          String      @id @default(cuid())
-  amount      Float       // Bid amount
-  propertyId  String
-  property    Property    @relation(fields: [propertyId], references: [id], onDelete: Cascade)
-  bidderId    String
-  bidder      User        @relation(fields: [bidderId], references: [id], onDelete: Cascade)
-  status      BidStatus   @default(ACTIVE)
-  isWinning   Boolean     @default(false)  // Whether this is currently the winning bid
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
+  id         String    @id @default(cuid())
+  amount     Float // Bid amount
+  propertyId String
+  property   Property  @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  bidderId   String
+  bidder     User      @relation(fields: [bidderId], references: [id], onDelete: Cascade)
+  status     BidStatus @default(ACTIVE)
+  isWinning  Boolean   @default(false) // Whether this is currently the winning bid
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
 
   // Relations
   triggeredExtensions AuctionExtension[] // Extensions triggered by this bid
@@ -221,20 +221,20 @@ model AuctionWatchList {
 
 // Auction analytics for tracking auction performance
 model AuctionAnalytics {
-  id                String   @id @default(cuid())
-  propertyId        String   @unique
-  property          Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
-  totalBids         Int      @default(0)
-  uniqueBidders     Int      @default(0)
-  highestBid        Float?
-  averageBid        Float?
-  viewCount         Int      @default(0)
-  watchListCount    Int      @default(0)
-  reservePriceMet   Boolean  @default(false)
-  extensionCount    Int      @default(0)  // Number of times auction was extended
-  finalSalePrice    Float?   // Final sale price if auction completed
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  id              String   @id @default(cuid())
+  propertyId      String   @unique
+  property        Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  totalBids       Int      @default(0)
+  uniqueBidders   Int      @default(0)
+  highestBid      Float?
+  averageBid      Float?
+  viewCount       Int      @default(0)
+  watchListCount  Int      @default(0)
+  reservePriceMet Boolean  @default(false)
+  extensionCount  Int      @default(0) // Number of times auction was extended
+  finalSalePrice  Float? // Final sale price if auction completed
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
   @@index([propertyId])
 }
@@ -246,7 +246,7 @@ model AuctionExtension {
   property         Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
   originalEndDate  DateTime // Original end date
   newEndDate       DateTime // New end date after extension
-  triggerBidId     String?  // Bid that triggered the extension
+  triggerBidId     String? // Bid that triggered the extension
   triggerBid       Bid?     @relation(fields: [triggerBidId], references: [id], onDelete: SetNull)
   extensionMinutes Int      @default(10) // How many minutes the auction was extended
   createdAt        DateTime @default(now())
@@ -256,36 +256,36 @@ model AuctionExtension {
 }
 
 enum BidStatus {
-  ACTIVE      // Bid is active and valid
-  OUTBID      // Bid has been outbid by a higher bid
-  WITHDRAWN   // Bid was withdrawn by the bidder
-  WINNING     // Bid won the auction
-  EXPIRED     // Auction ended without this bid winning
+  ACTIVE // Bid is active and valid
+  OUTBID // Bid has been outbid by a higher bid
+  WITHDRAWN // Bid was withdrawn by the bidder
+  WINNING // Bid won the auction
+  EXPIRED // Auction ended without this bid winning
 }
 
 // Transaction model
 model Transaction {
-  id                String              @id @default(cuid())
-  propertyId        String
-  property          Property            @relation(fields: [propertyId], references: [id])
-  creatorId         String
-  creator           User                @relation("UserTransactions", fields: [creatorId], references: [id])
-  type              TransactionType
-  status            TransactionStatus   @default(IN_PROGRESS)
-  price             Float
-  closingDate       DateTime?
-  createdAt         DateTime            @default(now())
-  updatedAt         DateTime            @updatedAt
-  progress          Int                 @default(0)
-  notes             String?             @db.Text
-  
+  id          String            @id @default(cuid())
+  propertyId  String
+  property    Property          @relation(fields: [propertyId], references: [id])
+  creatorId   String
+  creator     User              @relation("UserTransactions", fields: [creatorId], references: [id])
+  type        TransactionType
+  status      TransactionStatus @default(IN_PROGRESS)
+  price       Float
+  closingDate DateTime?
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+  progress    Int               @default(0)
+  notes       String?           @db.Text
+
   // Relations
-  parties           TransactionParty[]
-  documents         Document[]
-  titleCompanyId    String?
-  titleCompany      TitleCompany?       @relation(fields: [titleCompanyId], references: [id])
-  milestones        Milestone[]
-  appointments      Appointment[]
+  parties        TransactionParty[]
+  documents      Document[]
+  titleCompanyId String?
+  titleCompany   TitleCompany?      @relation(fields: [titleCompanyId], references: [id])
+  milestones     Milestone[]
+  appointments   Appointment[]
 }
 
 enum TransactionType {
@@ -303,14 +303,14 @@ enum TransactionStatus {
 }
 
 model TransactionParty {
-  id              String        @id @default(cuid())
-  transactionId   String
-  transaction     Transaction   @relation(fields: [transactionId], references: [id], onDelete: Cascade)
-  userId          String
-  user            User          @relation(fields: [userId], references: [id])
-  role            PartyRole
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
+  id            String      @id @default(cuid())
+  transactionId String
+  transaction   Transaction @relation(fields: [transactionId], references: [id], onDelete: Cascade)
+  userId        String
+  user          User        @relation(fields: [userId], references: [id])
+  role          PartyRole
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
 
   @@unique([transactionId, userId, role])
 }
@@ -325,15 +325,15 @@ enum PartyRole {
 }
 
 model Document {
-  id              String        @id @default(cuid())
-  name            String
-  url             String
-  type            DocumentType
-  transactionId   String
-  transaction     Transaction   @relation(fields: [transactionId], references: [id], onDelete: Cascade)
-  uploadedById    String?
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
+  id            String       @id @default(cuid())
+  name          String
+  url           String
+  type          DocumentType
+  transactionId String
+  transaction   Transaction  @relation(fields: [transactionId], references: [id], onDelete: Cascade)
+  uploadedById  String?
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
 }
 
 enum DocumentType {
@@ -347,16 +347,16 @@ enum DocumentType {
 }
 
 model Milestone {
-  id              String        @id @default(cuid())
-  transactionId   String
-  transaction     Transaction   @relation(fields: [transactionId], references: [id], onDelete: Cascade)
-  title           String
-  description     String?
-  dueDate         DateTime
-  completedDate   DateTime?
-  status          MilestoneStatus @default(PENDING)
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
+  id            String          @id @default(cuid())
+  transactionId String
+  transaction   Transaction     @relation(fields: [transactionId], references: [id], onDelete: Cascade)
+  title         String
+  description   String?
+  dueDate       DateTime
+  completedDate DateTime?
+  status        MilestoneStatus @default(PENDING)
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
 }
 
 enum MilestoneStatus {
@@ -368,45 +368,45 @@ enum MilestoneStatus {
 
 // Title Company model
 model TitleCompany {
-  id              String        @id @default(cuid())
-  name            String
-  address         String?
-  city            String?
-  state           String?
-  zipCode         String?
-  phone           String?
-  email           String?
-  website         String?
-  logo            String?
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
-  
+  id        String   @id @default(cuid())
+  name      String
+  address   String?
+  city      String?
+  state     String?
+  zipCode   String?
+  phone     String?
+  email     String?
+  website   String?
+  logo      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   // Relations
-  transactions    Transaction[]
+  transactions Transaction[]
 }
 
 // Service model
 model Service {
-  id              String        @id @default(cuid())
-  name            String
-  description     String?       @db.Text
-  category        ServiceCategory
-  price           String?
-  hourlyRate      Float?
-  providerId      String
-  provider        User          @relation(fields: [providerId], references: [id])
-  location        String?
-  image           String?
-  verified        Boolean       @default(false)
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
-  
+  id          String          @id @default(cuid())
+  name        String
+  description String?         @db.Text
+  category    ServiceCategory
+  price       String?
+  hourlyRate  Float?
+  providerId  String
+  provider    User            @relation(fields: [providerId], references: [id])
+  location    String?
+  image       String?
+  verified    Boolean         @default(false)
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
   // Relations
-  reviews         Review[]
-  projects        Project[]
-  orders          ServiceOrder[]
-  advertisements  Advertisement[]
-  appointments    Appointment[]
+  reviews        Review[]
+  projects       Project[]
+  orders         ServiceOrder[]
+  advertisements Advertisement[]
+  appointments   Appointment[]
 }
 
 enum ServiceCategory {
@@ -422,25 +422,25 @@ enum ServiceCategory {
 
 // Project model
 model Project {
-  id              String        @id @default(cuid())
-  title           String
-  description     String?       @db.Text
-  status          ProjectStatus @default(IN_PROGRESS)
-  progress        Int           @default(0)
-  startDate       DateTime?
-  endDate         DateTime?
-  budget          Float?
-  ownerId         String
-  owner           User          @relation(fields: [ownerId], references: [id])
-  serviceId       String?
-  service         Service?      @relation(fields: [serviceId], references: [id])
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
+  id          String        @id @default(cuid())
+  title       String
+  description String?       @db.Text
+  status      ProjectStatus @default(IN_PROGRESS)
+  progress    Int           @default(0)
+  startDate   DateTime?
+  endDate     DateTime?
+  budget      Float?
+  ownerId     String
+  owner       User          @relation(fields: [ownerId], references: [id])
+  serviceId   String?
+  service     Service?      @relation(fields: [serviceId], references: [id])
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
 
   // Relations
-  milestones      ProjectMilestone[]
-  deliverables    ProjectDeliverable[]
-  teamMembers     ProjectTeamMember[]
+  milestones   ProjectMilestone[]
+  deliverables ProjectDeliverable[]
+  teamMembers  ProjectTeamMember[]
 }
 
 enum ProjectStatus {
@@ -451,36 +451,34 @@ enum ProjectStatus {
 
 // Project Milestone model
 model ProjectMilestone {
-  id              String            @id @default(cuid())
-  title           String
-  description     String?           @db.Text
-  status          MilestoneStatus   @default(PENDING)
-  dueDate         DateTime?
-  completedDate   DateTime?
-  projectId       String
-  project         Project           @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  createdAt       DateTime          @default(now())
-  updatedAt       DateTime          @updatedAt
+  id            String          @id @default(cuid())
+  title         String
+  description   String?         @db.Text
+  status        MilestoneStatus @default(PENDING)
+  dueDate       DateTime?
+  completedDate DateTime?
+  projectId     String
+  project       Project         @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
 }
-
-
 
 // Project Deliverable model
 model ProjectDeliverable {
-  id              String              @id @default(cuid())
-  title           String
-  description     String?             @db.Text
-  type            DeliverableType
-  status          DeliverableStatus   @default(DRAFT)
-  fileUrl         String?
-  fileName        String?
-  fileSize        String?
-  uploadedById    String?
-  uploadedBy      User?               @relation(fields: [uploadedById], references: [id])
-  projectId       String
-  project         Project             @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  createdAt       DateTime            @default(now())
-  updatedAt       DateTime            @updatedAt
+  id           String            @id @default(cuid())
+  title        String
+  description  String?           @db.Text
+  type         DeliverableType
+  status       DeliverableStatus @default(DRAFT)
+  fileUrl      String?
+  fileName     String?
+  fileSize     String?
+  uploadedById String?
+  uploadedBy   User?             @relation(fields: [uploadedById], references: [id])
+  projectId    String
+  project      Project           @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
 }
 
 enum DeliverableType {
@@ -502,73 +500,73 @@ enum DeliverableStatus {
 
 // Project Team Member model
 model ProjectTeamMember {
-  id              String        @id @default(cuid())
-  name            String
-  role            String
-  email           String?
-  phone           String?
-  userId          String?       // Optional link to actual user
-  user            User?         @relation(fields: [userId], references: [id])
-  projectId       String
-  project         Project       @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
+  id        String   @id @default(cuid())
+  name      String
+  role      String
+  email     String?
+  phone     String?
+  userId    String? // Optional link to actual user
+  user      User?    @relation(fields: [userId], references: [id])
+  projectId String
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 // Review model
 model Review {
-  id              String        @id @default(cuid())
-  rating          Float
-  comment         String?       @db.Text
-  authorId        String
-  author          User          @relation("UserReviews", fields: [authorId], references: [id])
-  receiverId      String
-  receiver        User          @relation("ReceivedReviews", fields: [receiverId], references: [id])
-  serviceId       String?
-  service         Service?      @relation(fields: [serviceId], references: [id])
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
+  id         String   @id @default(cuid())
+  rating     Float
+  comment    String?  @db.Text
+  authorId   String
+  author     User     @relation("UserReviews", fields: [authorId], references: [id])
+  receiverId String
+  receiver   User     @relation("ReceivedReviews", fields: [receiverId], references: [id])
+  serviceId  String?
+  service    Service? @relation(fields: [serviceId], references: [id])
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 }
 
 // Calendar/Appointment model
 model Appointment {
-  id              String        @id @default(cuid())
-  title           String
-  description     String?
-  startTime       DateTime
-  endTime         DateTime
-  location        String?
-  type            AppointmentType
-  userId          String
-  user            User          @relation(fields: [userId], references: [id])
+  id          String          @id @default(cuid())
+  title       String
+  description String?
+  startTime   DateTime
+  endTime     DateTime
+  location    String?
+  type        AppointmentType
+  userId      String
+  user        User            @relation(fields: [userId], references: [id])
 
   // Source tracking
-  source          AppointmentSource @default(MANUAL)
-  sourceId        String?       // ID of the related entity (service, property, transaction, etc.)
+  source   AppointmentSource @default(MANUAL)
+  sourceId String? // ID of the related entity (service, property, transaction, etc.)
 
   // Related entities
-  serviceId       String?
-  service         Service?      @relation(fields: [serviceId], references: [id])
-  propertyId      String?
-  property        Property?     @relation(fields: [propertyId], references: [id])
-  transactionId   String?
-  transaction     Transaction?  @relation(fields: [transactionId], references: [id])
+  serviceId     String?
+  service       Service?     @relation(fields: [serviceId], references: [id])
+  propertyId    String?
+  property      Property?    @relation(fields: [propertyId], references: [id])
+  transactionId String?
+  transaction   Transaction? @relation(fields: [transactionId], references: [id])
 
   // Participants (for multi-party appointments)
-  participants    AppointmentParticipant[]
+  participants AppointmentParticipant[]
 
   // External calendar sync
-  externalId      String?       // For calendar sync
-  externalData    String?       // JSON data from external calendar
-  synced          Boolean       @default(false)
+  externalId   String? // For calendar sync
+  externalData String? // JSON data from external calendar
+  synced       Boolean @default(false)
 
   // Status and metadata
-  status          AppointmentStatus @default(SCHEDULED)
-  isRecurring     Boolean       @default(false)
-  recurringData   String?       // JSON data for recurring appointments
+  status        AppointmentStatus @default(SCHEDULED)
+  isRecurring   Boolean           @default(false)
+  recurringData String? // JSON data for recurring appointments
 
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 enum AppointmentType {
@@ -586,7 +584,7 @@ enum AppointmentType {
 }
 
 enum AppointmentSource {
-  MANUAL          // Created manually in calendar
+  MANUAL // Created manually in calendar
   SERVICE_BOOKING // Created from service booking
   PROPERTY_VIEWING // Created from property viewing request
   PROGRESS_MILESTONE // Created from transaction milestone
@@ -604,15 +602,15 @@ enum AppointmentStatus {
 
 // Appointment participants for multi-party meetings
 model AppointmentParticipant {
-  id            String      @id @default(cuid())
+  id            String            @id @default(cuid())
   appointmentId String
-  appointment   Appointment @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
+  appointment   Appointment       @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
   userId        String
-  user          User        @relation(fields: [userId], references: [id])
-  role          ParticipantRole @default(ATTENDEE)
+  user          User              @relation(fields: [userId], references: [id])
+  role          ParticipantRole   @default(ATTENDEE)
   status        ParticipantStatus @default(PENDING)
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
 
   @@unique([appointmentId, userId])
 }
@@ -632,15 +630,15 @@ enum ParticipantStatus {
 
 // Calendar Integration model
 model CalendarIntegration {
-  id              String        @id @default(cuid())
-  userId          String
-  user            User          @relation(fields: [userId], references: [id])
-  provider        CalendarProvider
-  accessToken     String
-  refreshToken    String?
-  expiresAt       DateTime?
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
+  id           String           @id @default(cuid())
+  userId       String
+  user         User             @relation(fields: [userId], references: [id])
+  provider     CalendarProvider
+  accessToken  String
+  refreshToken String?
+  expiresAt    DateTime?
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
 
   @@unique([userId, provider])
 }
@@ -653,44 +651,44 @@ enum CalendarProvider {
 
 // Messaging model
 model Message {
-  id              String        @id @default(cuid())
-  content         String        @db.Text
-  senderId        String
-  sender          User          @relation("SentMessages", fields: [senderId], references: [id])
-  receiverId      String
-  receiver        User          @relation("ReceivedMessages", fields: [receiverId], references: [id])
-  read            Boolean       @default(false)
-  createdAt       DateTime      @default(now())
-  conversationId  String
-  conversation    Conversation  @relation(fields: [conversationId], references: [id])
+  id             String       @id @default(cuid())
+  content        String       @db.Text
+  senderId       String
+  sender         User         @relation("SentMessages", fields: [senderId], references: [id])
+  receiverId     String
+  receiver       User         @relation("ReceivedMessages", fields: [receiverId], references: [id])
+  read           Boolean      @default(false)
+  createdAt      DateTime     @default(now())
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id])
 }
 
 model Conversation {
-  id              String        @id @default(cuid())
-  messages        Message[]
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
+  id        String    @id @default(cuid())
+  messages  Message[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
 }
 
 // Subscription models
 model Subscription {
-  id              String              @id @default(cuid())
-  userId          String              @unique
-  user            User                @relation(fields: [userId], references: [id])
-  tier            SubscriptionTier
-  status          SubscriptionStatus  @default(ACTIVE)
-  stripeCustomerId String?
+  id                   String             @id @default(cuid())
+  userId               String             @unique
+  user                 User               @relation(fields: [userId], references: [id])
+  tier                 SubscriptionTier
+  status               SubscriptionStatus @default(ACTIVE)
+  stripeCustomerId     String?
   stripeSubscriptionId String?
-  currentPeriodStart DateTime
-  currentPeriodEnd DateTime
-  cancelAtPeriodEnd Boolean           @default(false)
-  createdAt       DateTime            @default(now())
-  updatedAt       DateTime            @updatedAt
+  currentPeriodStart   DateTime
+  currentPeriodEnd     DateTime
+  cancelAtPeriodEnd    Boolean            @default(false)
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
 
   // Usage tracking
-  listingsUsed    Int                 @default(0)
-  listingsLimit   Int?                // null for unlimited
-  transactionFeesPaid Float           @default(0)
+  listingsUsed        Int   @default(0)
+  listingsLimit       Int? // null for unlimited
+  transactionFeesPaid Float @default(0)
 }
 
 enum SubscriptionTier {
@@ -711,21 +709,21 @@ enum SubscriptionStatus {
 
 // Service Order model for tracking service purchases
 model ServiceOrder {
-  id              String              @id @default(cuid())
-  serviceId       String
-  service         Service             @relation(fields: [serviceId], references: [id])
-  clientId        String
-  client          User                @relation("ClientOrders", fields: [clientId], references: [id])
-  providerId      String
-  provider        User                @relation("ProviderOrders", fields: [providerId], references: [id])
-  amount          Float
-  status          ServiceOrderStatus  @default(PENDING)
-  description     String?             @db.Text
-  createdAt       DateTime            @default(now())
-  updatedAt       DateTime            @updatedAt
+  id          String             @id @default(cuid())
+  serviceId   String
+  service     Service            @relation(fields: [serviceId], references: [id])
+  clientId    String
+  client      User               @relation("ClientOrders", fields: [clientId], references: [id])
+  providerId  String
+  provider    User               @relation("ProviderOrders", fields: [providerId], references: [id])
+  amount      Float
+  status      ServiceOrderStatus @default(PENDING)
+  description String?            @db.Text
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
 
   // Relations
-  fees            Fee[]
+  fees Fee[]
 }
 
 enum ServiceOrderStatus {
@@ -738,18 +736,18 @@ enum ServiceOrderStatus {
 
 // Fee model for tracking various fees
 model Fee {
-  id              String        @id @default(cuid())
-  userId          String
-  user            User          @relation(fields: [userId], references: [id])
-  type            FeeType
-  amount          Float
-  description     String?
-  status          FeeStatus     @default(PENDING)
-  serviceOrderId  String?
-  serviceOrder    ServiceOrder? @relation(fields: [serviceOrderId], references: [id])
+  id                    String        @id @default(cuid())
+  userId                String
+  user                  User          @relation(fields: [userId], references: [id])
+  type                  FeeType
+  amount                Float
+  description           String?
+  status                FeeStatus     @default(PENDING)
+  serviceOrderId        String?
+  serviceOrder          ServiceOrder? @relation(fields: [serviceOrderId], references: [id])
   stripePaymentIntentId String?
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
+  createdAt             DateTime      @default(now())
+  updatedAt             DateTime      @updatedAt
 }
 
 enum FeeType {
@@ -768,23 +766,23 @@ enum FeeStatus {
 
 // Service Request model for professionals to see service needs
 model ServiceRequest {
-  id              String              @id @default(cuid())
-  title           String
-  description     String              @db.Text
-  category        ServiceCategory
-  budget          String?
-  location        String
-  urgency         ServiceUrgency      @default(NORMAL)
-  status          ServiceRequestStatus @default(OPEN)
-  clientId        String
-  client          User                @relation("ServiceRequestClient", fields: [clientId], references: [id])
-  providerId      String?
-  provider        User?               @relation("ServiceRequestProvider", fields: [providerId], references: [id])
-  createdAt       DateTime            @default(now())
-  updatedAt       DateTime            @updatedAt
+  id          String               @id @default(cuid())
+  title       String
+  description String               @db.Text
+  category    ServiceCategory
+  budget      String?
+  location    String
+  urgency     ServiceUrgency       @default(NORMAL)
+  status      ServiceRequestStatus @default(OPEN)
+  clientId    String
+  client      User                 @relation("ServiceRequestClient", fields: [clientId], references: [id])
+  providerId  String?
+  provider    User?                @relation("ServiceRequestProvider", fields: [providerId], references: [id])
+  createdAt   DateTime             @default(now())
+  updatedAt   DateTime             @updatedAt
 
   // Relations
-  responses       ServiceResponse[]
+  responses ServiceResponse[]
 }
 
 enum ServiceUrgency {
@@ -803,37 +801,37 @@ enum ServiceRequestStatus {
 
 // Service Response model for professionals to respond to requests
 model ServiceResponse {
-  id              String        @id @default(cuid())
-  serviceRequestId String
-  serviceRequest  ServiceRequest @relation(fields: [serviceRequestId], references: [id])
-  providerId      String
-  provider        User          @relation("ServiceResponseProvider", fields: [providerId], references: [id])
-  message         String        @db.Text
-  proposedPrice   Float?
+  id                String         @id @default(cuid())
+  serviceRequestId  String
+  serviceRequest    ServiceRequest @relation(fields: [serviceRequestId], references: [id])
+  providerId        String
+  provider          User           @relation("ServiceResponseProvider", fields: [providerId], references: [id])
+  message           String         @db.Text
+  proposedPrice     Float?
   estimatedDuration String?
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
 }
 
 // Advertisement models
 model Advertisement {
-  id              String              @id @default(cuid())
-  title           String
-  description     String?             @db.Text
-  imageUrl        String?
-  linkUrl         String?
-  advertiserId    String
-  advertiser      User                @relation(fields: [advertiserId], references: [id])
-  serviceId       String?
-  service         Service?            @relation(fields: [serviceId], references: [id])
-  status          AdStatus            @default(PENDING)
-  createdAt       DateTime            @default(now())
-  updatedAt       DateTime            @updatedAt
+  id           String   @id @default(cuid())
+  title        String
+  description  String?  @db.Text
+  imageUrl     String?
+  linkUrl      String?
+  advertiserId String
+  advertiser   User     @relation(fields: [advertiserId], references: [id])
+  serviceId    String?
+  service      Service? @relation(fields: [serviceId], references: [id])
+  status       AdStatus @default(PENDING)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   // Relations
-  purchases       AdPurchase[]
-  placements      AdPlacement[]
-  analytics       AdAnalytics[]
+  purchases  AdPurchase[]
+  placements AdPlacement[]
+  analytics  AdAnalytics[]
 }
 
 enum AdStatus {
@@ -846,20 +844,20 @@ enum AdStatus {
 }
 
 model AdPurchase {
-  id              String              @id @default(cuid())
-  advertisementId String
-  advertisement   Advertisement       @relation(fields: [advertisementId], references: [id])
-  purchaserId     String
-  purchaser       User                @relation(fields: [purchaserId], references: [id])
-  adSlots         AdSlot[]
-  totalCost       Float
-  duration        Int                 // in hours
-  startDate       DateTime
-  endDate         DateTime
-  status          AdPurchaseStatus    @default(PENDING)
+  id                    String           @id @default(cuid())
+  advertisementId       String
+  advertisement         Advertisement    @relation(fields: [advertisementId], references: [id])
+  purchaserId           String
+  purchaser             User             @relation(fields: [purchaserId], references: [id])
+  adSlots               AdSlot[]
+  totalCost             Float
+  duration              Int // in hours
+  startDate             DateTime
+  endDate               DateTime
+  status                AdPurchaseStatus @default(PENDING)
   stripePaymentIntentId String?
-  createdAt       DateTime            @default(now())
-  updatedAt       DateTime            @updatedAt
+  createdAt             DateTime         @default(now())
+  updatedAt             DateTime         @updatedAt
 }
 
 enum AdPurchaseStatus {
@@ -871,69 +869,69 @@ enum AdPurchaseStatus {
 }
 
 model AdSlot {
-  id              String              @id @default(cuid())
-  adPurchaseId    String
-  adPurchase      AdPurchase          @relation(fields: [adPurchaseId], references: [id])
-  placement       AdPlacement         @relation(fields: [placementId], references: [id])
-  placementId     String
-  startTime       DateTime
-  endTime         DateTime
-  isActive        Boolean             @default(false)
-  createdAt       DateTime            @default(now())
-  updatedAt       DateTime            @updatedAt
+  id           String      @id @default(cuid())
+  adPurchaseId String
+  adPurchase   AdPurchase  @relation(fields: [adPurchaseId], references: [id])
+  placement    AdPlacement @relation(fields: [placementId], references: [id])
+  placementId  String
+  startTime    DateTime
+  endTime      DateTime
+  isActive     Boolean     @default(false)
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
 }
 
 model AdPlacement {
-  id              String              @id @default(cuid())
+  id              String        @id @default(cuid())
   advertisementId String
-  advertisement   Advertisement       @relation(fields: [advertisementId], references: [id])
+  advertisement   Advertisement @relation(fields: [advertisementId], references: [id])
   location        AdLocation
-  position        Int                 @default(0) // 0-4 for the 5 spots
-  priority        Int                 @default(0) // Higher priority shows first
-  isActive        Boolean             @default(true)
-  createdAt       DateTime            @default(now())
-  updatedAt       DateTime            @updatedAt
+  position        Int           @default(0) // 0-4 for the 5 spots
+  priority        Int           @default(0) // Higher priority shows first
+  isActive        Boolean       @default(true)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
 
   // Relations
-  slots           AdSlot[]
+  slots AdSlot[]
 }
 
 enum AdLocation {
-  BOTTOM_GLOBAL   // Bottom of all pages
-  FRONTPAGE       // Front page specific
-  SERVICES        // Services section
-  MARKETPLACE     // Marketplace section
-  SIDEBAR         // Sidebar ads (future)
+  BOTTOM_GLOBAL // Bottom of all pages
+  FRONTPAGE // Front page specific
+  SERVICES // Services section
+  MARKETPLACE // Marketplace section
+  SIDEBAR // Sidebar ads (future)
 }
 
 model AdAnalytics {
-  id              String              @id @default(cuid())
+  id              String        @id @default(cuid())
   advertisementId String
-  advertisement   Advertisement       @relation(fields: [advertisementId], references: [id])
-  date            DateTime            @default(now())
-  impressions     Int                 @default(0)
-  clicks          Int                 @default(0)
-  conversions     Int                 @default(0)
-  cost            Float               @default(0)
+  advertisement   Advertisement @relation(fields: [advertisementId], references: [id])
+  date            DateTime      @default(now())
+  impressions     Int           @default(0)
+  clicks          Int           @default(0)
+  conversions     Int           @default(0)
+  cost            Float         @default(0)
   location        AdLocation
-  createdAt       DateTime            @default(now())
-  updatedAt       DateTime            @updatedAt
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
 
   @@unique([advertisementId, date, location])
 }
 
 // Job Marketplace models
 model JobListing {
-  id              String        @id @default(cuid())
-  title           String
-  description     String        @db.Text
-  location        String
-  budget          String
-  category        ServiceCategory
-  skills          String[]
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
-  proposals       Int           @default(0)
+  id          String          @id @default(cuid())
+  title       String
+  description String          @db.Text
+  location    String
+  budget      String
+  category    ServiceCategory
+  skills      String[]
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  proposals   Int             @default(0)
 }
 
 // ============================================================================
@@ -942,27 +940,27 @@ model JobListing {
 
 // Team Management
 model Team {
-  id              String @id @default(cuid())
-  name            String
-  description     String?
-  location        String // City, State, Region
-  type            TeamType
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  location    String // City, State, Region
+  type        TeamType
 
   // Leadership
-  leaderId        String
-  leader          User @relation("TeamLeader", fields: [leaderId], references: [id])
+  leaderId String
+  leader   User   @relation("TeamLeader", fields: [leaderId], references: [id])
 
   // Members
-  members         User[] @relation("TeamMembers")
+  members User[] @relation("TeamMembers")
 
   // Performance & Goals
-  kpis            KPI[] @relation("TeamKPIs")
-  goals           TeamGoal[]
+  kpis  KPI[]      @relation("TeamKPIs")
+  goals TeamGoal[]
 
   // Settings
-  isActive        Boolean @default(true)
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([location])
   @@index([type])
@@ -978,20 +976,20 @@ enum TeamType {
 }
 
 model TeamGoal {
-  id              String @id @default(cuid())
-  teamId          String
-  team            Team @relation(fields: [teamId], references: [id])
-  title           String
-  description     String?
-  targetValue     Float
-  currentValue    Float @default(0)
-  unit            String
-  deadline        DateTime
-  status          GoalStatus @default(IN_PROGRESS)
-  createdById     String
-  createdBy       User @relation("CreatedGoals", fields: [createdById], references: [id])
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  id           String     @id @default(cuid())
+  teamId       String
+  team         Team       @relation(fields: [teamId], references: [id])
+  title        String
+  description  String?
+  targetValue  Float
+  currentValue Float      @default(0)
+  unit         String
+  deadline     DateTime
+  status       GoalStatus @default(IN_PROGRESS)
+  createdById  String
+  createdBy    User       @relation("CreatedGoals", fields: [createdById], references: [id])
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
 }
 
 enum GoalStatus {
@@ -1003,104 +1001,104 @@ enum GoalStatus {
 
 // Investment Groups
 model InvestmentGroup {
-  id              String @id @default(cuid())
-  name            String
-  description     String? @db.Text
+  id          String  @id @default(cuid())
+  name        String
+  description String? @db.Text
 
   // Financial
-  targetAmount    Float
-  currentAmount   Float @default(0)
+  targetAmount      Float
+  currentAmount     Float @default(0)
   minimumInvestment Float @default(1000)
 
   // Management
-  createdById     String
-  createdBy       User @relation("CreatedInvestmentGroups", fields: [createdById], references: [id])
-  managerId       String?
-  manager         User? @relation("ManagedInvestmentGroups", fields: [managerId], references: [id])
+  createdById String
+  createdBy   User    @relation("CreatedInvestmentGroups", fields: [createdById], references: [id])
+  managerId   String?
+  manager     User?   @relation("ManagedInvestmentGroups", fields: [managerId], references: [id])
 
   // Members & Properties
-  members         InvestmentGroupMember[]
-  properties      InvestmentProperty[]
+  members    InvestmentGroupMember[]
+  properties InvestmentProperty[]
 
   // Status & Settings
-  status          InvestmentGroupStatus @default(ACTIVE)
-  isPrivate       Boolean @default(false)
-  autoInvest      Boolean @default(false)
+  status     InvestmentGroupStatus @default(ACTIVE)
+  isPrivate  Boolean               @default(false)
+  autoInvest Boolean               @default(false)
 
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([status])
   @@index([createdById])
 }
 
 model InvestmentGroupMember {
-  id              String @id @default(cuid())
-  groupId         String
-  group           InvestmentGroup @relation(fields: [groupId], references: [id])
-  userId          String
-  user            User @relation("InvestmentMemberships", fields: [userId], references: [id])
+  id      String          @id @default(cuid())
+  groupId String
+  group   InvestmentGroup @relation(fields: [groupId], references: [id])
+  userId  String
+  user    User            @relation("InvestmentMemberships", fields: [userId], references: [id])
 
   // Investment details
-  contribution    Float
-  role            InvestmentRole @default(MEMBER)
+  contribution Float
+  role         InvestmentRole @default(MEMBER)
 
   // Tracking
-  totalReturns    Float @default(0)
-  distributions   InvestmentDistribution[]
+  totalReturns  Float                    @default(0)
+  distributions InvestmentDistribution[]
 
-  joinedAt        DateTime @default(now())
+  joinedAt DateTime @default(now())
 
   @@unique([groupId, userId])
   @@index([userId])
 }
 
 model InvestmentProperty {
-  id              String @id @default(cuid())
-  propertyId      String @unique
-  property        Property @relation("InvestmentProperties", fields: [propertyId], references: [id])
-  groupId         String
-  group           InvestmentGroup @relation(fields: [groupId], references: [id])
+  id         String          @id @default(cuid())
+  propertyId String          @unique
+  property   Property        @relation("InvestmentProperties", fields: [propertyId], references: [id])
+  groupId    String
+  group      InvestmentGroup @relation(fields: [groupId], references: [id])
 
   // Purchase details
-  purchasePrice   Float
-  purchaseDate    DateTime
+  purchasePrice Float
+  purchaseDate  DateTime
 
   // Performance tracking
-  currentValue    Float?
-  lastValuation   DateTime?
-  roi             Float? // Return on Investment percentage
+  currentValue  Float?
+  lastValuation DateTime?
+  roi           Float? // Return on Investment percentage
 
   // Income tracking
-  monthlyIncome   Float @default(0)
-  totalIncome     Float @default(0)
-  expenses        Float @default(0)
+  monthlyIncome Float @default(0)
+  totalIncome   Float @default(0)
+  expenses      Float @default(0)
 
   // Status
-  status          InvestmentPropertyStatus @default(ACTIVE)
+  status InvestmentPropertyStatus @default(ACTIVE)
 
   // Distributions
-  distributions   InvestmentDistribution[]
+  distributions InvestmentDistribution[]
 
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([groupId])
   @@index([status])
 }
 
 model InvestmentDistribution {
-  id              String @id @default(cuid())
-  propertyId      String
-  property        InvestmentProperty @relation(fields: [propertyId], references: [id])
-  memberId        String
-  member          InvestmentGroupMember @relation(fields: [memberId], references: [id])
+  id         String                @id @default(cuid())
+  propertyId String
+  property   InvestmentProperty    @relation(fields: [propertyId], references: [id])
+  memberId   String
+  member     InvestmentGroupMember @relation(fields: [memberId], references: [id])
 
-  amount          Float
-  type            DistributionType
-  description     String?
+  amount      Float
+  type        DistributionType
+  description String?
 
-  distributedAt   DateTime @default(now())
+  distributedAt DateTime @default(now())
 
   @@index([propertyId])
   @@index([memberId])
@@ -1137,38 +1135,39 @@ enum DistributionType {
 
 // Learning Center
 model Course {
-  id              String @id @default(cuid())
-  title           String
-  description     String @db.Text
-  category        CourseCategory
-  difficulty      CourseDifficulty
+  id          String           @id @default(cuid())
+  title       String
+  description String           @db.Text
+  category    CourseCategory
+  difficulty  CourseDifficulty
 
   // Content
-  duration        Int // total minutes
-  thumbnailUrl    String?
+  duration     Int // total minutes
+  thumbnailUrl String?
 
   // Instructor
-  instructorId    String
-  instructor      User @relation("InstructedCourses", fields: [instructorId], references: [id])
+  instructorId String
+  instructor   User   @relation("InstructedCourses", fields: [instructorId], references: [id])
 
   // Structure
   modules         CourseModule[]
   prerequisites   CoursePrerequisite[]
+  prerequisiteFor CoursePrerequisite[] @relation("CoursePrerequisites")
 
   // Access & Requirements
-  isRequired      Boolean @default(false)
+  isRequired      Boolean         @default(false)
   requiredForRole String? // JSON array of roles
   unlocks         FeatureUnlock[]
 
   // Tracking
-  enrollments     CourseProgress[]
+  enrollments CourseProgress[]
 
   // Status
-  isPublished     Boolean @default(false)
-  publishedAt     DateTime?
+  isPublished Boolean   @default(false)
+  publishedAt DateTime?
 
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([category])
   @@index([difficulty])
@@ -1176,78 +1175,81 @@ model Course {
 }
 
 model CourseModule {
-  id              String @id @default(cuid())
-  courseId        String
-  course          Course @relation(fields: [courseId], references: [id])
+  id       String @id @default(cuid())
+  courseId String
+  course   Course @relation(fields: [courseId], references: [id])
 
-  title           String
-  description     String?
-  content         String @db.Text
+  title       String
+  description String?
+  content     String  @db.Text
 
   // Media
-  videoUrl        String?
-  videoLength     Int? // seconds
-  attachments     String[] // URLs to files
+  videoUrl    String?
+  videoLength Int? // seconds
+  attachments String[] // URLs to files
 
   // Structure
-  order           Int
-  duration        Int // minutes
+  order    Int
+  duration Int // minutes
 
   // Assessment
-  quiz            Quiz?
+  quiz Quiz?
 
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  // Relations
+  currentProgress CourseProgress[] @relation("CurrentModule")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([courseId, order])
 }
 
 model CoursePrerequisite {
-  id              String @id @default(cuid())
-  courseId        String
-  course          Course @relation(fields: [courseId], references: [id])
-  prerequisiteId  String
-  prerequisite    Course @relation("CoursePrerequisites", fields: [prerequisiteId], references: [id])
+  id             String @id @default(cuid())
+  courseId       String
+  course         Course @relation(fields: [courseId], references: [id])
+  prerequisiteId String
+  prerequisite   Course @relation("CoursePrerequisites", fields: [prerequisiteId], references: [id])
 
   @@unique([courseId, prerequisiteId])
 }
 
 model FeatureUnlock {
-  id              String @id @default(cuid())
-  courseId        String
-  course          Course @relation(fields: [courseId], references: [id])
+  id       String @id @default(cuid())
+  courseId String
+  course   Course @relation(fields: [courseId], references: [id])
 
-  featureName     String // e.g., "advanced_bidding", "bulk_operations"
-  platform        Platform // HBH2, PORTAL, or BOTH
-  description     String
+  featureName String // e.g., "advanced_bidding", "bulk_operations"
+  platform    Platform // HBH2, PORTAL, or BOTH
+  description String
 
   @@index([platform])
 }
 
 model CourseProgress {
-  id              String @id @default(cuid())
-  userId          String
-  user            User @relation("LearningProgress", fields: [userId], references: [id])
-  courseId        String
-  course          Course @relation(fields: [courseId], references: [id])
+  id       String @id @default(cuid())
+  userId   String
+  user     User   @relation("LearningProgress", fields: [userId], references: [id])
+  courseId String
+  course   Course @relation(fields: [courseId], references: [id])
 
   // Progress tracking
-  progress        Int @default(0) // 0-100
+  progress        Int           @default(0) // 0-100
   currentModuleId String?
   currentModule   CourseModule? @relation("CurrentModule", fields: [currentModuleId], references: [id])
 
   // Completion
-  completedAt     DateTime?
-  certificateUrl  String?
+  completedAt    DateTime?
+  certificateUrl String?
 
   // Time tracking
-  startedAt       DateTime @default(now())
-  timeSpent       Int @default(0) // minutes
-  lastAccessedAt  DateTime @default(now())
+  startedAt      DateTime @default(now())
+  timeSpent      Int      @default(0) // minutes
+  lastAccessedAt DateTime @default(now())
 
   // Assessment
-  quizScores      QuizScore[]
-  finalScore      Float?
+  quizScores QuizScore[]
+  finalScore Float?
 
   @@unique([userId, courseId])
   @@index([userId])
@@ -1255,55 +1257,55 @@ model CourseProgress {
 }
 
 model Quiz {
-  id              String @id @default(cuid())
-  moduleId        String @unique
-  module          CourseModule @relation(fields: [moduleId], references: [id])
+  id       String       @id @default(cuid())
+  moduleId String       @unique
+  module   CourseModule @relation(fields: [moduleId], references: [id])
 
-  title           String
-  description     String?
-  passingScore    Float @default(70) // percentage
-  timeLimit       Int? // minutes
-  maxAttempts     Int @default(3)
+  title        String
+  description  String?
+  passingScore Float   @default(70) // percentage
+  timeLimit    Int? // minutes
+  maxAttempts  Int     @default(3)
 
-  questions       QuizQuestion[]
-  scores          QuizScore[]
+  questions QuizQuestion[]
+  scores    QuizScore[]
 
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model QuizQuestion {
-  id              String @id @default(cuid())
-  quizId          String
-  quiz            Quiz @relation(fields: [quizId], references: [id])
+  id     String @id @default(cuid())
+  quizId String
+  quiz   Quiz   @relation(fields: [quizId], references: [id])
 
-  question        String @db.Text
-  type            QuestionType
-  options         String[] // JSON array for multiple choice
-  correctAnswer   String
-  explanation     String?
-  points          Int @default(1)
-  order           Int
+  question      String       @db.Text
+  type          QuestionType
+  options       String[] // JSON array for multiple choice
+  correctAnswer String
+  explanation   String?
+  points        Int          @default(1)
+  order         Int
 
   @@index([quizId, order])
 }
 
 model QuizScore {
-  id              String @id @default(cuid())
-  quizId          String
-  quiz            Quiz @relation(fields: [quizId], references: [id])
-  userId          String
-  user            User @relation("QuizAttempts", fields: [userId], references: [id])
-  progressId      String
-  progress        CourseProgress @relation(fields: [progressId], references: [id])
+  id         String         @id @default(cuid())
+  quizId     String
+  quiz       Quiz           @relation(fields: [quizId], references: [id])
+  userId     String
+  user       User           @relation("QuizAttempts", fields: [userId], references: [id])
+  progressId String
+  progress   CourseProgress @relation(fields: [progressId], references: [id])
 
-  score           Float // percentage
-  totalQuestions  Int
-  correctAnswers  Int
-  timeSpent       Int // seconds
-  attempt         Int @default(1)
+  score          Float // percentage
+  totalQuestions Int
+  correctAnswers Int
+  timeSpent      Int // seconds
+  attempt        Int   @default(1)
 
-  completedAt     DateTime @default(now())
+  completedAt DateTime @default(now())
 
   @@index([userId])
   @@index([quizId])
@@ -1344,42 +1346,42 @@ enum QuestionType {
 
 // KPI Tracking System
 model KPI {
-  id              String @id @default(cuid())
-  name            String
-  description     String? @db.Text
-  category        KPICategory
+  id          String      @id @default(cuid())
+  name        String
+  description String?     @db.Text
+  category    KPICategory
 
   // Target & Current Values
-  targetValue     Float
-  currentValue    Float @default(0)
-  unit            String // "deals", "dollars", "percentage", etc.
+  targetValue  Float
+  currentValue Float  @default(0)
+  unit         String // "deals", "dollars", "percentage", etc.
 
   // Time period
-  period          KPIPeriod
-  startDate       DateTime
-  endDate         DateTime?
+  period    KPIPeriod
+  startDate DateTime
+  endDate   DateTime?
 
   // Ownership (can be user, team, or company-wide)
-  ownerId         String?
-  owner           User? @relation("UserKPIs", fields: [ownerId], references: [id])
-  teamId          String?
-  team            Team? @relation("TeamKPIs", fields: [teamId], references: [id])
+  ownerId String?
+  owner   User?   @relation("UserKPIs", fields: [ownerId], references: [id])
+  teamId  String?
+  team    Team?   @relation("TeamKPIs", fields: [teamId], references: [id])
 
   // Data source configuration
-  dataSource      KPIDataSource
-  sourceConfig    String? @db.Text // JSON config for data extraction
-  autoUpdate      Boolean @default(true)
+  dataSource   KPIDataSource
+  sourceConfig String?       @db.Text // JSON config for data extraction
+  autoUpdate   Boolean       @default(true)
 
   // Tracking & History
-  history         KPIHistory[]
-  alerts          KPIAlert[]
+  history KPIHistory[]
+  alerts  KPIAlert[]
 
   // Status
-  isActive        Boolean @default(true)
-  lastUpdated     DateTime @default(now())
+  isActive    Boolean  @default(true)
+  lastUpdated DateTime @default(now())
 
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([category])
   @@index([period])
@@ -1388,42 +1390,42 @@ model KPI {
 }
 
 model KPIHistory {
-  id              String @id @default(cuid())
-  kpiId           String
-  kpi             KPI @relation(fields: [kpiId], references: [id])
+  id    String @id @default(cuid())
+  kpiId String
+  kpi   KPI    @relation(fields: [kpiId], references: [id])
 
-  value           Float
-  previousValue   Float?
-  changePercent   Float?
+  value         Float
+  previousValue Float?
+  changePercent Float?
 
   // Context
-  recordedAt      DateTime @default(now())
-  notes           String?
-  dataSnapshot    String? @db.Text // JSON snapshot of source data
+  recordedAt   DateTime @default(now())
+  notes        String?
+  dataSnapshot String?  @db.Text // JSON snapshot of source data
 
   @@index([kpiId, recordedAt])
 }
 
 model KPIAlert {
-  id              String @id @default(cuid())
-  kpiId           String
-  kpi             KPI @relation(fields: [kpiId], references: [id])
+  id    String @id @default(cuid())
+  kpiId String
+  kpi   KPI    @relation(fields: [kpiId], references: [id])
 
-  name            String
-  condition       AlertCondition
-  threshold       Float
-  message         String
+  name      String
+  condition AlertCondition
+  threshold Float
+  message   String
 
   // Recipients
-  recipients      String[] // User IDs to notify
-  channels        AlertChannel[] // How to notify
+  recipients String[] // User IDs to notify
+  channels   AlertChannel[] // How to notify
 
   // Status
-  isActive        Boolean @default(true)
-  lastTriggered   DateTime?
-  triggerCount    Int @default(0)
+  isActive      Boolean   @default(true)
+  lastTriggered DateTime?
+  triggerCount  Int       @default(0)
 
-  createdAt       DateTime @default(now())
+  createdAt DateTime @default(now())
 
   @@index([kpiId])
 }
@@ -1479,28 +1481,28 @@ enum AlertChannel {
 
 // Certifications & Achievements
 model Certification {
-  id              String @id @default(cuid())
-  userId          String
-  user            User @relation(fields: [userId], references: [id])
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
 
-  name            String
-  description     String?
-  issuer          String // "HBH Portal", "External Authority", etc.
+  name        String
+  description String?
+  issuer      String // "HBH Portal", "External Authority", etc.
 
   // Requirements
   requiredCourses String[] // Course IDs
   requiredScore   Float? // Minimum score required
 
   // Completion
-  earnedAt        DateTime
-  expiresAt       DateTime?
-  certificateUrl  String?
+  earnedAt       DateTime
+  expiresAt      DateTime?
+  certificateUrl String?
 
   // Verification
-  verificationCode String @unique
-  isVerified      Boolean @default(true)
+  verificationCode String  @unique
+  isVerified       Boolean @default(true)
 
-  createdAt       DateTime @default(now())
+  createdAt DateTime @default(now())
 
   @@index([userId])
   @@index([earnedAt])
@@ -1508,28 +1510,28 @@ model Certification {
 
 // Notifications & Communication
 model PortalNotification {
-  id              String @id @default(cuid())
-  userId          String
-  user            User @relation("PortalNotifications", fields: [userId], references: [id])
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation("PortalNotifications", fields: [userId], references: [id])
 
-  title           String
-  message         String @db.Text
-  type            NotificationType
-  category        NotificationCategory
+  title    String
+  message  String               @db.Text
+  type     NotificationType
+  category NotificationCategory
 
   // Related entities
-  relatedId       String? // ID of related entity (course, team, etc.)
-  relatedType     String? // Type of related entity
+  relatedId   String? // ID of related entity (course, team, etc.)
+  relatedType String? // Type of related entity
 
   // Actions
-  actionUrl       String?
-  actionText      String?
+  actionUrl  String?
+  actionText String?
 
   // Status
-  isRead          Boolean @default(false)
-  readAt          DateTime?
+  isRead Boolean   @default(false)
+  readAt DateTime?
 
-  createdAt       DateTime @default(now())
+  createdAt DateTime @default(now())
 
   @@index([userId, isRead])
   @@index([type])

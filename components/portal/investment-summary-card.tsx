@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { CurrencyDollarIcon, ArrowRightIcon, TrendingUpIcon } from '@heroicons/react/24/outline'
+import { CurrencyDollarIcon, ArrowRightIcon, ArrowTrendingUpIcon } from '@heroicons/react/24/outline'
 
 interface InvestmentSummary {
   totalInvested: number
@@ -114,7 +114,7 @@ export function InvestmentSummaryCard() {
           </div>
           <div>
             <div className="flex items-center">
-              <TrendingUpIcon className="h-4 w-4 text-green-500 mr-1" />
+              <ArrowTrendingUpIcon className="h-4 w-4 text-green-500 mr-1" />
               <p className="text-sm font-medium text-green-600">{summary.roi}%</p>
             </div>
             <p className="text-xs text-gray-500">ROI</p>
