@@ -58,6 +58,45 @@ model User {
   auctionWatchList  AuctionWatchList[]  // Auctions this user is watching
   deliverables      ProjectDeliverable[] // Deliverables uploaded by this user
   teamMemberships   ProjectTeamMember[]  // Projects where this user is a team member
+
+  // ============================================================================
+  // PORTAL PLATFORM EXTENSIONS
+  // ============================================================================
+
+  // Platform Access Control
+  hbh2Access        Boolean @default(true)
+  portalAccess      Boolean @default(false)
+
+  // Portal-specific fields
+  employeeId        String? @unique
+  department        String?
+  hireDate          DateTime?
+
+  // Team relationships
+  teamId            String?
+  team              Team? @relation("TeamMembers", fields: [teamId], references: [id])
+  managerId         String?
+  manager           User? @relation("ManagerEmployee", fields: [managerId], references: [id])
+  directReports     User[] @relation("ManagerEmployee")
+  ledTeams          Team[] @relation("TeamLeader")
+
+  // Investment participation
+  investmentMemberships InvestmentGroupMember[] @relation("InvestmentMemberships")
+  createdInvestmentGroups InvestmentGroup[] @relation("CreatedInvestmentGroups")
+  managedInvestmentGroups InvestmentGroup[] @relation("ManagedInvestmentGroups")
+
+  // Learning & Development
+  learningProgress  CourseProgress[] @relation("LearningProgress")
+  instructedCourses Course[] @relation("InstructedCourses")
+  quizAttempts      QuizScore[] @relation("QuizAttempts")
+  certifications    Certification[]
+
+  // Goals & KPIs
+  createdGoals      TeamGoal[] @relation("CreatedGoals")
+  kpis              KPI[] @relation("UserKPIs")
+
+  // Portal notifications
+  portalNotifications PortalNotification[] @relation("PortalNotifications")
 }
 
 enum UserRole {
@@ -107,6 +146,9 @@ model Property {
   watchedBy       AuctionWatchList[] // Users watching this auction
   analytics       AuctionAnalytics?  // Analytics for this auction
   extensions      AuctionExtension[] // Extension history for this auction
+
+  // Portal integration
+  investmentProperty InvestmentProperty? @relation("InvestmentProperties")
 }
 
 enum PropertyType {
@@ -892,4 +934,621 @@ model JobListing {
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
   proposals       Int           @default(0)
+}
+
+// ============================================================================
+// HBH PORTAL MODELS
+// ============================================================================
+
+// Team Management
+model Team {
+  id              String @id @default(cuid())
+  name            String
+  description     String?
+  location        String // City, State, Region
+  type            TeamType
+
+  // Leadership
+  leaderId        String
+  leader          User @relation("TeamLeader", fields: [leaderId], references: [id])
+
+  // Members
+  members         User[] @relation("TeamMembers")
+
+  // Performance & Goals
+  kpis            KPI[] @relation("TeamKPIs")
+  goals           TeamGoal[]
+
+  // Settings
+  isActive        Boolean @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([location])
+  @@index([type])
+}
+
+enum TeamType {
+  SALES
+  OPERATIONS
+  MARKETING
+  DEVELOPMENT
+  SUPPORT
+  MANAGEMENT
+}
+
+model TeamGoal {
+  id              String @id @default(cuid())
+  teamId          String
+  team            Team @relation(fields: [teamId], references: [id])
+  title           String
+  description     String?
+  targetValue     Float
+  currentValue    Float @default(0)
+  unit            String
+  deadline        DateTime
+  status          GoalStatus @default(IN_PROGRESS)
+  createdById     String
+  createdBy       User @relation("CreatedGoals", fields: [createdById], references: [id])
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+enum GoalStatus {
+  IN_PROGRESS
+  COMPLETED
+  OVERDUE
+  CANCELLED
+}
+
+// Investment Groups
+model InvestmentGroup {
+  id              String @id @default(cuid())
+  name            String
+  description     String? @db.Text
+
+  // Financial
+  targetAmount    Float
+  currentAmount   Float @default(0)
+  minimumInvestment Float @default(1000)
+
+  // Management
+  createdById     String
+  createdBy       User @relation("CreatedInvestmentGroups", fields: [createdById], references: [id])
+  managerId       String?
+  manager         User? @relation("ManagedInvestmentGroups", fields: [managerId], references: [id])
+
+  // Members & Properties
+  members         InvestmentGroupMember[]
+  properties      InvestmentProperty[]
+
+  // Status & Settings
+  status          InvestmentGroupStatus @default(ACTIVE)
+  isPrivate       Boolean @default(false)
+  autoInvest      Boolean @default(false)
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([status])
+  @@index([createdById])
+}
+
+model InvestmentGroupMember {
+  id              String @id @default(cuid())
+  groupId         String
+  group           InvestmentGroup @relation(fields: [groupId], references: [id])
+  userId          String
+  user            User @relation("InvestmentMemberships", fields: [userId], references: [id])
+
+  // Investment details
+  contribution    Float
+  role            InvestmentRole @default(MEMBER)
+
+  // Tracking
+  totalReturns    Float @default(0)
+  distributions   InvestmentDistribution[]
+
+  joinedAt        DateTime @default(now())
+
+  @@unique([groupId, userId])
+  @@index([userId])
+}
+
+model InvestmentProperty {
+  id              String @id @default(cuid())
+  propertyId      String @unique
+  property        Property @relation("InvestmentProperties", fields: [propertyId], references: [id])
+  groupId         String
+  group           InvestmentGroup @relation(fields: [groupId], references: [id])
+
+  // Purchase details
+  purchasePrice   Float
+  purchaseDate    DateTime
+
+  // Performance tracking
+  currentValue    Float?
+  lastValuation   DateTime?
+  roi             Float? // Return on Investment percentage
+
+  // Income tracking
+  monthlyIncome   Float @default(0)
+  totalIncome     Float @default(0)
+  expenses        Float @default(0)
+
+  // Status
+  status          InvestmentPropertyStatus @default(ACTIVE)
+
+  // Distributions
+  distributions   InvestmentDistribution[]
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([groupId])
+  @@index([status])
+}
+
+model InvestmentDistribution {
+  id              String @id @default(cuid())
+  propertyId      String
+  property        InvestmentProperty @relation(fields: [propertyId], references: [id])
+  memberId        String
+  member          InvestmentGroupMember @relation(fields: [memberId], references: [id])
+
+  amount          Float
+  type            DistributionType
+  description     String?
+
+  distributedAt   DateTime @default(now())
+
+  @@index([propertyId])
+  @@index([memberId])
+}
+
+enum InvestmentGroupStatus {
+  ACTIVE
+  CLOSED
+  LIQUIDATING
+  SUSPENDED
+}
+
+enum InvestmentRole {
+  MEMBER
+  MANAGER
+  ADMIN
+}
+
+enum InvestmentPropertyStatus {
+  ACTIVE
+  SOLD
+  UNDER_CONTRACT
+  FORECLOSURE
+  MAINTENANCE
+}
+
+enum DistributionType {
+  PROFIT
+  LOSS
+  DIVIDEND
+  CAPITAL_RETURN
+  EXPENSE_REIMBURSEMENT
+}
+
+// Learning Center
+model Course {
+  id              String @id @default(cuid())
+  title           String
+  description     String @db.Text
+  category        CourseCategory
+  difficulty      CourseDifficulty
+
+  // Content
+  duration        Int // total minutes
+  thumbnailUrl    String?
+
+  // Instructor
+  instructorId    String
+  instructor      User @relation("InstructedCourses", fields: [instructorId], references: [id])
+
+  // Structure
+  modules         CourseModule[]
+  prerequisites   CoursePrerequisite[]
+
+  // Access & Requirements
+  isRequired      Boolean @default(false)
+  requiredForRole String? // JSON array of roles
+  unlocks         FeatureUnlock[]
+
+  // Tracking
+  enrollments     CourseProgress[]
+
+  // Status
+  isPublished     Boolean @default(false)
+  publishedAt     DateTime?
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([category])
+  @@index([difficulty])
+  @@index([isPublished])
+}
+
+model CourseModule {
+  id              String @id @default(cuid())
+  courseId        String
+  course          Course @relation(fields: [courseId], references: [id])
+
+  title           String
+  description     String?
+  content         String @db.Text
+
+  // Media
+  videoUrl        String?
+  videoLength     Int? // seconds
+  attachments     String[] // URLs to files
+
+  // Structure
+  order           Int
+  duration        Int // minutes
+
+  // Assessment
+  quiz            Quiz?
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([courseId, order])
+}
+
+model CoursePrerequisite {
+  id              String @id @default(cuid())
+  courseId        String
+  course          Course @relation(fields: [courseId], references: [id])
+  prerequisiteId  String
+  prerequisite    Course @relation("CoursePrerequisites", fields: [prerequisiteId], references: [id])
+
+  @@unique([courseId, prerequisiteId])
+}
+
+model FeatureUnlock {
+  id              String @id @default(cuid())
+  courseId        String
+  course          Course @relation(fields: [courseId], references: [id])
+
+  featureName     String // e.g., "advanced_bidding", "bulk_operations"
+  platform        Platform // HBH2, PORTAL, or BOTH
+  description     String
+
+  @@index([platform])
+}
+
+model CourseProgress {
+  id              String @id @default(cuid())
+  userId          String
+  user            User @relation("LearningProgress", fields: [userId], references: [id])
+  courseId        String
+  course          Course @relation(fields: [courseId], references: [id])
+
+  // Progress tracking
+  progress        Int @default(0) // 0-100
+  currentModuleId String?
+  currentModule   CourseModule? @relation("CurrentModule", fields: [currentModuleId], references: [id])
+
+  // Completion
+  completedAt     DateTime?
+  certificateUrl  String?
+
+  // Time tracking
+  startedAt       DateTime @default(now())
+  timeSpent       Int @default(0) // minutes
+  lastAccessedAt  DateTime @default(now())
+
+  // Assessment
+  quizScores      QuizScore[]
+  finalScore      Float?
+
+  @@unique([userId, courseId])
+  @@index([userId])
+  @@index([courseId])
+}
+
+model Quiz {
+  id              String @id @default(cuid())
+  moduleId        String @unique
+  module          CourseModule @relation(fields: [moduleId], references: [id])
+
+  title           String
+  description     String?
+  passingScore    Float @default(70) // percentage
+  timeLimit       Int? // minutes
+  maxAttempts     Int @default(3)
+
+  questions       QuizQuestion[]
+  scores          QuizScore[]
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model QuizQuestion {
+  id              String @id @default(cuid())
+  quizId          String
+  quiz            Quiz @relation(fields: [quizId], references: [id])
+
+  question        String @db.Text
+  type            QuestionType
+  options         String[] // JSON array for multiple choice
+  correctAnswer   String
+  explanation     String?
+  points          Int @default(1)
+  order           Int
+
+  @@index([quizId, order])
+}
+
+model QuizScore {
+  id              String @id @default(cuid())
+  quizId          String
+  quiz            Quiz @relation(fields: [quizId], references: [id])
+  userId          String
+  user            User @relation("QuizAttempts", fields: [userId], references: [id])
+  progressId      String
+  progress        CourseProgress @relation(fields: [progressId], references: [id])
+
+  score           Float // percentage
+  totalQuestions  Int
+  correctAnswers  Int
+  timeSpent       Int // seconds
+  attempt         Int @default(1)
+
+  completedAt     DateTime @default(now())
+
+  @@index([userId])
+  @@index([quizId])
+}
+
+enum CourseCategory {
+  ONBOARDING
+  REAL_ESTATE_BASICS
+  ADVANCED_BIDDING
+  INVESTMENT_STRATEGIES
+  TEAM_MANAGEMENT
+  COMPLIANCE
+  TECHNOLOGY_TRAINING
+  SALES_TECHNIQUES
+  CUSTOMER_SERVICE
+  LEGAL_UPDATES
+}
+
+enum CourseDifficulty {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+  EXPERT
+}
+
+enum Platform {
+  HBH2
+  PORTAL
+  BOTH
+}
+
+enum QuestionType {
+  MULTIPLE_CHOICE
+  TRUE_FALSE
+  SHORT_ANSWER
+  ESSAY
+}
+
+// KPI Tracking System
+model KPI {
+  id              String @id @default(cuid())
+  name            String
+  description     String? @db.Text
+  category        KPICategory
+
+  // Target & Current Values
+  targetValue     Float
+  currentValue    Float @default(0)
+  unit            String // "deals", "dollars", "percentage", etc.
+
+  // Time period
+  period          KPIPeriod
+  startDate       DateTime
+  endDate         DateTime?
+
+  // Ownership (can be user, team, or company-wide)
+  ownerId         String?
+  owner           User? @relation("UserKPIs", fields: [ownerId], references: [id])
+  teamId          String?
+  team            Team? @relation("TeamKPIs", fields: [teamId], references: [id])
+
+  // Data source configuration
+  dataSource      KPIDataSource
+  sourceConfig    String? @db.Text // JSON config for data extraction
+  autoUpdate      Boolean @default(true)
+
+  // Tracking & History
+  history         KPIHistory[]
+  alerts          KPIAlert[]
+
+  // Status
+  isActive        Boolean @default(true)
+  lastUpdated     DateTime @default(now())
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([category])
+  @@index([period])
+  @@index([ownerId])
+  @@index([teamId])
+}
+
+model KPIHistory {
+  id              String @id @default(cuid())
+  kpiId           String
+  kpi             KPI @relation(fields: [kpiId], references: [id])
+
+  value           Float
+  previousValue   Float?
+  changePercent   Float?
+
+  // Context
+  recordedAt      DateTime @default(now())
+  notes           String?
+  dataSnapshot    String? @db.Text // JSON snapshot of source data
+
+  @@index([kpiId, recordedAt])
+}
+
+model KPIAlert {
+  id              String @id @default(cuid())
+  kpiId           String
+  kpi             KPI @relation(fields: [kpiId], references: [id])
+
+  name            String
+  condition       AlertCondition
+  threshold       Float
+  message         String
+
+  // Recipients
+  recipients      String[] // User IDs to notify
+  channels        AlertChannel[] // How to notify
+
+  // Status
+  isActive        Boolean @default(true)
+  lastTriggered   DateTime?
+  triggerCount    Int @default(0)
+
+  createdAt       DateTime @default(now())
+
+  @@index([kpiId])
+}
+
+enum KPICategory {
+  SALES_PERFORMANCE
+  PROPERTY_METRICS
+  USER_ENGAGEMENT
+  FINANCIAL
+  OPERATIONAL
+  LEARNING_DEVELOPMENT
+  TEAM_PRODUCTIVITY
+  CUSTOMER_SATISFACTION
+}
+
+enum KPIPeriod {
+  DAILY
+  WEEKLY
+  MONTHLY
+  QUARTERLY
+  YEARLY
+  CUSTOM
+}
+
+enum KPIDataSource {
+  HBH2_TRANSACTIONS
+  HBH2_PROPERTIES
+  HBH2_USERS
+  HBH2_AUCTIONS
+  PORTAL_LEARNING
+  PORTAL_TEAMS
+  PORTAL_INVESTMENTS
+  MANUAL_ENTRY
+  EXTERNAL_API
+}
+
+enum AlertCondition {
+  ABOVE_THRESHOLD
+  BELOW_THRESHOLD
+  PERCENT_CHANGE_UP
+  PERCENT_CHANGE_DOWN
+  NO_UPDATE
+  TARGET_REACHED
+}
+
+enum AlertChannel {
+  EMAIL
+  SMS
+  PUSH_NOTIFICATION
+  SLACK
+  IN_APP
+}
+
+// Certifications & Achievements
+model Certification {
+  id              String @id @default(cuid())
+  userId          String
+  user            User @relation(fields: [userId], references: [id])
+
+  name            String
+  description     String?
+  issuer          String // "HBH Portal", "External Authority", etc.
+
+  // Requirements
+  requiredCourses String[] // Course IDs
+  requiredScore   Float? // Minimum score required
+
+  // Completion
+  earnedAt        DateTime
+  expiresAt       DateTime?
+  certificateUrl  String?
+
+  // Verification
+  verificationCode String @unique
+  isVerified      Boolean @default(true)
+
+  createdAt       DateTime @default(now())
+
+  @@index([userId])
+  @@index([earnedAt])
+}
+
+// Notifications & Communication
+model PortalNotification {
+  id              String @id @default(cuid())
+  userId          String
+  user            User @relation("PortalNotifications", fields: [userId], references: [id])
+
+  title           String
+  message         String @db.Text
+  type            NotificationType
+  category        NotificationCategory
+
+  // Related entities
+  relatedId       String? // ID of related entity (course, team, etc.)
+  relatedType     String? // Type of related entity
+
+  // Actions
+  actionUrl       String?
+  actionText      String?
+
+  // Status
+  isRead          Boolean @default(false)
+  readAt          DateTime?
+
+  createdAt       DateTime @default(now())
+
+  @@index([userId, isRead])
+  @@index([type])
+  @@index([createdAt])
+}
+
+enum NotificationType {
+  INFO
+  SUCCESS
+  WARNING
+  ERROR
+  REMINDER
+}
+
+enum NotificationCategory {
+  LEARNING
+  TEAM
+  INVESTMENT
+  KPI
+  SYSTEM
+  ACHIEVEMENT
 }

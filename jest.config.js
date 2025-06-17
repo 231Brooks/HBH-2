@@ -14,6 +14,8 @@ const customJestConfig = {
     '^@/(.*)$': '<rootDir>/$1',
   },
   testMatch: [
+    '<rootDir>/tests/**/*.test.{js,jsx,ts,tsx}',
+    '<rootDir>/**/__tests__/**/*.{js,jsx,ts,tsx}',
     '**/__tests__/**/*.(ts|tsx|js)',
     '**/*.(test|spec).(ts|tsx|js)'
   ],
@@ -35,7 +37,26 @@ const customJestConfig = {
       functions: 70,
       lines: 70,
       statements: 70
-    }
+    },
+    // Specific thresholds for critical modules
+    './lib/cross-platform-sync.ts': {
+      branches: 80,
+      functions: 80,
+      lines: 80,
+      statements: 80,
+    },
+    './lib/learning-service.ts': {
+      branches: 75,
+      functions: 75,
+      lines: 75,
+      statements: 75,
+    },
+    './lib/pusher-server.ts': {
+      branches: 75,
+      functions: 75,
+      lines: 75,
+      statements: 75,
+    },
   },
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
   transform: {
@@ -46,11 +67,61 @@ const customJestConfig = {
   testEnvironmentOptions: {
     customExportConditions: [''],
   },
+  // Test timeout
+  testTimeout: 10000,
+
+  // Setup files
+  setupFiles: ['<rootDir>/tests/setup/env.js'],
+
+  // Verbose output
+  verbose: true,
+
+  // Clear mocks between tests
+  clearMocks: true,
+
+  // Restore mocks after each test
+  restoreMocks: true,
+
+  // Test suites configuration
+  projects: [
+    {
+      displayName: 'Unit Tests',
+      testMatch: ['<rootDir>/tests/unit/**/*.test.{js,ts,jsx,tsx}'],
+      testEnvironment: 'jest-environment-jsdom',
+    },
+    {
+      displayName: 'Integration Tests',
+      testMatch: ['<rootDir>/tests/integration/**/*.test.{js,ts,jsx,tsx}'],
+      testEnvironment: 'jest-environment-node',
+    },
+    {
+      displayName: 'API Tests',
+      testMatch: ['<rootDir>/tests/api/**/*.test.{js,ts,jsx,tsx}'],
+      testEnvironment: 'jest-environment-node',
+    },
+    {
+      displayName: 'Security Tests',
+      testMatch: ['<rootDir>/tests/security/**/*.test.{js,ts,jsx,tsx}'],
+      testEnvironment: 'jest-environment-node',
+    },
+    {
+      displayName: 'Performance Tests',
+      testMatch: ['<rootDir>/tests/performance/**/*.test.{js,ts,jsx,tsx}'],
+      testEnvironment: 'jest-environment-node',
+      testTimeout: 30000, // Longer timeout for performance tests
+    },
+    {
+      displayName: 'Real-time Tests',
+      testMatch: ['<rootDir>/tests/realtime/**/*.test.{js,ts,jsx,tsx}'],
+      testEnvironment: 'jest-environment-node',
+    },
+  ],
+
   // Handle static file imports
   moduleNameMapping: {
     '^@/(.*)$': '<rootDir>/$1',
     '\\.(css|less|scss|sass)$': 'identity-obj-proxy',
-    '\\.(jpg|jpeg|png|gif|eot|otf|webp|svg|ttf|woff|woff2|mp4|webm|wav|mp3|m4a|aac|oga)$': '<rootDir>/__mocks__/fileMock.js'
+    '\\.(jpg|jpeg|png|gif|eot|otf|webp|svg|ttf|woff2|mp4|webm|wav|mp3|m4a|aac|oga)$': '<rootDir>/__mocks__/fileMock.js'
   }
 }
 

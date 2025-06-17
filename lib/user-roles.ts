@@ -1,4 +1,5 @@
-export type UserRole = 'USER' | 'PROFESSIONAL' | 'ADMIN' | 'TITLE_COMPANY'
+export type UserRole = 'USER' | 'PROFESSIONAL' | 'ADMIN'
+export type PortalRole = 'EMPLOYEE' | 'TEAM_LEAD' | 'MANAGER' | 'EXECUTIVE' | 'INVESTOR' | 'TRAINER' | 'TITLE_COMPANY'
 
 export interface UserPermissions {
   // Property permissions
@@ -57,6 +58,47 @@ export interface UserPermissions {
   canAccessTitleCompany: boolean
   canManageClosings: boolean
   canViewAllTransactions: boolean
+}
+
+// Portal-specific permissions
+export interface PortalPermissions {
+  // Learning Center
+  canAccessLearningCenter: boolean
+  canCreateCourses: boolean
+  canManageCourses: boolean
+  canInstructCourses: boolean
+  canViewAllProgress: boolean
+
+  // Team Management
+  canViewTeams: boolean
+  canManageTeam: boolean
+  canCreateTeams: boolean
+  canManageAllTeams: boolean
+
+  // Investment Groups
+  canViewInvestments: boolean
+  canCreateInvestmentGroups: boolean
+  canManageInvestments: boolean
+  canViewAllInvestments: boolean
+
+  // KPI & Analytics
+  canViewKPIs: boolean
+  canCreateKPIs: boolean
+  canManageKPIs: boolean
+  canViewCompanyKPIs: boolean
+  canViewReports: boolean
+
+  // Employee Management
+  canViewEmployees: boolean
+  canManageEmployees: boolean
+  canViewPayroll: boolean
+  canManageRoles: boolean
+}
+
+// Combined platform permissions
+export interface PlatformPermissions {
+  hbh2: UserPermissions
+  portal: PortalPermissions
 }
 
 export const USER_PERMISSIONS: Record<UserRole, UserPermissions> = {
@@ -295,6 +337,129 @@ export const USER_PERMISSIONS: Record<UserRole, UserPermissions> = {
     canManageClosings: true,
     canViewAllTransactions: true,
   },
+}
+
+// Portal permissions by role
+export const PORTAL_PERMISSIONS: Record<UserRole, PortalPermissions> = {
+  USER: {
+    // Learning Center
+    canAccessLearningCenter: true,
+    canCreateCourses: false,
+    canManageCourses: false,
+    canInstructCourses: false,
+    canViewAllProgress: false,
+
+    // Team Management
+    canViewTeams: false,
+    canManageTeam: false,
+    canCreateTeams: false,
+    canManageAllTeams: false,
+
+    // Investment Groups
+    canViewInvestments: true,
+    canCreateInvestmentGroups: false,
+    canManageInvestments: false,
+    canViewAllInvestments: false,
+
+    // KPI & Analytics
+    canViewKPIs: false,
+    canCreateKPIs: false,
+    canManageKPIs: false,
+    canViewCompanyKPIs: false,
+    canViewReports: false,
+
+    // Employee Management
+    canViewEmployees: false,
+    canManageEmployees: false,
+    canViewPayroll: false,
+    canManageRoles: false,
+  },
+
+  PROFESSIONAL: {
+    // Learning Center
+    canAccessLearningCenter: true,
+    canCreateCourses: true,
+    canManageCourses: true,
+    canInstructCourses: true,
+    canViewAllProgress: false,
+
+    // Team Management
+    canViewTeams: true,
+    canManageTeam: false,
+    canCreateTeams: false,
+    canManageAllTeams: false,
+
+    // Investment Groups
+    canViewInvestments: true,
+    canCreateInvestmentGroups: true,
+    canManageInvestments: true,
+    canViewAllInvestments: false,
+
+    // KPI & Analytics
+    canViewKPIs: true,
+    canCreateKPIs: true,
+    canManageKPIs: true,
+    canViewCompanyKPIs: false,
+    canViewReports: true,
+
+    // Employee Management
+    canViewEmployees: false,
+    canManageEmployees: false,
+    canViewPayroll: false,
+    canManageRoles: false,
+  },
+
+  ADMIN: {
+    // Learning Center
+    canAccessLearningCenter: true,
+    canCreateCourses: true,
+    canManageCourses: true,
+    canInstructCourses: true,
+    canViewAllProgress: true,
+
+    // Team Management
+    canViewTeams: true,
+    canManageTeam: true,
+    canCreateTeams: true,
+    canManageAllTeams: true,
+
+    // Investment Groups
+    canViewInvestments: true,
+    canCreateInvestmentGroups: true,
+    canManageInvestments: true,
+    canViewAllInvestments: true,
+
+    // KPI & Analytics
+    canViewKPIs: true,
+    canCreateKPIs: true,
+    canManageKPIs: true,
+    canViewCompanyKPIs: true,
+    canViewReports: true,
+
+    // Employee Management
+    canViewEmployees: true,
+    canManageEmployees: true,
+    canViewPayroll: true,
+    canManageRoles: true,
+  },
+}
+
+// Get combined platform permissions
+export function getPlatformPermissions(role: UserRole): PlatformPermissions {
+  return {
+    hbh2: USER_PERMISSIONS[role],
+    portal: PORTAL_PERMISSIONS[role]
+  }
+}
+
+// Check if user has portal access
+export function hasPortalAccess(userRole: UserRole, portalAccess: boolean): boolean {
+  return portalAccess && (userRole === 'PROFESSIONAL' || userRole === 'ADMIN')
+}
+
+// Check portal permission
+export function hasPortalPermission(userRole: UserRole, permission: keyof PortalPermissions): boolean {
+  return PORTAL_PERMISSIONS[userRole][permission]
 }
 
 export function getUserPermissions(role: UserRole): UserPermissions {

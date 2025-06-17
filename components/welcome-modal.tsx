@@ -28,7 +28,7 @@ import {
 } from "lucide-react"
 import { useSupabase } from "@/hooks/use-supabase"
 import { usePermissions } from "@/hooks/use-permissions"
-import { useTour } from "@reactour/tour"
+import { useTour } from "@/components/user-tour"
 
 interface WelcomeModalProps {
   open: boolean
@@ -38,13 +38,13 @@ interface WelcomeModalProps {
 export function WelcomeModal({ open, onOpenChange }: WelcomeModalProps) {
   const { user } = useSupabase()
   const { userRole, isProfessional } = usePermissions()
-  const { setIsOpen: setTourOpen } = useTour()
+  const { openTour } = useTour()
   const [currentStep, setCurrentStep] = useState(0)
 
   const handleStartTour = () => {
     onOpenChange(false)
     setTimeout(() => {
-      setTourOpen(true)
+      openTour()
     }, 500)
   }
 

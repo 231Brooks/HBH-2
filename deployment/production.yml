@@ -1,0 +1,335 @@
+# Production Deployment Configuration for HBH-2 & Portal Integration
+# This file contains the production deployment setup for Vercel/AWS
+
+# Vercel Configuration
+vercel:
+  name: "hbh-portal-integration"
+  version: 2
+  
+  # Build Configuration
+  build:
+    env:
+      NODE_ENV: "production"
+      NEXT_TELEMETRY_DISABLED: "1"
+    
+  # Environment Variables (set in Vercel dashboard)
+  env:
+    # Database
+    - DATABASE_URL: "@database-url-production"
+    - SUPABASE_URL: "@supabase-url-production"
+    - SUPABASE_ANON_KEY: "@supabase-anon-key-production"
+    - SUPABASE_SERVICE_KEY: "@supabase-service-key-production"
+    
+    # Authentication
+    - NEXTAUTH_URL: "@nextauth-url-production"
+    - NEXTAUTH_SECRET: "@nextauth-secret-production"
+    - SESSION_SECRET: "@session-secret-production"
+    
+    # Real-time (Pusher)
+    - PUSHER_APP_ID: "@pusher-app-id-production"
+    - PUSHER_KEY: "@pusher-key-production"
+    - PUSHER_SECRET: "@pusher-secret-production"
+    - PUSHER_CLUSTER: "@pusher-cluster-production"
+    
+    # Security
+    - ENCRYPTION_KEY: "@encryption-key-production"
+    - CSRF_SECRET: "@csrf-secret-production"
+    
+    # External APIs
+    - STRIPE_SECRET_KEY: "@stripe-secret-key-production"
+    - STRIPE_WEBHOOK_SECRET: "@stripe-webhook-secret-production"
+    
+    # Monitoring
+    - SENTRY_DSN: "@sentry-dsn-production"
+    - ANALYTICS_ID: "@analytics-id-production"
+    
+  # Headers for security
+  headers:
+    - source: "/(.*)"
+      headers:
+        - key: "X-Frame-Options"
+          value: "DENY"
+        - key: "X-Content-Type-Options"
+          value: "nosniff"
+        - key: "X-XSS-Protection"
+          value: "1; mode=block"
+        - key: "Referrer-Policy"
+          value: "strict-origin-when-cross-origin"
+        - key: "Permissions-Policy"
+          value: "camera=(), microphone=(), geolocation=()"
+        - key: "Strict-Transport-Security"
+          value: "max-age=31536000; includeSubDomains; preload"
+    
+    # API Security Headers
+    - source: "/api/(.*)"
+      headers:
+        - key: "Cache-Control"
+          value: "no-store, no-cache, must-revalidate"
+        - key: "X-Robots-Tag"
+          value: "noindex, nofollow"
+    
+    # Static Asset Caching
+    - source: "/_next/static/(.*)"
+      headers:
+        - key: "Cache-Control"
+          value: "public, max-age=31536000, immutable"
+    
+    - source: "/images/(.*)"
+      headers:
+        - key: "Cache-Control"
+          value: "public, max-age=86400"
+
+  # Redirects
+  redirects:
+    - source: "/portal"
+      destination: "/portal/dashboard"
+      permanent: false
+    
+    - source: "/admin"
+      destination: "/portal/admin"
+      permanent: false
+
+  # Rewrites for API routing
+  rewrites:
+    - source: "/api/v1/(.*)"
+      destination: "/api/$1"
+
+# AWS Infrastructure (if using AWS instead of Vercel)
+aws:
+  # ECS Configuration
+  ecs:
+    cluster: "hbh-portal-production"
+    service: "hbh-portal-service"
+    
+    task_definition:
+      family: "hbh-portal-task"
+      cpu: "1024"
+      memory: "2048"
+      network_mode: "awsvpc"
+      
+      container_definitions:
+        - name: "hbh-portal-app"
+          image: "hbh-portal:latest"
+          port_mappings:
+            - container_port: 3000
+              protocol: "tcp"
+          
+          environment:
+            - name: "NODE_ENV"
+              value: "production"
+            - name: "PORT"
+              value: "3000"
+          
+          log_configuration:
+            log_driver: "awslogs"
+            options:
+              awslogs-group: "/ecs/hbh-portal"
+              awslogs-region: "us-east-1"
+              awslogs-stream-prefix: "ecs"
+
+  # Load Balancer
+  alb:
+    name: "hbh-portal-alb"
+    scheme: "internet-facing"
+    type: "application"
+    
+    listeners:
+      - port: 443
+        protocol: "HTTPS"
+        ssl_policy: "ELBSecurityPolicy-TLS-1-2-2017-01"
+        certificate_arn: "arn:aws:acm:us-east-1:ACCOUNT:certificate/CERT-ID"
+        
+        default_actions:
+          - type: "forward"
+            target_group_arn: "arn:aws:elasticloadbalancing:us-east-1:ACCOUNT:targetgroup/hbh-portal-tg"
+      
+      - port: 80
+        protocol: "HTTP"
+        default_actions:
+          - type: "redirect"
+            redirect:
+              protocol: "HTTPS"
+              port: "443"
+              status_code: "HTTP_301"
+
+  # Auto Scaling
+  auto_scaling:
+    min_capacity: 2
+    max_capacity: 10
+    target_cpu_utilization: 70
+    target_memory_utilization: 80
+
+  # RDS Configuration
+  rds:
+    engine: "postgres"
+    engine_version: "14.9"
+    instance_class: "db.t3.medium"
+    allocated_storage: 100
+    storage_type: "gp2"
+    storage_encrypted: true
+    
+    backup_retention_period: 7
+    backup_window: "03:00-04:00"
+    maintenance_window: "sun:04:00-sun:05:00"
+    
+    multi_az: true
+    publicly_accessible: false
+    
+    vpc_security_group_ids:
+      - "sg-database-access"
+
+  # ElastiCache for Redis
+  elasticache:
+    engine: "redis"
+    node_type: "cache.t3.micro"
+    num_cache_nodes: 1
+    port: 6379
+    
+    subnet_group_name: "hbh-portal-cache-subnet-group"
+    security_group_ids:
+      - "sg-cache-access"
+
+# Monitoring and Logging
+monitoring:
+  # CloudWatch Alarms
+  cloudwatch:
+    alarms:
+      - name: "HighCPUUtilization"
+        metric_name: "CPUUtilization"
+        threshold: 80
+        comparison_operator: "GreaterThanThreshold"
+        evaluation_periods: 2
+        
+      - name: "HighMemoryUtilization"
+        metric_name: "MemoryUtilization"
+        threshold: 85
+        comparison_operator: "GreaterThanThreshold"
+        evaluation_periods: 2
+        
+      - name: "HighErrorRate"
+        metric_name: "HTTPCode_Target_5XX_Count"
+        threshold: 10
+        comparison_operator: "GreaterThanThreshold"
+        evaluation_periods: 1
+
+  # Log Groups
+  log_groups:
+    - name: "/ecs/hbh-portal"
+      retention_in_days: 30
+    
+    - name: "/aws/lambda/hbh-portal-sync"
+      retention_in_days: 14
+
+# Security Configuration
+security:
+  # WAF Rules
+  waf:
+    rules:
+      - name: "AWSManagedRulesCommonRuleSet"
+        priority: 1
+        override_action: "none"
+        
+      - name: "AWSManagedRulesKnownBadInputsRuleSet"
+        priority: 2
+        override_action: "none"
+        
+      - name: "AWSManagedRulesSQLiRuleSet"
+        priority: 3
+        override_action: "none"
+        
+      - name: "RateLimitRule"
+        priority: 4
+        action: "block"
+        rate_limit: 2000 # requests per 5 minutes
+
+  # VPC Configuration
+  vpc:
+    cidr_block: "10.0.0.0/16"
+    
+    subnets:
+      public:
+        - cidr: "10.0.1.0/24"
+          availability_zone: "us-east-1a"
+        - cidr: "10.0.2.0/24"
+          availability_zone: "us-east-1b"
+      
+      private:
+        - cidr: "10.0.3.0/24"
+          availability_zone: "us-east-1a"
+        - cidr: "10.0.4.0/24"
+          availability_zone: "us-east-1b"
+
+# Backup and Disaster Recovery
+backup:
+  # Database Backups
+  database:
+    automated_backup: true
+    backup_retention_period: 7
+    backup_window: "03:00-04:00"
+    
+    point_in_time_recovery: true
+    
+    cross_region_backup:
+      enabled: true
+      destination_region: "us-west-2"
+
+  # Application Backups
+  application:
+    s3_bucket: "hbh-portal-backups"
+    backup_schedule: "0 2 * * *" # Daily at 2 AM
+    retention_days: 30
+
+# Performance Optimization
+performance:
+  # CDN Configuration
+  cdn:
+    provider: "CloudFront"
+    price_class: "PriceClass_100" # US, Canada, Europe
+    
+    cache_behaviors:
+      - path_pattern: "/_next/static/*"
+        ttl: 31536000 # 1 year
+        compress: true
+        
+      - path_pattern: "/api/*"
+        ttl: 0 # No caching for API
+        compress: false
+        
+      - path_pattern: "/images/*"
+        ttl: 86400 # 1 day
+        compress: true
+
+  # Database Optimization
+  database:
+    connection_pooling:
+      min_connections: 5
+      max_connections: 20
+      idle_timeout: 300
+    
+    read_replicas: 1
+    query_cache: true
+
+# Deployment Pipeline
+ci_cd:
+  # GitHub Actions
+  github_actions:
+    workflows:
+      - name: "production-deploy"
+        trigger: "push to main"
+        steps:
+          - "checkout"
+          - "setup-node"
+          - "install-dependencies"
+          - "run-tests"
+          - "build-application"
+          - "security-scan"
+          - "deploy-to-production"
+          - "run-smoke-tests"
+          - "notify-team"
+
+  # Deployment Strategy
+  deployment:
+    strategy: "blue-green"
+    health_check_path: "/api/health"
+    health_check_timeout: 30
+    rollback_on_failure: true
