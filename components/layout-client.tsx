@@ -11,7 +11,6 @@ interface LayoutClientProps {
 }
 
 export function LayoutClient({ children }: LayoutClientProps) {
-  const { showWelcome, setShowWelcome } = useWelcomeModal()
 
   return (
     <UserTour>
