@@ -1,7 +1,6 @@
 "use client"
 
 import { UserTour } from "@/components/user-tour"
-import { WelcomeModal, useWelcomeModal } from "@/components/welcome-modal"
 import { TestModeBanner } from "@/components/test-mode-banner"
 import Navbar from "@/components/navbar"
 import BottomNavbar from "@/components/bottom-navbar"
