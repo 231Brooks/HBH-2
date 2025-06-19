@@ -28,11 +28,6 @@ export function LayoutClient({ children }: LayoutClientProps) {
         <BottomNavbar />
       </div>
       
-      {/* Welcome Modal */}
-      <WelcomeModal 
-        open={showWelcome} 
-        onOpenChange={setShowWelcome} 
-      />
     </UserTour>
   )
 }
